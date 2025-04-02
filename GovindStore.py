@@ -55,44 +55,22 @@ if page == "📈 Dashboard":
     current_month_sales = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Sale Amount"].sum()
     current_month_purchases = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Purchase Amount"].sum()
 
+    st.subheader("📅 Monthly Overview")
     col1, col2 = st.columns(2)
     with col1:
         st.metric("📈 Total Sales This Month", f"₹ {current_month_sales:.2f}")
     with col2:
         st.metric("📉 Total Purchases This Month", f"₹ {current_month_purchases:.2f}")
 
-    # Sales & Purchase Projection
-    def forecast_next_month(data, column):
-        data = data[["Date", column]].dropna()
-        data.set_index("Date", inplace=True)
-        
-        if len(data) < 24:
-            return data[column].rolling(window=3, min_periods=1).mean().iloc[-1]  # Moving avg fallback
-        
-        model = ExponentialSmoothing(data[column], seasonal="add", seasonal_periods=12)
-        model_fit = model.fit()
-        forecast = model_fit.forecast(steps=1)
-        return forecast.iloc[0]
-
-    next_month_sales = forecast_next_month(df, "Sale Amount")
-    next_month_purchases = forecast_next_month(df, "Purchase Amount")
-
-    st.subheader("🔮 Sales & Purchase Projection")
-    col3, col4 = st.columns(2)
-    with col3:
-        st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
-    with col4:
-        st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
+    # Sales vs Date Graph
+    st.subheader("📈 Sales vs Date")
+    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
+    st.plotly_chart(fig)
 
     # Monthly Sales & Purchase Summary
     st.subheader("📊 Monthly Sales & Purchase Summary")
     monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
     st.dataframe(monthly_summary)
-
-    # Sales Amount vs Date Graph
-    st.subheader("📈 Sales Trend Over Time")
-    fig = px.line(df, x="Date", y="Sale Amount", title="Sales Amount Over Time", labels={"Sale Amount": "Sales (₹)"})
-    st.plotly_chart(fig)
 
 if page == "📋 Form Entry":
     st.header("➕ Add New Entry")
