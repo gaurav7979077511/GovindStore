@@ -39,7 +39,7 @@ df = fetch_data()
 
 # Layout
 st.sidebar.title("📊 Dashboard Navigation")
-page = st.sidebar.radio("Go to", ["📈 Dashboard", "📋 Form Entry", "📊 Data Table", "📉 Monthly Data"])
+page = st.sidebar.radio("Go to", ["📈 Dashboard", "📋 Form Entry", "📊 Data Table"])
 
 if page == "📈 Dashboard":
     st.header("📈 Dashboard")
@@ -78,6 +78,11 @@ if page == "📈 Dashboard":
     st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
     st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
 
+    # Monthly Sales & Purchase Summary
+    st.subheader("📆 Monthly Sales & Purchase Data")
+    monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
+    st.dataframe(monthly_summary)
+
 if page == "📋 Form Entry":
     st.header("➕ Add New Entry")
     date = st.date_input("📅 Select Date")
@@ -103,8 +108,3 @@ if page == "📋 Form Entry":
 elif page == "📊 Data Table":
     st.header("📄 Submitted Data")
     st.dataframe(df)
-
-elif page == "📉 Monthly Data":
-    st.header("📆 Monthly Sales & Purchase Data")
-    monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
-    st.dataframe(monthly_summary)
