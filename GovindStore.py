@@ -7,12 +7,15 @@ from googleapiclient.http import MediaFileUpload
 import os
 import plotly.express as px
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import bcrypt
 
 # Google Sheets Authentication
 SHEET_ID = "1UaxMdDoNHFXd1CNP0Exm2IN0KOiKtBKM-YK3q5FWe0A"
 SHEET_NAME = "SalePurchaseData"
 SALE_FOLDER_ID = "1nfaIvzdqQAAV77pus1wehJUAxXpCnGx1jtEqz3kK1LWd6z5F1-1KsklvX9ReFNIB-_Ad9iIW"
 PURCHASE_FOLDER_ID = "1sN7U7rFNbv0dtZwXnQT18ZqgpJq3Hr5yFYxpE9oKXVSZLXLupYYQ-I3B6_iD-LxT5jh21jUq"
+AUTH_SHEET_ID = st.secrets["sheets"]["AUTH_SHEET_ID"]
+AUTH_SHEET_NAME = "Sheet1"
 
 # Load credentials
 creds_dict = dict(st.secrets["gcp_service_account"])
@@ -25,98 +28,105 @@ try:
     )
     client = gspread.authorize(creds)
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+    AUTH_sheet = client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
     drive_service = build("drive", "v3", credentials=creds)
 except Exception as e:
     st.error(f"❌ Connection error: {e}")
     st.stop()
 
-# Fetch data
-def fetch_data():
-    data = sheet.get_all_records()
-    return pd.DataFrame(data) if data else pd.DataFrame()
+# Fetch authentication data
+def load_auth_data():
+    data = AUTH_sheet.get_all_records()
+    return pd.DataFrame(data)
 
-df = fetch_data()
+auth_df = load_auth_data()
 
-# Layout
-st.sidebar.title("📊 Dashboard Navigation")
-page = st.sidebar.radio("Go to", ["📈 Dashboard", "📋 Form Entry", "📊 Data Table"])
+def verify_password(stored_hash, entered_password):
+    return bcrypt.checkpw(entered_password.encode(), stored_hash.encode())
 
-if page == "📈 Dashboard":
-    st.header("📊 Business Overview")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    df["Year"] = df["Date"].dt.year
-    df["Month"] = df["Date"].dt.month
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user_role = None
+    st.session_state.username = None
+    st.session_state.user_name = None
 
-    df["Sale Amount"] = pd.to_numeric(df["Sale Amount"], errors="coerce").fillna(0)
-    df["Purchase Amount"] = pd.to_numeric(df["Purchase Amount"], errors="coerce").fillna(0)
+if not st.session_state.authenticated:
+    st.title("🔒 Secure Login")
+    username = st.text_input("👤 Username")
+    password = st.text_input("🔑 Password", type="password")
+    login_button = st.button("Login")
 
-    # Current Month Sales & Purchases
-    today = pd.Timestamp.now()
-    current_month_sales = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Sale Amount"].sum()
-    current_month_purchases = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Purchase Amount"].sum()
+    if login_button:
+        user_data = auth_df[auth_df["Username"] == username]
+        if not user_data.empty:
+            stored_hash = user_data.iloc[0]["Password"]
+            role = user_data.iloc[0]["Role"]
+            name = user_data.iloc[0]["Name"]
+            if verify_password(stored_hash, password):
+                st.session_state.authenticated = True
+                st.session_state.user_role = role
+                st.session_state.username = username
+                st.session_state.user_name = name
+                st.experimental_set_query_params(logged_in="true")
+                st.success(f"✅ Welcome, {name}!")
+                st.rerun()
+            else:
+                st.error("❌ Invalid Credentials")
+        else:
+            st.error("❌ User not found")
+else:
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.authenticated = False
+        st.session_state.user_role = None
+        st.session_state.username = None
+        st.session_state.user_name = None
+        st.experimental_set_query_params(logged_in="false")
+        st.rerun()
 
-    st.subheader("📅 Monthly Overview")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("📈 Total Sales This Month", f"₹ {current_month_sales:.2f}")
-    with col2:
-        st.metric("📉 Total Purchases This Month", f"₹ {current_month_purchases:.2f}")
+    st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
-    # Sales vs Date Graph
-    st.subheader("📈 Sales vs Date")
-    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
-    st.plotly_chart(fig)
+    # Fetch data
+    def fetch_data():
+        data = sheet.get_all_records()
+        return pd.DataFrame(data) if data else pd.DataFrame()
 
-    # Monthly Sales & Purchase Summary
-    st.subheader("📊 Monthly Sales & Purchase Summary")
-    monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
-    st.dataframe(monthly_summary)
+    df = fetch_data()
 
-    # Sales & Purchase Projection
-    def forecast_next_month(data, column):
-        data = data[["Date", column]].dropna()
-        data.set_index("Date", inplace=True)
-        
-        if len(data) < 24:
-            return data[column].rolling(window=3, min_periods=1).mean().iloc[-1]  # Moving avg fallback
-        
-        model = ExponentialSmoothing(data[column], seasonal="add", seasonal_periods=12)
-        model_fit = model.fit()
-        forecast = model_fit.forecast(steps=1)
-        return forecast.iloc[0]
+    # Layout
+    st.sidebar.title("📊 Dashboard Navigation")
+    page = st.sidebar.radio("Go to", ["📈 Dashboard", "📋 Form Entry", "📊 Data Table"])
 
-    next_month_sales = forecast_next_month(df, "Sale Amount")
-    next_month_purchases = forecast_next_month(df, "Purchase Amount")
+    if page == "📈 Dashboard":
+        st.header("📊 Business Overview")
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df["Year"] = df["Date"].dt.year
+        df["Month"] = df["Date"].dt.month
 
-    st.subheader("🔮 Sales & Purchase Projection")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
-    with col2:
-        st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
+        df["Sale Amount"] = pd.to_numeric(df["Sale Amount"], errors="coerce").fillna(0)
+        df["Purchase Amount"] = pd.to_numeric(df["Purchase Amount"], errors="coerce").fillna(0)
 
-if page == "📋 Form Entry":
-    st.header("➕ Add New Entry")
-    date = st.date_input("📅 Select Date")
-    entry_type = st.selectbox("📌 Type", ["Sale", "Purchase"])
-    doc_file = None
-    if entry_type == "Sale":
-        amount = st.number_input("💲 Sale Amount", min_value=0.0, format="%.2f")
-        comment = st.text_input("📝 Sale Comment")
-        doc_file = st.file_uploader("📂 Upload Sale Document", type=["jpg", "jpeg", "png", "pdf"])
-        folder_id = SALE_FOLDER_ID
-    else:
-        amount = st.number_input("💲 Purchase Amount", min_value=0.0, format="%.2f")
-        comment = st.text_input("📝 Purchase Comment")
-        doc_file = st.file_uploader("📂 Upload Purchase Document", type=["jpg", "jpeg", "png", "pdf"])
-        folder_id = PURCHASE_FOLDER_ID
+        # Current Month Sales & Purchases
+        today = pd.Timestamp.now()
+        current_month_sales = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Sale Amount"].sum()
+        current_month_purchases = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Purchase Amount"].sum()
 
-    if st.button("✅ Submit"):
-        doc_url = upload_to_drive(f"/tmp/{doc_file.name}", doc_file.name, folder_id) if doc_file else ""
-        new_row = [str(pd.Timestamp.now()), str(date), entry_type, amount if entry_type == "Sale" else "", comment if entry_type == "Sale" else "", doc_url if entry_type == "Sale" else "", amount if entry_type == "Purchase" else "", comment if entry_type == "Purchase" else "", doc_url if entry_type == "Purchase" else ""]
-        sheet.append_row(new_row)
-        st.success("✅ Data added successfully!")
+        st.subheader("📅 Monthly Overview")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("📈 Total Sales This Month", f"₹ {current_month_sales:.2f}")
+        with col2:
+            st.metric("📉 Total Purchases This Month", f"₹ {current_month_purchases:.2f}")
 
-elif page == "📊 Data Table":
-    st.header("📄 Submitted Data")
-    st.dataframe(df)
+        # Sales vs Date Graph
+        st.subheader("📈 Sales vs Date")
+        fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
+        st.plotly_chart(fig)
+
+        # Monthly Sales & Purchase Summary
+        st.subheader("📊 Monthly Sales & Purchase Summary")
+        monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
+        st.dataframe(monthly_summary)
+
+    elif page == "📊 Data Table":
+        st.header("📄 Submitted Data")
+        st.dataframe(df)
