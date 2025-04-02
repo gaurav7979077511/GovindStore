@@ -3,8 +3,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-import os
 import plotly.express as px
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
@@ -37,32 +35,31 @@ def fetch_data():
 
 df = fetch_data()
 
-# Layout
+# Data Preprocessing
+df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+df["Year"] = df["Date"].dt.year
+df["Month"] = df["Date"].dt.month
+df["Sale Amount"] = pd.to_numeric(df["Sale Amount"], errors="coerce").fillna(0)
+df["Purchase Amount"] = pd.to_numeric(df["Purchase Amount"], errors="coerce").fillna(0)
+
+today = pd.Timestamp.now()
+
+# Sidebar Navigation
 st.sidebar.title("📊 Dashboard Navigation")
-page = st.sidebar.radio("Go to", ["📈 Dashboard" , "📋 Monthly Data", "📋 Form Entry", "📊 Data Table"])
+page = st.sidebar.radio("Go to", ["📈 Dashboard", "📊 Monthly Summary", "📋 Form Entry", "📄 Data Table"])
 
 if page == "📈 Dashboard":
     st.header("📊 Business Overview")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    df["Year"] = df["Date"].dt.year
-    df["Month"] = df["Date"].dt.month
-
-    df["Sale Amount"] = pd.to_numeric(df["Sale Amount"], errors="coerce").fillna(0)
-    df["Purchase Amount"] = pd.to_numeric(df["Purchase Amount"], errors="coerce").fillna(0)
-
+    
     # Current Month Sales & Purchases
-    today = pd.Timestamp.now()
     current_month_sales = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Sale Amount"].sum()
     current_month_purchases = df[(df["Year"] == today.year) & (df["Month"] == today.month)]["Purchase Amount"].sum()
-
+    
     st.subheader("📅 Monthly Overview")
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric("📈 Total Sales of "+today.month, f"₹ {current_month_sales:.2f}")
-    with col2:
-        st.metric("📉 Total Purchases of "+today.month, f"₹ {current_month_purchases:.2f}")
-
-
+    col1.metric("📈 Total Sales This Month", f"₹ {current_month_sales:.2f}")
+    col2.metric("📉 Total Purchases This Month", f"₹ {current_month_purchases:.2f}")
+    
     # Sales & Purchase Projection
     def forecast_next_month(data, column):
         data = data[["Date", column]].dropna()
@@ -75,52 +72,40 @@ if page == "📈 Dashboard":
         model_fit = model.fit()
         forecast = model_fit.forecast(steps=1)
         return forecast.iloc[0]
-
+    
     next_month_sales = forecast_next_month(df, "Sale Amount")
     next_month_purchases = forecast_next_month(df, "Purchase Amount")
-
+    
     st.subheader("🔮 Sales & Purchase Projection")
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
-    with col2:
-        st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
-
+    col1.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
+    col2.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
+    
     # Sales vs Date Graph
-    st.subheader("📈 Sales vs Date")
-    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
+    st.subheader("📈 Sales Trend")
+    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount Over Time", labels={"Sale Amount": "Sales (₹)"})
     st.plotly_chart(fig)
 
-if page == "📋 Monthly Data":
-        # Monthly Sales & Purchase Summary
-        st.subheader("📊 Monthly Sales & Purchase Summary")
-        monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
-        st.dataframe(monthly_summary)
+elif page == "📊 Monthly Summary":
+    st.header("📅 Monthly Sales & Purchase Summary")
+    monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
+    st.dataframe(monthly_summary)
 
-
-
-if page == "📋 Form Entry":
+elif page == "📋 Form Entry":
     st.header("➕ Add New Entry")
     date = st.date_input("📅 Select Date")
     entry_type = st.selectbox("📌 Type", ["Sale", "Purchase"])
-    doc_file = None
-    if entry_type == "Sale":
-        amount = st.number_input("💲 Sale Amount", min_value=0.0, format="%.2f")
-        comment = st.text_input("📝 Sale Comment")
-        doc_file = st.file_uploader("📂 Upload Sale Document", type=["jpg", "jpeg", "png", "pdf"])
-        folder_id = SALE_FOLDER_ID
-    else:
-        amount = st.number_input("💲 Purchase Amount", min_value=0.0, format="%.2f")
-        comment = st.text_input("📝 Purchase Comment")
-        doc_file = st.file_uploader("📂 Upload Purchase Document", type=["jpg", "jpeg", "png", "pdf"])
-        folder_id = PURCHASE_FOLDER_ID
+    amount = st.number_input("💲 Amount", min_value=0.0, format="%.2f")
+    comment = st.text_input("📝 Comment")
+    doc_file = st.file_uploader("📂 Upload Document", type=["jpg", "jpeg", "png", "pdf"])
+    folder_id = SALE_FOLDER_ID if entry_type == "Sale" else PURCHASE_FOLDER_ID
 
     if st.button("✅ Submit"):
-        doc_url = upload_to_drive(f"/tmp/{doc_file.name}", doc_file.name, folder_id) if doc_file else ""
+        doc_url = ""  # Placeholder for upload logic
         new_row = [str(pd.Timestamp.now()), str(date), entry_type, amount if entry_type == "Sale" else "", comment if entry_type == "Sale" else "", doc_url if entry_type == "Sale" else "", amount if entry_type == "Purchase" else "", comment if entry_type == "Purchase" else "", doc_url if entry_type == "Purchase" else ""]
         sheet.append_row(new_row)
         st.success("✅ Data added successfully!")
 
-elif page == "📊 Data Table":
+elif page == "📄 Data Table":
     st.header("📄 Submitted Data")
     st.dataframe(df)
