@@ -85,7 +85,11 @@ elif page == "📈 Analytics & Forecast":
     df["Month"] = df["Date"].dt.month
     
     # Monthly sales & purchase trend
+    df["Sale Amount"] = pd.to_numeric(df["Sale Amount"], errors="coerce").fillna(0)
+    df["Purchase Amount"] = pd.to_numeric(df["Purchase Amount"], errors="coerce").fillna(0)
+
     monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
+
     fig = px.line(monthly_summary, x=monthly_summary.index, y=["Sale Amount", "Purchase Amount"], markers=True, title="Monthly Sales & Purchase Trend")
     st.plotly_chart(fig)
     
