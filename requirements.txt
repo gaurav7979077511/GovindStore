@@ -1,11 +1,11 @@
 streamlit
-pandas
 gspread
+pandas
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
-google-auth-python-toolkit
-googleapiclient
+google-auth-service-account
+google-api-python-client
 plotly
 statsmodels
 bcrypt
