@@ -72,6 +72,29 @@ if page == "📈 Dashboard":
     monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
     st.dataframe(monthly_summary)
 
+    # Sales & Purchase Projection
+    def forecast_next_month(data, column):
+        data = data[["Date", column]].dropna()
+        data.set_index("Date", inplace=True)
+        
+        if len(data) < 24:
+            return data[column].rolling(window=3, min_periods=1).mean().iloc[-1]  # Moving avg fallback
+        
+        model = ExponentialSmoothing(data[column], seasonal="add", seasonal_periods=12)
+        model_fit = model.fit()
+        forecast = model_fit.forecast(steps=1)
+        return forecast.iloc[0]
+
+    next_month_sales = forecast_next_month(df, "Sale Amount")
+    next_month_purchases = forecast_next_month(df, "Purchase Amount")
+
+    st.subheader("🔮 Sales & Purchase Projection")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
+    with col2:
+        st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
+
 if page == "📋 Form Entry":
     st.header("➕ Add New Entry")
     date = st.date_input("📅 Select Date")
