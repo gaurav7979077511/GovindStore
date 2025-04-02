@@ -102,6 +102,10 @@ elif page == "📈 Analytics & Forecast":
     def forecast_next_month(data, column):
         data = data[["Date", column]].dropna()
         data.set_index("Date", inplace=True)
+        
+        if len(data) < 24:
+            return data[column].rolling(window=3, min_periods=1).mean().iloc[-1]  # Moving avg fallback
+        
         model = ExponentialSmoothing(data[column], seasonal="add", seasonal_periods=12)
         model_fit = model.fit()
         forecast = model_fit.forecast(steps=1)
