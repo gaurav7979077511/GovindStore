@@ -39,7 +39,7 @@ df = fetch_data()
 
 # Layout
 st.sidebar.title("📊 Dashboard Navigation")
-page = st.sidebar.radio("Go to", ["📈 Dashboard", "📋 Form Entry", "📊 Data Table"])
+page = st.sidebar.radio("Go to", ["📈 Dashboard" , "📋 Monthly Data", "📋 Form Entry", "📊 Data Table"])
 
 if page == "📈 Dashboard":
     st.header("📊 Business Overview")
@@ -58,19 +58,10 @@ if page == "📈 Dashboard":
     st.subheader("📅 Monthly Overview")
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("📈 Total Sales This Month", f"₹ {current_month_sales:.2f}")
+        st.metric("📈 Total Sales of "+today.month, f"₹ {current_month_sales:.2f}")
     with col2:
-        st.metric("📉 Total Purchases This Month", f"₹ {current_month_purchases:.2f}")
+        st.metric("📉 Total Purchases of "+today.month, f"₹ {current_month_purchases:.2f}")
 
-    # Sales vs Date Graph
-    st.subheader("📈 Sales vs Date")
-    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
-    st.plotly_chart(fig)
-
-    # Monthly Sales & Purchase Summary
-    st.subheader("📊 Monthly Sales & Purchase Summary")
-    monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
-    st.dataframe(monthly_summary)
 
     # Sales & Purchase Projection
     def forecast_next_month(data, column):
@@ -94,6 +85,19 @@ if page == "📈 Dashboard":
         st.metric("📈 Projected Sales for Next Month", f"₹ {next_month_sales:.2f}")
     with col2:
         st.metric("📉 Projected Purchases for Next Month", f"₹ {next_month_purchases:.2f}")
+
+    # Sales vs Date Graph
+    st.subheader("📈 Sales vs Date")
+    fig = px.bar(df, x="Date", y="Sale Amount", title="Sales Amount per Date", labels={"Sale Amount": "Sales (₹)"})
+    st.plotly_chart(fig)
+
+if page == "📋 Monthly Data":
+        # Monthly Sales & Purchase Summary
+        st.subheader("📊 Monthly Sales & Purchase Summary")
+        monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
+        st.dataframe(monthly_summary)
+
+
 
 if page == "📋 Form Entry":
     st.header("➕ Add New Entry")
