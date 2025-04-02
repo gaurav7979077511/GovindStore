@@ -4,8 +4,8 @@ from google.oauth2.service_account import Credentials
 import pandas as pd
 
 # Google Sheets Authentication
-SHEET_ID = "1NTwh2GsadyZFEiSMpjSgDX5EjMTPpZUJ0BVfVWOVClw"
-SHEET_NAME = "Data"
+SHEET_ID = "1UaxMdDoNHFXd1CNP0Exm2IN0KOiKtBKM-YK3q5FWe0A"
+SHEET_NAME = "SalePurchaseData"
 
 # Load credentials from Streamlit Secrets (create a copy)
 creds_dict = dict(st.secrets["gcp_service_account"])  # ✅ Create a mutable copy
@@ -26,22 +26,31 @@ except Exception as e:
     st.stop()
 
 # Streamlit UI
-st.title("📋 Google Sheet Form & Viewer")
+st.title("📋 Sale & Purchase Data")
 
 # Form to add new data
 st.header("➕ Add New Entry")
 
 with st.form(key="entry_form"):
     date = st.date_input("📅 Select Date")
-    item = st.text_input("📦 Enter Item (Category)")
-    rate = st.number_input("💲 Rate (Per KG)", min_value=0.0, format="%.2f")
-    quantity = st.number_input("📏 Quantity (KG)", min_value=0.0, format="%.2f")
+    entry_type = st.selectbox("📌 Type", ["Sale", "Purchase"])
+    
+    if entry_type == "Sale":
+        sale_amount = st.number_input("💲 Sale Amount", min_value=0.0, format="%.2f")
+        sale_comment = st.text_input("📝 Sale Comment")
+        purchase_amount = ""
+        purchase_comment = ""
+    else:
+        sale_amount = ""
+        sale_comment = ""
+        purchase_amount = st.number_input("💲 Purchase Amount", min_value=0.0, format="%.2f")
+        purchase_comment = st.text_input("📝 Purchase Comment")
     
     submit_button = st.form_submit_button(label="✅ Submit")
 
     if submit_button:
         try:
-            new_row = [str(pd.Timestamp.now()), str(date), item, rate, quantity]
+            new_row = [str(pd.Timestamp.now()), str(date), entry_type, sale_amount, sale_comment, "", purchase_amount, purchase_comment, ""]
             sheet.append_row(new_row)
             st.success("✅ Data added successfully!")
         except Exception as e:
