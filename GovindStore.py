@@ -35,22 +35,23 @@ with st.form(key="entry_form"):
     date = st.date_input("📅 Select Date")
     entry_type = st.selectbox("📌 Type", ["Sale", "Purchase"])
     
+    sale_amount = None
+    sale_comment = ""
+    purchase_amount = None
+    purchase_comment = ""
+    
     if entry_type == "Sale":
-        sale_amount = st.number_input("💲 Sale Amount", min_value=0.0, format="%.2f")
-        sale_comment = st.text_input("📝 Sale Comment")
-        purchase_amount = ""
-        purchase_comment = ""
+        sale_amount = st.number_input("💲 Sale Amount", min_value=0.0, format="%.2f", key="sale_amount")
+        sale_comment = st.text_input("📝 Sale Comment", key="sale_comment")
     else:
-        sale_amount = ""
-        sale_comment = ""
-        purchase_amount = st.number_input("💲 Purchase Amount", min_value=0.0, format="%.2f")
-        purchase_comment = st.text_input("📝 Purchase Comment")
+        purchase_amount = st.number_input("💲 Purchase Amount", min_value=0.0, format="%.2f", key="purchase_amount")
+        purchase_comment = st.text_input("📝 Purchase Comment", key="purchase_comment")
     
     submit_button = st.form_submit_button(label="✅ Submit")
 
     if submit_button:
         try:
-            new_row = [str(pd.Timestamp.now()), str(date), entry_type, sale_amount, sale_comment, "", purchase_amount, purchase_comment, ""]
+            new_row = [str(pd.Timestamp.now()), str(date), entry_type, sale_amount or "", sale_comment, "", purchase_amount or "", purchase_comment, ""]
             sheet.append_row(new_row)
             st.success("✅ Data added successfully!")
         except Exception as e:
