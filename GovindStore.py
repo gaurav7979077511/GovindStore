@@ -91,15 +91,22 @@ elif page == "📊 Monthly Summary":
     monthly_summary = df.groupby(["Year", "Month"]).agg({"Sale Amount": "sum", "Purchase Amount": "sum"}).reset_index()
     st.dataframe(monthly_summary)
 
-elif page == "📋 Form Entry":
+if page == "📋 Form Entry":
     st.header("➕ Add New Entry")
     date = st.date_input("📅 Select Date")
     entry_type = st.selectbox("📌 Type", ["Sale", "Purchase"])
-    amount = st.number_input("💲 Amount", min_value=0.0, format="%.2f")
-    comment = st.text_input("📝 Comment")
-    doc_file = st.file_uploader("📂 Upload Document", type=["jpg", "jpeg", "png", "pdf"])
-    folder_id = SALE_FOLDER_ID if entry_type == "Sale" else PURCHASE_FOLDER_ID
-
+    doc_file = None
+    if entry_type == "Sale":
+        amount = st.number_input("₹ Sale Amount", min_value=0.0, format="%.2f")
+        comment = st.text_input("📝 Sale Comment")
+        doc_file = st.file_uploader("📂 Upload Sale Document", type=["jpg", "jpeg", "png", "pdf"])
+        folder_id = SALE_FOLDER_ID
+    else:
+        amount = st.number_input("₹ Purchase Amount", min_value=0.0, format="%.2f")
+        comment = st.text_input("📝 Purchase Comment")
+        doc_file = st.file_uploader("📂 Upload Purchase Document", type=["jpg", "jpeg", "png", "pdf"])
+        folder_id = PURCHASE_FOLDER_ID
+        
     if st.button("✅ Submit"):
         doc_url = ""  # Placeholder for upload logic
         new_row = [str(pd.Timestamp.now()), str(date), entry_type, amount if entry_type == "Sale" else "", comment if entry_type == "Sale" else "", doc_url if entry_type == "Sale" else "", amount if entry_type == "Purchase" else "", comment if entry_type == "Purchase" else "", doc_url if entry_type == "Purchase" else ""]
