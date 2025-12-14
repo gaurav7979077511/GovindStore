@@ -62,7 +62,7 @@ def connect_to_sheets():
 
 
 # ✅ Get cached sheets
-AUTH_sheet, COLLECTION_sheet, EXPENSE_sheet, INVESTMENT_sheet ,BANK_sheet= connect_to_sheets()
+AUTH_sheet= connect_to_sheets()
 
 # Function to load authentication data securely
 @st.cache_resource # Cache for 5 minutes
