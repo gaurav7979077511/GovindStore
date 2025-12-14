@@ -983,8 +983,8 @@ else:
                         unsafe_allow_html=True,
                     )
 
-        elif page=="Medication":
-            st.title("Medication")
+    elif page=="Medication":
+        st.title("Medication")
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
