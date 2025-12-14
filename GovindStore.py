@@ -1028,7 +1028,7 @@ elif page == "Manage Customers":
     def open_customer_sheet():
         client = init_gsheets()
         sh = client.open_by_key(MAIN_SHEET_ID)
-        return sh.worksheet(CUSTOMER_SHEET_TAB)
+        return sh.worksheet(CUSTOMER_TAB)
 
     def get_customers_df():
         ws = open_customer_sheet()
