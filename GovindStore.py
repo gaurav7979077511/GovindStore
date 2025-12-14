@@ -381,9 +381,183 @@ else:
                         unsafe_allow_html=True
                     )
 
+    #--------
+    elif page == "Expense":
+
+        st.title("💸 Expense")
     
-    elif page=="Expense":
-        st.title("Expense")
+        EXPENSE_HEADER = [
+            "ExpenseID","Date","Category","SubCategory","CowID",
+            "Amount","PaymentMode","ExpenseBy","Reference",
+            "FileURL","Notes","Timestamp"
+        ]
+    
+        # ======================================================
+        # SHEET HELPERS
+        # ======================================================
+        def open_expense_sheet():
+            return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
+    
+        def load_expenses():
+            ws = open_expense_sheet()
+            rows = ws.get_all_values()
+    
+            if not rows or rows[0] != EXPENSE_HEADER:
+                ws.clear()
+                ws.insert_row(EXPENSE_HEADER, 1)
+                return pd.DataFrame(columns=EXPENSE_HEADER)
+    
+            return pd.DataFrame(rows[1:], columns=rows[0])
+    
+        def append_expense(row):
+            open_expense_sheet().append_row(
+                row, value_input_option="USER_ENTERED"
+            )
+    
+        # ======================================================
+        # GOOGLE DRIVE UPLOAD
+        # ======================================================
+        def upload_to_drive(file):
+            """
+            Uploads file to fixed Drive folder and returns shareable link
+            """
+            from googleapiclient.discovery import build
+            from googleapiclient.http import MediaIoBaseUpload
+            import io
+    
+            creds_dict = dict(st.secrets["gcp_service_account"])
+            creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+    
+            creds = Credentials.from_service_account_info(
+                creds_dict,
+                scopes=["https://www.googleapis.com/auth/drive"]
+            )
+    
+            service = build("drive", "v3", credentials=creds)
+    
+            folder_id = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
+    
+            file_metadata = {
+                "name": file.name,
+                "parents": [folder_id]
+            }
+    
+            media = MediaIoBaseUpload(
+                io.BytesIO(file.getbuffer()),
+                mimetype=file.type,
+                resumable=False
+            )
+    
+            uploaded = service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields="id"
+            ).execute()
+    
+            file_id = uploaded.get("id")
+    
+            # Make file readable
+            service.permissions().create(
+                fileId=file_id,
+                body={"type": "anyone", "role": "reader"}
+            ).execute()
+    
+            return f"https://drive.google.com/file/d/{file_id}/view"
+    
+        # ======================================================
+        # ADD EXPENSE
+        # ======================================================
+        st.subheader("➕ Add Expense")
+    
+        with st.form("add_expense"):
+    
+            c1, c2, c3 = st.columns(3)
+    
+            with c1:
+                date = st.date_input("Date", value=dt.date.today())
+                category = st.selectbox(
+                    "Category",
+                    ["Feed","Medicine","Labour","Electricity","Maintenance","Other"]
+                )
+                sub_category = st.text_input("Sub Category")
+    
+            with c2:
+                cows_df = load_cows()
+                cow_ids = ["All"] + cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
+                cow_id = st.selectbox("CowID", cow_ids)
+    
+                amount = st.number_input("Amount", min_value=0.0, step=10.0)
+                payment_mode = st.selectbox("Payment Mode", ["Cash","UPI","Bank"])
+    
+            with c3:
+                expense_by = st.text_input(
+                    "Expense By",
+                    value=st.session_state.user_name,
+                    disabled=True
+                )
+                reference = st.text_input("Reference / Bill No")
+                file = st.file_uploader(
+                    "Upload Bill (Image / PDF)",
+                    type=["png","jpg","jpeg","pdf"]
+                )
+    
+            notes = st.text_area("Notes")
+    
+            save, cancel = st.columns(2)
+            save_btn = save.form_submit_button("💾 Save")
+            cancel_btn = cancel.form_submit_button("❌ Cancel")
+    
+        if cancel_btn:
+            st.rerun()
+    
+        if save_btn:
+    
+            if amount <= 0:
+                st.error("❌ Amount must be greater than zero")
+                st.stop()
+    
+            file_url = ""
+            if file:
+                with st.spinner("Uploading file to Drive..."):
+                    file_url = upload_to_drive(file)
+    
+            expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+            ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+            append_expense([
+                expense_id,
+                date.strftime("%Y-%m-%d"),
+                category,
+                sub_category,
+                cow_id,
+                amount,
+                payment_mode,
+                st.session_state.user_name,
+                reference,
+                file_url,
+                notes,
+                ts
+            ])
+    
+            st.success("Expense saved successfully ✅")
+            st.rerun()
+    
+        # ======================================================
+        # EXPENSE LIST
+        # ======================================================
+        st.subheader("📋 Expense Records")
+    
+        df_exp = load_expenses()
+    
+        if df_exp.empty:
+            st.info("No expenses recorded yet.")
+        else:
+            df_exp["Amount"] = pd.to_numeric(df_exp["Amount"], errors="coerce")
+            st.dataframe(
+                df_exp.sort_values("Date", ascending=False),
+                use_container_width=True
+            )
+
     
     elif page=="Investment":
         st.title("Investment")
