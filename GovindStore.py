@@ -193,7 +193,147 @@ else:
         st.title("Billing")
     
     elif page=="Cow Profile":
-        st.title("Cow Profile")
+
+        st.title("🐄🐃 Cow Profile")
+    
+        CURRENT_YEAR = dt.datetime.now().year
+    
+        # ---------- STATE ----------
+        if "show_add_cow" not in st.session_state:
+            st.session_state.show_add_cow = False
+    
+        if "edit_cow_id" not in st.session_state:
+            st.session_state.edit_cow_id = None
+    
+        # ---------- SHEET ----------
+        def open_cow_sheet():
+            return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
+    
+        def load_cows():
+            ws = open_cow_sheet()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame(columns=[
+                    "CowID","ParentCowID","AnimalType","Gender","Breed",
+                    "AgeYears","PurchaseDate","PurchasePrice",
+                    "Status","HealthStatus","Notes","BirthYear","Timestamp"
+                ])
+            return pd.DataFrame(rows[1:], columns=rows[0])
+    
+        # ---------- ADD COW ----------
+        if st.button("➕ Add Cow / Buffalo"):
+            st.session_state.show_add_cow = True
+    
+        if st.session_state.show_add_cow:
+            with st.form("add_cow_form"):
+                c1, c2, c3 = st.columns(3)
+    
+                with c1:
+                    animal_type = st.selectbox("Animal Type", ["Cow", "Buffalo"])
+                    gender = st.selectbox("Gender", ["Female", "Male"])
+                    breed = st.text_input("Breed")
+    
+                with c2:
+                    age_years = st.number_input("Age (Years)", min_value=0, step=1)
+                    purchase_date = st.date_input("Purchase Date")
+                    purchase_price = st.number_input("Purchase Price", min_value=0.0, step=100.0)
+    
+                with c3:
+                    cows_df = load_cows()
+                    active_cows = cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
+                    parent_id = st.selectbox(
+                        "Parent Cow (Optional)",
+                        [""] + active_cows
+                    )
+                    status = st.selectbox("Status", ["Active", "Sick", "Sold", "Dead"])
+                    health = st.selectbox("Health Status", ["Healthy", "Sick"])
+    
+                notes = st.text_area("Notes")
+    
+                a, b = st.columns(2)
+                save = a.form_submit_button("Save")
+                cancel = b.form_submit_button("Cancel")
+    
+            if cancel:
+                st.session_state.show_add_cow = False
+                st.rerun()
+    
+            if save:
+                prefix = "COW" if animal_type == "Cow" else "BUF"
+                cow_id = f"{prefix}{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                birth_year = CURRENT_YEAR - int(age_years)
+    
+                ws = open_cow_sheet()
+                ws.append_row([
+                    cow_id,
+                    parent_id,
+                    animal_type,
+                    gender,
+                    breed,
+                    age_years,
+                    purchase_date.strftime("%Y-%m-%d"),
+                    purchase_price,
+                    status,
+                    health,
+                    notes,
+                    birth_year,
+                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ])
+    
+                st.success("Cow profile added successfully ✅")
+                st.session_state.show_add_cow = False
+                st.rerun()
+    
+        # ---------- DISPLAY COW CARDS ----------
+        st.markdown("### 📋 Cow List")
+        df = load_cows()
+    
+        if df.empty:
+            st.info("No cow records found.")
+        else:
+            for i, row in df.iterrows():
+                if i % 4 == 0:
+                    cols = st.columns(4)
+    
+                # 🔁 AUTO AGE CALCULATION
+                age = CURRENT_YEAR - int(row["BirthYear"])
+    
+                # 🎨 STATUS COLOR
+                gradient = {
+                    "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
+                    "Sick": "linear-gradient(135deg,#f7971e,#ffd200)",
+                    "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
+                    "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
+                }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
+    
+                parent_text = (
+                    f"👩 Mother: {row['ParentCowID']}"
+                    if row["ParentCowID"] else "👩 Mother: N/A"
+                )
+    
+                card_html = f"""
+                <div style="
+                    padding:12px;
+                    border-radius:14px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.3;
+                ">
+                    <div style="font-size:15px;font-weight:800;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    </div>
+                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
+                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
+                    <div style="font-size:12px;">Age: {age} Years</div>
+                    <div style="font-size:12px;">Status: {row['Status']}</div>
+                    <div style="font-size:12px;">{parent_text}</div>
+                </div>
+                """
+    
+                with cols[i % 4]:
+                    components.html(card_html, height=180)
+
 
 
     elif page == "Manage Customers":   
