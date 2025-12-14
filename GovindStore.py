@@ -384,7 +384,7 @@ else:
     #--------
     elif page == "Expense":
 
-        st.title("💸 Expense")
+        st.title("💸 Expense------")
     
         EXPENSE_HEADER = [
             "ExpenseID","Date","Category","SubCategory","CowID",
