@@ -118,7 +118,15 @@ if not st.session_state.authenticated:
 # DASHBOARD
 # ============================================================
 else:
-    
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.authenticated = False
+        st.session_state.user_role = None
+        st.session_state.username = None
+        st.session_state.user_name = None
+        st.experimental_set_query_params(logged_in="false")
+        st.rerun()
+
+    st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
     # ============================================================
     # UTILITY FUNCTIONS
