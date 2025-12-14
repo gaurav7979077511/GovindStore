@@ -161,8 +161,15 @@ else:
     page = st.sidebar.radio(
         "Go to",
         [
+            "Dashboard",
+            "Milk Bitran",
+            "Milking & Feeding",
             "Manage Customers",
-            "Milk Bitran"
+            "Expese",
+            "Investment",
+            "Billing",
+            "Cow Profile"
+            
         ],
     )
 
@@ -170,10 +177,26 @@ else:
     # ----------------------------
     # MANAGE CUSTOMERS PAGE
     # ----------------------------
-    if page == "Manage Customers":
+    if page =="Dashboard":
+        st.title("Dashboard")
+    
+    elif page=="Milking & Feeding":
+        st.title("Milking & Feeding")
+    
+    elif page=="Expese":
+        st.title("Expese")
+    
+    elif page=="Investment":
+        st.title("Investment")
+    
+    elif page=="Billing":
+        st.title("Billing")
+    
+    elif page=="Cow Profile":
+        st.title("Cow Profile")
 
 
-        
+    elif page == "Manage Customers":   
 
         st.title("👥 Manage Customers")
 
