@@ -165,7 +165,7 @@ else:
             "Dashboard",
             "Milk Bitran",
             "Milking",
-            "Manage Customers",
+            "Customers",
             "Expense",
             "Investment",
             "Payment",
@@ -638,7 +638,7 @@ else:
                             st.session_state.edit_cow_id = None
                             st.rerun()
 
-    elif page == "Manage Customers":   
+    elif page == "Customers":   
 
         st.title("👥 Manage Customers")
 
