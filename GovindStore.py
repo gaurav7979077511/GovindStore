@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import urllib.parse
 import streamlit.components.v1 as components
+import datetime as dt
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -30,6 +31,8 @@ PAYMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{PAYMENT_SHEET_ID}/gv
 
 
 MAIN_SHEET_ID = st.secrets["sheets"]["MAIN_SHEET_ID"]
+CUSTOMER_TAB = "Manage_Customer"
+BITRAN_TAB = "Milk_Distrubution"
 
 # ============================================================
 # UTILITY FUNCTIONS
@@ -993,10 +996,8 @@ elif page == "Investments":
 # ----------------------------
 elif page == "Manage Customers":
 
-    import streamlit as st
-    import pandas as pd
-    import streamlit.components.v1 as components
-    import datetime as dt
+
+    
 
     st.title("👥 Manage Customers")
 
@@ -1007,12 +1008,7 @@ elif page == "Manage Customers":
     if "edit_customer_id" not in st.session_state:
         st.session_state.edit_customer_id = None
 
-    # ---------- CONFIG ----------
-    CUSTOMER_SHEET_ID = st.secrets.get("sheets", {}).get(
-        "CUSTOMER_SHEET_ID",
-        "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
-    )
-    CUSTOMER_SHEET_TAB = "Manage_Customer"
+   
 
     # ---------- GOOGLE SHEETS ----------
     def init_gsheets():
@@ -1031,7 +1027,7 @@ elif page == "Manage Customers":
 
     def open_customer_sheet():
         client = init_gsheets()
-        sh = client.open_by_key(CUSTOMER_SHEET_ID)
+        sh = client.open_by_key(MAIN_SHEET_ID)
         return sh.worksheet(CUSTOMER_SHEET_TAB)
 
     def get_customers_df():
@@ -1198,15 +1194,6 @@ elif page == "Milk Bitran":
 
     st.title("🥛 Milk Bitran")
 
-    # ================= CONFIG =================
-    CUSTOMER_SHEET_ID = st.secrets["sheets"].get(
-        "CUSTOMER_SHEET_ID",
-        "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
-    )
-    MILK_BITRAN_SHEET_ID = "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
-
-    CUSTOMER_TAB = "Manage_Customer"
-    BITRAN_TAB = "Milk_Distrubution"
 
     BITRAN_HEADER = [
         "Date", "Shift", "CustomerID",
