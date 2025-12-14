@@ -440,7 +440,7 @@ else:
         
             file_metadata = {
                 "name": file.name,
-                "parents": ["18o_AoRLSSIDsrhAAPMM_afHxmW3krLQP"]  # Expense_Uploads_Service
+                "parents": ["15Psaa910zDiStFNH76MMtPRhqdmgNe98"]  # Expense_Uploads_Service
             }
         
             media = MediaIoBaseUpload(
