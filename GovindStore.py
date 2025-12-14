@@ -192,18 +192,21 @@ else:
     elif page=="Billing":
         st.title("Billing")
     
-    elif page=="Cow Profile":
+    elif page == "Cow Profile":
 
         st.title("🐄🐃 Cow Profile")
     
         CURRENT_YEAR = dt.datetime.now().year
     
+        COW_HEADER = [
+            "CowID","ParentCowID","AnimalType","Gender","Breed",
+            "AgeYears","PurchaseDate","PurchasePrice",
+            "Status","HealthStatus","Notes","BirthYear","Timestamp"
+        ]
+    
         # ---------- STATE ----------
         if "show_add_cow" not in st.session_state:
             st.session_state.show_add_cow = False
-    
-        if "edit_cow_id" not in st.session_state:
-            st.session_state.edit_cow_id = None
     
         # ---------- SHEET ----------
         def open_cow_sheet():
@@ -212,12 +215,13 @@ else:
         def load_cows():
             ws = open_cow_sheet()
             rows = ws.get_all_values()
-            if len(rows) <= 1:
-                return pd.DataFrame(columns=[
-                    "CowID","ParentCowID","AnimalType","Gender","Breed",
-                    "AgeYears","PurchaseDate","PurchasePrice",
-                    "Status","HealthStatus","Notes","BirthYear","Timestamp"
-                ])
+    
+            # ✅ Ensure header exists (self-healing)
+            if not rows or rows[0] != COW_HEADER:
+                ws.clear()
+                ws.insert_row(COW_HEADER, 1)
+                return pd.DataFrame(columns=COW_HEADER)
+    
             return pd.DataFrame(rows[1:], columns=rows[0])
     
         # ---------- ADD COW ----------
@@ -241,10 +245,12 @@ else:
                 with c3:
                     cows_df = load_cows()
                     active_cows = cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
+    
                     parent_id = st.selectbox(
                         "Parent Cow (Optional)",
                         [""] + active_cows
                     )
+    
                     status = st.selectbox("Status", ["Active", "Sick", "Sold", "Dead"])
                     health = st.selectbox("Health Status", ["Healthy", "Sick"])
     
@@ -264,21 +270,24 @@ else:
                 birth_year = CURRENT_YEAR - int(age_years)
     
                 ws = open_cow_sheet()
-                ws.append_row([
-                    cow_id,
-                    parent_id,
-                    animal_type,
-                    gender,
-                    breed,
-                    age_years,
-                    purchase_date.strftime("%Y-%m-%d"),
-                    purchase_price,
-                    status,
-                    health,
-                    notes,
-                    birth_year,
-                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                ])
+                ws.append_row(
+                    [
+                        cow_id,
+                        parent_id,
+                        animal_type,
+                        gender,
+                        breed,
+                        age_years,
+                        purchase_date.strftime("%Y-%m-%d"),
+                        purchase_price,
+                        status,
+                        health,
+                        notes,
+                        birth_year,
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
     
                 st.success("Cow profile added successfully ✅")
                 st.session_state.show_add_cow = False
@@ -333,6 +342,7 @@ else:
     
                 with cols[i % 4]:
                     components.html(card_html, height=180)
+
 
 
 
