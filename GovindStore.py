@@ -436,11 +436,11 @@ else:
                 scopes=["https://www.googleapis.com/auth/drive"]
             )
         
-            service = build("drive", "v3", credentials=creds)
+            service = build("drive", "v3", credentials=creds, cache_discovery=False)
         
             file_metadata = {
                 "name": file.name,
-                "parents": ["18o_AoRLSSIDsrhAAPMM_afHxmW3krLQP"],  # Expense_Uploads_Service folder ID
+                "parents": ["18o_AoRLSSIDsrhAAPMM_afHxmW3krLQP"]  # Expense_Uploads_Service
             }
         
             media = MediaIoBaseUpload(
@@ -456,10 +456,10 @@ else:
                 supportsAllDrives=True
             ).execute()
         
-            # Make file viewable
+            # Make file public
             service.permissions().create(
                 fileId=uploaded["id"],
-                body={"role": "reader", "type": "anyone"},
+                body={"type": "anyone", "role": "reader"},
                 supportsAllDrives=True
             ).execute()
         
@@ -521,11 +521,12 @@ else:
             file_url = ""
             if file:
                 try:
-                    with st.spinner("Uploading file to Drive..."):
-                        file_url = upload_to_drive(file)
-                except Exception:
-                    st.error("❌ File upload failed. Check Drive permissions.")
+                    file_url = upload_to_drive(file)
+                except Exception as e:
+                    st.error("❌ DRIVE UPLOAD ERROR (REAL MESSAGE BELOW)")
+                    st.code(str(e))
                     st.stop()
+
     
             expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
             ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
