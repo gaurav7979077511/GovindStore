@@ -22,7 +22,7 @@ MAIN_SHEET_ID = st.secrets["sheets"]["MAIN_SHEET_ID"]
 CUSTOMER_TAB = "Manage_Customer"
 BITRAN_TAB = "Milk_Distrubution"
 COW_PROFILE_TAB = "Cow_Profile"
-MILKING_FEEDING_TAB = "Milking_Feeding"
+MILKING_TAB = "Milking"
 EXPENSE_TAB = "Expense"
 INVESTMENT_TAB = "Investment"
 PAYMENT_TAB = "Payment"
@@ -163,7 +163,7 @@ else:
         [
             "Dashboard",
             "Milk Bitran",
-            "Milking & Feeding",
+            "Milking",
             "Manage Customers",
             "Expese",
             "Investment",
@@ -180,7 +180,7 @@ else:
     if page =="Dashboard":
         st.title("Dashboard")
     
-    elif page=="Milking & Feeding":
+    elif page=="Milking":
         st.title("Milking & Feeding")
     
     elif page=="Expese":
