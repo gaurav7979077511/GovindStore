@@ -1,12 +1,5 @@
 streamlit
 pandas
-numpy
-bcrypt
-gspread
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-matplotlib
-google-api-python-client
 plotly
-statsmodels
+gspread
+oauth2client
