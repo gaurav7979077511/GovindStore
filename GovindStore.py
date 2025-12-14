@@ -173,6 +173,30 @@ else:
         ],
     )
 
+    # ============================================================
+    # GLOBAL COW HELPERS (USED BY MULTIPLE MODULES)
+    # ============================================================
+    
+    COW_HEADER = [
+        "CowID","ParentCowID","AnimalType","Gender","Breed",
+        "AgeYears","PurchaseDate","PurchasePrice",
+        "SoldPrice","SoldDate",
+        "Status","MilkingStatus",
+        "Notes","BirthYear","Timestamp"
+    ]
+    
+    def open_cow_sheet():
+        return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
+    
+    @st.cache_data(ttl=60)
+    def load_cows():
+        ws = open_cow_sheet()
+        rows = ws.get_all_values()
+    
+        if not rows or rows[0] != COW_HEADER:
+            return pd.DataFrame(columns=COW_HEADER)
+    
+        return pd.DataFrame(rows[1:], columns=rows[0])
 
     # ----------------------------
     # MANAGE CUSTOMERS PAGE
@@ -369,16 +393,6 @@ else:
     
         CURRENT_YEAR = dt.datetime.now().year
     
-        # ======================================================
-        # SHEET HEADER (MUST MATCH GOOGLE SHEET)
-        # ======================================================
-        COW_HEADER = [
-            "CowID","ParentCowID","AnimalType","Gender","Breed",
-            "AgeYears","PurchaseDate","PurchasePrice",
-            "SoldPrice","SoldDate",
-            "Status","MilkingStatus",
-            "Notes","BirthYear","Timestamp"
-        ]
     
         # ======================================================
         # STATE
@@ -388,22 +402,7 @@ else:
         if "edit_cow_id" not in st.session_state:
             st.session_state.edit_cow_id = None
     
-        # ======================================================
-        # SHEET HELPERS
-        # ======================================================
-        def open_cow_sheet():
-            return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
-    
-        def load_cows():
-            ws = open_cow_sheet()
-            rows = ws.get_all_values()
-    
-            if not rows or rows[0] != COW_HEADER:
-                ws.clear()
-                ws.insert_row(COW_HEADER, 1)
-                return pd.DataFrame(columns=COW_HEADER)
-    
-            return pd.DataFrame(rows[1:], columns=rows[0])
+
     
         def update_cow_by_id(cow_id, updated):
             ws = open_cow_sheet()
