@@ -316,92 +316,88 @@ else:
                 st.session_state.show_add_cow = False
                 st.rerun()
 
-            # ---------- LIST ----------
-            st.markdown("### 📋 Cow List")
-            df = load_cows()
-    
-            for i, row in df.iterrows():
-                if i % 4 == 0:
-                    cols = st.columns(4)
-    
-                age = CURRENT_YEAR - int(row["BirthYear"])
-                gradient = {
-                    "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
-                    "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
-                    "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
-                }.get(row["Status"], "#333")
-    
-                with cols[i % 4]:
-                    components.html(
-                        f"""
-                        <div style="padding:12px;border-radius:14px;
-                        background:{gradient};color:white;">
-                        <b>{'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}</b><br>
-                        Breed: {row['Breed']}<br>
-                        Gender: {row['Gender']}<br>
-                        Age: {age} Years<br>
-                        Status: {row['Status']}<br>
-                        Health: {row['HealthStatus']}
-                        </div>
-                        """,
-                        height=170
-                    )
-    
-                    if st.button("✏️", key=f"edit_{row['CowID']}"):
-                        st.session_state.edit_cow_id = row["CowID"]
-                        st.rerun()
-    
-                    if st.session_state.edit_cow_id == row["CowID"]:
-                        with st.form(f"edit_{row['CowID']}"):
-                            e_breed = st.text_input("Breed", row["Breed"])
-                            e_age = st.number_input("Age", min_value=0, value=age)
-                            e_status = st.selectbox("Status", ["Active","Sold","Dead"],
-                                index=["Active","Sold","Dead"].index(row["Status"]))
-                            e_health = st.selectbox("Health", ["Healthy","Sick"],
-                                index=["Healthy","Sick"].index(row["HealthStatus"]))
-    
-                            e_sold_price = ""
-                            e_sold_date = ""
-                            if e_status == "Sold":
-                                e_sold_price = st.number_input(
-                                    "Sold Price",
-                                    min_value=0.0,
-                                    value=float(row["SoldPrice"]) if row["SoldPrice"] else 0.0
-                                )
-                                e_sold_date = st.date_input(
-                                    "Sold Date",
-                                    value=pd.to_datetime(row["SoldDate"]).date()
-                                    if row["SoldDate"] else dt.date.today()
-                                )
-    
-                            e_notes = st.text_area("Notes", row["Notes"])
-                            u, c = st.columns(2)
-    
-                        if c.form_submit_button("Cancel"):
-                            st.session_state.edit_cow_id = None
-                            st.rerun()
-    
-                        if u.form_submit_button("Update"):
-                            update_cow_by_id(
-                                row["CowID"],
-                                {
-                                    "Breed": e_breed,
-                                    "AgeYears": e_age,
-                                    "Status": e_status,
-                                    "HealthStatus": e_health,
-                                    "SoldPrice": e_sold_price if e_status=="Sold" else "",
-                                    "SoldDate": e_sold_date.strftime("%Y-%m-%d") if e_status=="Sold" else "",
-                                    "Notes": e_notes,
-                                    "BirthYear": CURRENT_YEAR - int(e_age),
-                                }
+        # ---------- LIST ----------
+        st.markdown("### 📋 Cow List")
+        df = load_cows()
+
+        for i, row in df.iterrows():
+            if i % 4 == 0:
+                cols = st.columns(4)
+
+            age = CURRENT_YEAR - int(row["BirthYear"])
+            gradient = {
+                "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
+                "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
+                "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
+            }.get(row["Status"], "#333")
+
+            with cols[i % 4]:
+                components.html(
+                    f"""
+                    <div style="padding:12px;border-radius:14px;
+                    background:{gradient};color:white;">
+                    <b>{'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}</b><br>
+                    Breed: {row['Breed']}<br>
+                    Gender: {row['Gender']}<br>
+                    Age: {age} Years<br>
+                    Status: {row['Status']}<br>
+                    Health: {row['HealthStatus']}
+                    </div>
+                    """,
+                    height=170
+                )
+
+                if st.button("✏️", key=f"edit_{row['CowID']}"):
+                    st.session_state.edit_cow_id = row["CowID"]
+                    st.rerun()
+
+                if st.session_state.edit_cow_id == row["CowID"]:
+                    with st.form(f"edit_{row['CowID']}"):
+                        e_breed = st.text_input("Breed", row["Breed"])
+                        e_age = st.number_input("Age", min_value=0, value=age)
+                        e_status = st.selectbox("Status", ["Active","Sold","Dead"],
+                            index=["Active","Sold","Dead"].index(row["Status"]))
+                        e_health = st.selectbox("Health", ["Healthy","Sick"],
+                            index=["Healthy","Sick"].index(row["HealthStatus"]))
+
+                        e_sold_price = ""
+                        e_sold_date = ""
+                        if e_status == "Sold":
+                            e_sold_price = st.number_input(
+                                "Sold Price",
+                                min_value=0.0,
+                                value=float(row["SoldPrice"]) if row["SoldPrice"] else 0.0
                             )
-                            st.success("Cow updated")
-                            st.session_state.edit_cow_id = None
-                            st.rerun()
+                            e_sold_date = st.date_input(
+                                "Sold Date",
+                                value=pd.to_datetime(row["SoldDate"]).date()
+                                if row["SoldDate"] else dt.date.today()
+                            )
 
+                        e_notes = st.text_area("Notes", row["Notes"])
+                        u, c = st.columns(2)
 
+                    if c.form_submit_button("Cancel"):
+                        st.session_state.edit_cow_id = None
+                        st.rerun()
 
-
+                    if u.form_submit_button("Update"):
+                        update_cow_by_id(
+                            row["CowID"],
+                            {
+                                "Breed": e_breed,
+                                "AgeYears": e_age,
+                                "Status": e_status,
+                                "HealthStatus": e_health,
+                                "SoldPrice": e_sold_price if e_status=="Sold" else "",
+                                "SoldDate": e_sold_date.strftime("%Y-%m-%d") if e_status=="Sold" else "",
+                                "Notes": e_notes,
+                                "BirthYear": CURRENT_YEAR - int(e_age),
+                            }
+                        )
+                        st.success("Cow updated")
+                        st.session_state.edit_cow_id = None
+                        st.rerun()
     elif page == "Manage Customers":   
 
         st.title("👥 Manage Customers")
