@@ -28,6 +28,9 @@ EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gv
 COW_LOG_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COW_LOG_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=dailylog"
 PAYMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{PAYMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=payment"
 
+
+MAIN_SHEET_ID = st.secrets["sheets"]["MAIN_SHEET_ID"]
+
 # ============================================================
 # UTILITY FUNCTIONS
 # ============================================================
@@ -1231,14 +1234,14 @@ elif page == "Milk Bitran":
             return sh.get_worksheet(0)
 
     def load_customers():
-        ws = open_sheet(CUSTOMER_SHEET_ID, CUSTOMER_TAB)
+        ws = open_sheet(MAIN_SHEET_ID, CUSTOMER_TAB)
         rows = ws.get_all_values()
         if len(rows) <= 1:
             return pd.DataFrame(columns=["CustomerID", "Name", "Shift", "Status"])
         return pd.DataFrame(rows[1:], columns=rows[0])
 
     def load_bitran_data():
-        ws = open_sheet(MILK_BITRAN_SHEET_ID, BITRAN_TAB)
+        ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
         rows = ws.get_all_values()
         if not rows or rows[0] != BITRAN_HEADER:
             ws.insert_row(BITRAN_HEADER, 1)
@@ -1246,7 +1249,7 @@ elif page == "Milk Bitran":
         return pd.DataFrame(rows[1:], columns=rows[0])
 
     def append_bitran_rows(rows):
-        ws = open_sheet(MILK_BITRAN_SHEET_ID, BITRAN_TAB)
+        ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
         for r in rows:
             ws.append_row(r, value_input_option="USER_ENTERED")
 
