@@ -27,6 +27,7 @@ EXPENSE_TAB = "Expense"
 INVESTMENT_TAB = "Investment"
 PAYMENT_TAB = "Payment"
 BILLING_TAB = "Billing"
+MEDICATION_TAB="Medication"
 
 # ============================================================
 # GOOGLE SHEETS AUTH (SINGLE SOURCE OF TRUTH)
@@ -165,10 +166,13 @@ else:
             "Milk Bitran",
             "Milking",
             "Manage Customers",
-            "Expese",
+            "Expense",
             "Investment",
+            "Payment",
             "Billing",
-            "Cow Profile"
+            "Cow Profile",
+            "Medication"
+
             
         ],
     )
@@ -378,11 +382,14 @@ else:
                     )
 
     
-    elif page=="Expese":
-        st.title("Expese")
+    elif page=="Expense":
+        st.title("Expense")
     
     elif page=="Investment":
         st.title("Investment")
+
+    elif page=="Payment":
+        st.title("Payment")
     
     elif page=="Billing":
         st.title("Billing")
@@ -976,7 +983,8 @@ else:
                         unsafe_allow_html=True,
                     )
 
-
+        elif page=="Medication":
+            st.title("Medication")
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
