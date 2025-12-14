@@ -4,3 +4,4 @@ plotly
 gspread
 oauth2client
 bcrypt
+google-api-python-client
