@@ -384,13 +384,18 @@ else:
     #--------
     elif page == "Expense":
 
-        st.title("💸 Expense------")
+        st.title("💸 Expense")
     
+        # ======================================================
+        # CONSTANTS
+        # ======================================================
         EXPENSE_HEADER = [
             "ExpenseID","Date","Category","SubCategory","CowID",
-            "Amount","PaymentMode","ExpenseBy","Reference",
-            "FileURL","Notes","Timestamp"
+            "Amount","PaymentMode","ExpenseBy",
+            "Reference","FileURL","Notes","Timestamp"
         ]
+    
+        DRIVE_FOLDER_ID = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
     
         # ======================================================
         # SHEET HELPERS
@@ -415,12 +420,9 @@ else:
             )
     
         # ======================================================
-        # GOOGLE DRIVE UPLOAD
+        # GOOGLE DRIVE UPLOAD (SHARED DRIVE SAFE)
         # ======================================================
         def upload_to_drive(file):
-            """
-            Uploads file to fixed Drive folder and returns shareable link
-            """
             from googleapiclient.discovery import build
             from googleapiclient.http import MediaIoBaseUpload
             import io
@@ -435,11 +437,9 @@ else:
     
             service = build("drive", "v3", credentials=creds)
     
-            folder_id = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
-    
             file_metadata = {
                 "name": file.name,
-                "parents": [folder_id]
+                "parents": [DRIVE_FOLDER_ID]
             }
     
             media = MediaIoBaseUpload(
@@ -451,15 +451,16 @@ else:
             uploaded = service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields="id"
+                fields="id",
+                supportsAllDrives=True
             ).execute()
     
-            file_id = uploaded.get("id")
+            file_id = uploaded["id"]
     
-            # Make file readable
             service.permissions().create(
                 fileId=file_id,
-                body={"type": "anyone", "role": "reader"}
+                body={"type": "anyone", "role": "reader"},
+                supportsAllDrives=True
             ).execute()
     
             return f"https://drive.google.com/file/d/{file_id}/view"
@@ -490,7 +491,7 @@ else:
                 payment_mode = st.selectbox("Payment Mode", ["Cash","UPI","Bank"])
     
             with c3:
-                expense_by = st.text_input(
+                st.text_input(
                     "Expense By",
                     value=st.session_state.user_name,
                     disabled=True
@@ -518,8 +519,12 @@ else:
     
             file_url = ""
             if file:
-                with st.spinner("Uploading file to Drive..."):
-                    file_url = upload_to_drive(file)
+                try:
+                    with st.spinner("Uploading file to Drive..."):
+                        file_url = upload_to_drive(file)
+                except Exception:
+                    st.error("❌ File upload failed. Check Drive permissions.")
+                    st.stop()
     
             expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
             ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -557,6 +562,7 @@ else:
                 df_exp.sort_values("Date", ascending=False),
                 use_container_width=True
             )
+
 
     
     elif page=="Investment":
