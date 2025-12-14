@@ -1007,9 +1007,9 @@ elif page == "Manage Customers":
     # ---------- CONFIG ----------
     CUSTOMER_SHEET_ID = st.secrets.get("sheets", {}).get(
         "CUSTOMER_SHEET_ID",
-        "13n7il7rrEHQ2kek1tIf1W2p0VdepfTkerfu1IeSe8Yc"
+        "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
     )
-    CUSTOMER_SHEET_TAB = "Sheet1"
+    CUSTOMER_SHEET_TAB = "Manage_Customer"
 
     # ---------- GOOGLE SHEETS ----------
     def init_gsheets():
@@ -1198,12 +1198,12 @@ elif page == "Milk Bitran":
     # ================= CONFIG =================
     CUSTOMER_SHEET_ID = st.secrets["sheets"].get(
         "CUSTOMER_SHEET_ID",
-        "13n7il7rrEHQ2kek1tIf1W2p0VdepfTkerfu1IeSe8Yc"
+        "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
     )
-    MILK_BITRAN_SHEET_ID = "1mXhh57VYHrdGS2c78jGXXzkUQ9LU104OCzpUuV6QDbE"
+    MILK_BITRAN_SHEET_ID = "1teLgZqW0Xs2hX8ru4ze2zLplQEeFl_6yW6nyNBgebNY"
 
-    CUSTOMER_TAB = "Sheet1"
-    BITRAN_TAB = "Sheet1"
+    CUSTOMER_TAB = "Manage_Customer"
+    BITRAN_TAB = "Milk_Distrubution"
 
     BITRAN_HEADER = [
         "Date", "Shift", "CustomerID",
