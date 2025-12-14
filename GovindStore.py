@@ -426,44 +426,48 @@ else:
             from googleapiclient.discovery import build
             from googleapiclient.http import MediaIoBaseUpload
             import io
-    
+        
             creds_dict = dict(st.secrets["gcp_service_account"])
             creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-    
+        
             creds = Credentials.from_service_account_info(
                 creds_dict,
                 scopes=["https://www.googleapis.com/auth/drive"]
             )
-    
+        
             service = build("drive", "v3", credentials=creds)
-    
+        
+            folder_id = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
+        
             file_metadata = {
                 "name": file.name,
-                "parents": [DRIVE_FOLDER_ID]
+                "parents": [folder_id]
             }
-    
+        
             media = MediaIoBaseUpload(
                 io.BytesIO(file.getbuffer()),
                 mimetype=file.type,
                 resumable=False
             )
-    
+        
+            # 🔴 CRITICAL FIX FOR SHARED DRIVES
             uploaded = service.files().create(
                 body=file_metadata,
                 media_body=media,
                 fields="id",
                 supportsAllDrives=True
             ).execute()
-    
+        
             file_id = uploaded["id"]
-    
+        
             service.permissions().create(
                 fileId=file_id,
                 body={"type": "anyone", "role": "reader"},
                 supportsAllDrives=True
             ).execute()
-    
+        
             return f"https://drive.google.com/file/d/{file_id}/view"
+
     
         # ======================================================
         # ADD EXPENSE
