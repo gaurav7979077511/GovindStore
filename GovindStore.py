@@ -195,153 +195,199 @@ else:
     elif page == "Cow Profile":
 
         st.title("🐄🐃 Cow Profile")
-    
         CURRENT_YEAR = dt.datetime.now().year
-    
+
         COW_HEADER = [
             "CowID","ParentCowID","AnimalType","Gender","Breed",
             "AgeYears","PurchaseDate","PurchasePrice",
+            "SoldPrice","SoldDate",
             "Status","HealthStatus","Notes","BirthYear","Timestamp"
         ]
-    
-        # ---------- STATE ----------
+
         if "show_add_cow" not in st.session_state:
             st.session_state.show_add_cow = False
-    
-        # ---------- SHEET ----------
+        if "edit_cow_id" not in st.session_state:
+            st.session_state.edit_cow_id = None
+
         def open_cow_sheet():
             return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
-    
+
         def load_cows():
             ws = open_cow_sheet()
             rows = ws.get_all_values()
-    
-            # ✅ Ensure header exists (self-healing)
             if not rows or rows[0] != COW_HEADER:
                 ws.clear()
                 ws.insert_row(COW_HEADER, 1)
                 return pd.DataFrame(columns=COW_HEADER)
-    
             return pd.DataFrame(rows[1:], columns=rows[0])
-    
-        # ---------- ADD COW ----------
+
+        def update_cow_by_id(cow_id, updated):
+            ws = open_cow_sheet()
+            rows = ws.get_all_values()
+            header = rows[0]
+            id_col = header.index("CowID")
+            for i, r in enumerate(rows[1:], start=2):
+                if r[id_col] == cow_id:
+                    for k, v in updated.items():
+                        ws.update_cell(i, header.index(k) + 1, v)
+                    return True
+            return False
+
+        # ---------- ADD ----------
         if st.button("➕ Add Cow / Buffalo"):
             st.session_state.show_add_cow = True
-    
+
         if st.session_state.show_add_cow:
-            with st.form("add_cow_form"):
+            with st.form("add_cow"):
                 c1, c2, c3 = st.columns(3)
-    
+
                 with c1:
-                    animal_type = st.selectbox("Animal Type", ["Cow", "Buffalo"])
+                    animal = st.selectbox("Animal Type", ["Cow", "Buffalo"])
                     gender = st.selectbox("Gender", ["Female", "Male"])
                     breed = st.text_input("Breed")
-    
+
                 with c2:
-                    age_years = st.number_input("Age (Years)", min_value=0, step=1)
-                    purchase_date = st.date_input("Purchase Date")
-                    purchase_price = st.number_input("Purchase Price", min_value=0.0, step=100.0)
-    
+                    age = st.number_input("Age (Years)", min_value=0, step=1)
+                    df = load_cows()
+                    parents = df[df["Status"] == "Active"]["CowID"].tolist()
+                    parent = st.selectbox("Parent Cow (Optional)", [""] + parents)
+
+                    if parent:
+                        dob = st.date_input("Date of Birth")
+                        purchase_date = ""
+                        purchase_price = ""
+                    else:
+                        purchase_date = st.date_input("Purchase Date")
+                        purchase_price = st.number_input("Purchase Price", min_value=0.0, step=100.0)
+                        dob = None
+
                 with c3:
-                    cows_df = load_cows()
-                    active_cows = cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
-    
-                    parent_id = st.selectbox(
-                        "Parent Cow (Optional)",
-                        [""] + active_cows
-                    )
-    
-                    status = st.selectbox("Status", ["Active", "Sick", "Sold", "Dead"])
+                    status = st.selectbox("Status", ["Active", "Sold", "Dead"])
                     health = st.selectbox("Health Status", ["Healthy", "Sick"])
-    
+
+                    sold_price = ""
+                    sold_date = ""
+                    if status == "Sold":
+                        sold_price = st.number_input("Sold Price", min_value=0.0, step=100.0)
+                        sold_date = st.date_input("Sold Date")
+
                 notes = st.text_area("Notes")
-    
-                a, b = st.columns(2)
-                save = a.form_submit_button("Save")
-                cancel = b.form_submit_button("Cancel")
-    
-            if cancel:
+                save, cancel = st.columns(2)
+
+            if cancel.form_submit_button("Cancel"):
                 st.session_state.show_add_cow = False
                 st.rerun()
-    
-            if save:
-                prefix = "COW" if animal_type == "Cow" else "BUF"
+
+            if save.form_submit_button("Save"):
+                if status == "Sold" and (sold_price == "" or sold_date == ""):
+                    st.error("Sold price and date required")
+                    st.stop()
+
+                prefix = "COW" if animal == "Cow" else "BUF"
                 cow_id = f"{prefix}{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                birth_year = CURRENT_YEAR - int(age_years)
-    
-                ws = open_cow_sheet()
-                ws.append_row(
+                birth_year = CURRENT_YEAR - int(age)
+
+                open_cow_sheet().append_row(
                     [
-                        cow_id,
-                        parent_id,
-                        animal_type,
-                        gender,
-                        breed,
-                        age_years,
-                        purchase_date.strftime("%Y-%m-%d"),
+                        cow_id, parent, animal, gender, breed,
+                        age,
+                        dob.strftime("%Y-%m-%d") if dob else purchase_date.strftime("%Y-%m-%d"),
                         purchase_price,
-                        status,
-                        health,
-                        notes,
+                        sold_price,
+                        sold_date.strftime("%Y-%m-%d") if sold_date else "",
+                        status, health, notes,
                         birth_year,
                         dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     ],
                     value_input_option="USER_ENTERED"
                 )
-    
-                st.success("Cow profile added successfully ✅")
+
+                st.success("Cow added successfully")
                 st.session_state.show_add_cow = False
                 st.rerun()
-    
-        # ---------- DISPLAY COW CARDS ----------
+
+        # ---------- LIST ----------
         st.markdown("### 📋 Cow List")
         df = load_cows()
-    
-        if df.empty:
-            st.info("No cow records found.")
-        else:
-            for i, row in df.iterrows():
-                if i % 4 == 0:
-                    cols = st.columns(4)
-    
-                # 🔁 AUTO AGE CALCULATION
-                age = CURRENT_YEAR - int(row["BirthYear"])
-    
-                # 🎨 STATUS COLOR
-                gradient = {
-                    "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
-                    "Sick": "linear-gradient(135deg,#f7971e,#ffd200)",
-                    "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
-                    "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
-                }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
-    
-                parent_text = (
-                    f"👩 Mother: {row['ParentCowID']}"
-                    if row["ParentCowID"] else "👩 Mother: N/A"
-                )
-    
-                card_html = f"""
-                <div style="
-                    padding:12px;
-                    border-radius:14px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                    line-height:1.3;
-                ">
-                    <div style="font-size:15px;font-weight:800;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+
+        for i, row in df.iterrows():
+            if i % 4 == 0:
+                cols = st.columns(4)
+
+            age = CURRENT_YEAR - int(row["BirthYear"])
+            gradient = {
+                "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
+                "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
+                "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
+            }.get(row["Status"], "#333")
+
+            with cols[i % 4]:
+                components.html(
+                    f"""
+                    <div style="padding:12px;border-radius:14px;
+                    background:{gradient};color:white;">
+                    <b>{'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}</b><br>
+                    Breed: {row['Breed']}<br>
+                    Gender: {row['Gender']}<br>
+                    Age: {age} Years<br>
+                    Status: {row['Status']}<br>
+                    Health: {row['HealthStatus']}
                     </div>
-                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
-                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
-                    <div style="font-size:12px;">Age: {age} Years</div>
-                    <div style="font-size:12px;">Status: {row['Status']}</div>
-                    <div style="font-size:12px;">{parent_text}</div>
-                </div>
-                """
-    
-                with cols[i % 4]:
-                    components.html(card_html, height=180)
+                    """,
+                    height=170
+                )
+
+                if st.button("✏️", key=f"edit_{row['CowID']}"):
+                    st.session_state.edit_cow_id = row["CowID"]
+                    st.rerun()
+
+                if st.session_state.edit_cow_id == row["CowID"]:
+                    with st.form(f"edit_{row['CowID']}"):
+                        e_breed = st.text_input("Breed", row["Breed"])
+                        e_age = st.number_input("Age", min_value=0, value=age)
+                        e_status = st.selectbox("Status", ["Active","Sold","Dead"],
+                            index=["Active","Sold","Dead"].index(row["Status"]))
+                        e_health = st.selectbox("Health", ["Healthy","Sick"],
+                            index=["Healthy","Sick"].index(row["HealthStatus"]))
+
+                        e_sold_price = ""
+                        e_sold_date = ""
+                        if e_status == "Sold":
+                            e_sold_price = st.number_input(
+                                "Sold Price",
+                                min_value=0.0,
+                                value=float(row["SoldPrice"]) if row["SoldPrice"] else 0.0
+                            )
+                            e_sold_date = st.date_input(
+                                "Sold Date",
+                                value=pd.to_datetime(row["SoldDate"]).date()
+                                if row["SoldDate"] else dt.date.today()
+                            )
+
+                        e_notes = st.text_area("Notes", row["Notes"])
+                        u, c = st.columns(2)
+
+                    if c.form_submit_button("Cancel"):
+                        st.session_state.edit_cow_id = None
+                        st.rerun()
+
+                    if u.form_submit_button("Update"):
+                        update_cow_by_id(
+                            row["CowID"],
+                            {
+                                "Breed": e_breed,
+                                "AgeYears": e_age,
+                                "Status": e_status,
+                                "HealthStatus": e_health,
+                                "SoldPrice": e_sold_price if e_status=="Sold" else "",
+                                "SoldDate": e_sold_date.strftime("%Y-%m-%d") if e_status=="Sold" else "",
+                                "Notes": e_notes,
+                                "BirthYear": CURRENT_YEAR - int(e_age),
+                            }
+                        )
+                        st.success("Cow updated")
+                        st.session_state.edit_cow_id = None
+                        st.rerun()
 
 
 
