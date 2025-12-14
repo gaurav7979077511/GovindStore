@@ -425,6 +425,7 @@ else:
         def upload_to_drive(file):
             from googleapiclient.discovery import build
             from googleapiclient.http import MediaIoBaseUpload
+            from google.oauth2.service_account import Credentials
             import io
         
             creds_dict = dict(st.secrets["gcp_service_account"])
@@ -437,11 +438,9 @@ else:
         
             service = build("drive", "v3", credentials=creds)
         
-            folder_id = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
-        
             file_metadata = {
                 "name": file.name,
-                "parents": [folder_id]
+                "parents": ["18o_AoRLSSIDsrhAAPMM_afHxmW3krLQP"],  # Expense_Uploads_Service folder ID
             }
         
             media = MediaIoBaseUpload(
@@ -450,23 +449,21 @@ else:
                 resumable=False
             )
         
-            # 🔴 CRITICAL FIX FOR SHARED DRIVES
             uploaded = service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields="id",
+                fields="id, webViewLink",
                 supportsAllDrives=True
             ).execute()
         
-            file_id = uploaded["id"]
-        
+            # Make file viewable
             service.permissions().create(
-                fileId=file_id,
-                body={"type": "anyone", "role": "reader"},
+                fileId=uploaded["id"],
+                body={"role": "reader", "type": "anyone"},
                 supportsAllDrives=True
             ).execute()
         
-            return f"https://drive.google.com/file/d/{file_id}/view"
+            return uploaded["webViewLink"]
 
     
         # ======================================================
