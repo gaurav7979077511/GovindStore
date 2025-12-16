@@ -1034,14 +1034,31 @@ else:
     
         def load_bills():
             ws = open_billing_sheet()
-            rows = ws.get_all_values()
-    
-            if not rows or rows[0] != BILLING_HEADER:
+        
+            try:
+                rows = ws.get_all_values()
+            except Exception as e:
+                st.error("❌ Unable to read Billing sheet. Check permissions.")
+                st.stop()
+        
+            # Case 1: Sheet is completely empty
+            if not rows:
+                ws.insert_row(BILLING_HEADER, 1)
+                return pd.DataFrame(columns=BILLING_HEADER)
+        
+            # Case 2: Header mismatch or missing
+            if rows[0] != BILLING_HEADER:
                 ws.clear()
                 ws.insert_row(BILLING_HEADER, 1)
                 return pd.DataFrame(columns=BILLING_HEADER)
-    
+        
+            # Case 3: Only header present
+            if len(rows) == 1:
+                return pd.DataFrame(columns=BILLING_HEADER)
+        
+            # Normal case
             return pd.DataFrame(rows[1:], columns=rows[0])
+
     
         # ---------------- MILK CALCULATION ----------------
         def calculate_milk(customer_id, from_date, to_date):
