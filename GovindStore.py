@@ -614,7 +614,7 @@ else:
                             border-radius:10px;
                             padding:8px;
                             font-family:Arial;
-                            height:115px;
+                            height:95px;
                             box-shadow:0 1px 2px rgba(0,0,0,0.05);
                         ">
                     
@@ -670,7 +670,7 @@ else:
 
         
                 with cols[i % 5]:
-                    components.html(card_html, height=165)
+                    components.html(card_html, height=135)
 
 
 
