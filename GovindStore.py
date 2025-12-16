@@ -769,30 +769,37 @@ else:
         st.subheader("📊 Investment Summary")
     
         def kpi_card(title, amount, percent=None):
+            percent_html = (
+                f"<div style='font-size:13px;color:#94a3b8;'>({percent}%)</div>"
+                if percent is not None
+                else ""
+            )
+        
             st.markdown(
                 f"""
                 <div style="
-                    padding:16px;
+                    padding:14px;
                     margin:8px 0;
-                    border-radius:14px;
-                    background:linear-gradient(135deg,#141E30,#243B55);
+                    border-radius:12px;
+                    background:linear-gradient(135deg,#0f172a,#1e293b);
                     color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    box-shadow:0 4px 12px rgba(0,0,0,0.18);
                 ">
-                    <div style="font-size:13px;opacity:0.85">
+                    <div style="font-size:12px;opacity:0.85">
                         {title}
                     </div>
+        
                     <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                        <div style="font-size:22px;font-weight:800">
+                        <div style="font-size:20px;font-weight:800;">
                             ₹ {amount:,.0f}
                         </div>
-                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else ""}
+                        {percent_html}
                     </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-    
+
         # --- Overall + Per User Cards (hide zero users) ---
         visible_users = []
         for u in dairy_users:
