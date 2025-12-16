@@ -574,84 +574,76 @@ else:
         
             for i, row in expense_df.iterrows():
         
-                if i % 4 == 0:   # 4 cards per row
-                    cols = st.columns(4)
+                if i % 3 == 0:
+                    cols = st.columns(3)
         
-                # ---- Bill button (same space always) ----
+                bill_html = ""
                 if row["FileURL"]:
-                    bill_button = (
+                    bill_html = (
                         f"<a href='{row['FileURL']}' target='_blank' "
-                        "style='display:inline-block;width:100%;"
-                        "padding:6px 0;text-align:center;"
-                        "background:#00c6ff;color:black;"
-                        "border-radius:8px;text-decoration:none;"
-                        "font-size:13px;font-weight:600;'>"
+                        "style='font-size:12px;font-weight:600;"
+                        "color:#00c6ff;text-decoration:none;'>"
                         "📎 View Bill</a>"
-                    )
-                else:
-                    bill_button = (
-                        "<div style='width:100%;padding:6px 0;"
-                        "text-align:center;border-radius:8px;"
-                        "background:#555;color:#aaa;"
-                        "font-size:13px;'>No Bill</div>"
                     )
         
                 card_html = f"""
                 <div style="
-                    height:260px;
                     padding:12px;
-                    border-radius:16px;
-                    background:linear-gradient(135deg,#232526,#414345);
+                    border-radius:14px;
+                    background:#1f2933;
                     color:white;
-                    box-shadow:0 8px 18px rgba(0,0,0,0.3);
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
+                    box-shadow:0 4px 12px rgba(0,0,0,0.25);
                     font-family:Arial;
                 ">
         
-                    <div>
-                        <div style="font-size:12px;opacity:0.8">
-                            📅 {row['Date']}
-                        </div>
-        
-                        <div style="font-size:20px;font-weight:800;margin:4px 0">
+                    <!-- Top Row -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="font-size:18px;font-weight:800;">
                             ₹ {float(row['Amount']):,.2f}
                         </div>
-        
-                        <div style="font-size:13px">
-                            📂 <b>{row['Category']}</b>
-                        </div>
-        
-                        <div style="font-size:12px;opacity:0.9">
-                            🐄 {row['CowID']}
-                        </div>
-        
-                        <div style="font-size:12px;opacity:0.9">
-                            💳 {row['PaymentMode']} • 👤 {row['ExpenseBy']}
-                        </div>
-        
-                        <div style="
-                            font-size:12px;
-                            margin-top:6px;
-                            opacity:0.85;
-                            display:-webkit-box;
-                            -webkit-line-clamp:2;
-                            -webkit-box-orient:vertical;
-                            overflow:hidden;
-                        ">
-                            📝 {row['Notes']}
+                        <div style="font-size:12px;opacity:0.8;">
+                            📅 {pd.to_datetime(row['Date']).strftime('%Y-%m-%d')}
                         </div>
                     </div>
         
-                    <div style="margin-top:10px">
-                        {bill_button}
+                    <!-- Category -->
+                    <div style="font-size:13px;margin-top:4px;">
+                        📂 <b>{row['Category']}</b>
                     </div>
+        
+                    <!-- Meta -->
+                    <div style="font-size:12px;opacity:0.9;margin-top:2px;">
+                        🐄 {row['CowID']} • 💳 {row['PaymentMode']}
+                    </div>
+        
+                    <!-- Notes -->
+                    <div style="
+                        font-size:12px;
+                        margin-top:6px;
+                        opacity:0.85;
+                        display:-webkit-box;
+                        -webkit-line-clamp:2;
+                        -webkit-box-orient:vertical;
+                        overflow:hidden;
+                    ">
+                        {row['Notes']}
+                    </div>
+        
+                    <!-- Footer -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                        <div style="font-size:12px;opacity:0.8;">
+                            👤 {row['ExpenseBy']}
+                        </div>
+                        <div>
+                            {bill_html}
+                        </div>
+                    </div>
+        
                 </div>
                 """
         
-                with cols[i % 4]:
-                    components.html(card_html, height=280)
+                with cols[i % 3]:
+                    components.html(card_html, height=200)
 
 
 
