@@ -74,7 +74,8 @@ def load_auth_data():
     return pd.DataFrame(AUTH_sheet.get_all_records())
 
 auth_df = load_auth_data()
-auth_df.columns = auth_df.columns.str.strip()
+auth_df.columns = auth_df.columns.astype(str).str.strip()
+
 
 # ============================================================
 # PASSWORD VERIFY
@@ -715,13 +716,14 @@ else:
     
         dairy_users = (
             auth_df[
-                auth_df["Access"]
+                auth_df["AccessLevel"]
                 .fillna("")
                 .str.contains(r"\bDairy\b", case=False)
             ]["Name"]
             .unique()
             .tolist()
         )
+
 
     
         total_investment = investment_df["Amount"].sum()
