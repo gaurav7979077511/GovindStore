@@ -452,7 +452,7 @@ else:
                 f"""
                 <div style="
                     padding:16px;
-                    margin:12px 0;
+                    margin:8px 0;
                     border-radius:14px;
                     background:linear-gradient(135deg,#141E30,#243B55);
                     color:white;
