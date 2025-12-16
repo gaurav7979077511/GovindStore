@@ -911,38 +911,38 @@ else:
             investment_df = investment_df.sort_values("Date", ascending=False)
     
             for _, row in investment_df.iterrows():
-                st.markdown(
-                    f"""
-                    <div style="
-                        background:#ffffff;
-                        border:1px solid #e5e7eb;
-                        border-radius:10px;
-                        padding:10px;
-                        margin-bottom:10px;
-                    ">
+                components.html(
+                        f"""
+                    <div style="background:#ffffff;
+                                border:1px solid #e5e7eb;
+                                border-radius:10px;
+                                padding:10px;
+                                margin-bottom:10px;">
+                    
                         <div style="display:flex;justify-content:space-between;">
                             <div style="font-weight:700;">₹ {float(row['Amount']):,.0f}</div>
                             <div style="font-size:12px;color:#64748b;">{row['Date']}</div>
                         </div>
-    
+                    
                         <div style="font-size:13px;margin-top:4px;">
                             {row['InvestmentType']} → {row['FundDestination']}
                         </div>
-    
+                    
                         <div style="font-size:12px;color:#475569;margin-top:4px;">
                             {row['Notes'][:120] if row['Notes'] else ""}
                         </div>
-    
+                    
                         <div style="display:flex;justify-content:space-between;margin-top:6px;">
                             <div style="font-size:12px;font-weight:600;">
                                 {row['InvestedBy']}
                             </div>
-                            {f"<a href='{row['FileURL']}' target='_blank'>📎</a>" if row['FileURL'] else ""}
+                            {"<a href='"+row['FileURL']+"' target='_blank'>📎</a>" if row['FileURL'] else ""}
                         </div>
+                    
                     </div>
                     """,
-                    unsafe_allow_html=True,
-                )
+                        height=140,
+                    )
 
 
 
