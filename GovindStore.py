@@ -673,13 +673,24 @@ else:
 
         st.title("💼 Investment")
     
+        # =========================================================
+        # STATE
+        # =========================================================
+        if "show_add_investment" not in st.session_state:
+            st.session_state.show_add_investment = False
+    
+        # =========================================================
+        # CONSTANTS
+        # =========================================================
         INVESTMENT_HEADER = [
             "InvestmentID", "Date", "InvestedBy", "Amount",
             "InvestmentType", "FundDestination",
             "FileURL", "Notes", "Timestamp"
         ]
     
-        # ------------------ SHEET FUNCTIONS ------------------
+        # =========================================================
+        # SHEET FUNCTIONS
+        # =========================================================
         def open_investment_sheet():
             return open_sheet(MAIN_SHEET_ID, INVESTMENT_TAB)
     
@@ -694,7 +705,9 @@ else:
     
             return pd.DataFrame(rows[1:], columns=rows[0])
     
-        # ------------------ CLOUDINARY UPLOAD ------------------
+        # =========================================================
+        # CLOUDINARY UPLOAD
+        # =========================================================
         def upload_to_cloudinary(file):
             import cloudinary
             import cloudinary.uploader
@@ -708,30 +721,33 @@ else:
             result = cloudinary.uploader.upload(file)
             return result["secure_url"]
     
-        # ------------------ LOAD DATA ------------------
+        # =========================================================
+        # LOAD DATA
+        # =========================================================
         investment_df = load_investments()
         investment_df["Amount"] = pd.to_numeric(
             investment_df["Amount"], errors="coerce"
         ).fillna(0)
     
+        # Dairy users from AUTH sheet
         dairy_users = (
             auth_df[
-                auth_df["AccessLevel"]
+                auth_df["accesslevel"]
                 .fillna("")
-                .str.contains(r"\bDairy\b", case=False)
-            ]["Name"]
+                .str.contains(r"\bdairy\b", case=False)
+            ]["name"]
             .unique()
             .tolist()
         )
-
-
     
         total_investment = investment_df["Amount"].sum()
     
-        # ------------------ KPI SECTION ------------------
+        # =========================================================
+        # KPI SECTION
+        # =========================================================
         st.subheader("📊 Investment Summary")
     
-        def kpi_card(title, amount, subtitle=None):
+        def kpi_card(title, amount, percent=None):
             st.markdown(
                 f"""
                 <div style="
@@ -739,105 +755,138 @@ else:
                     border:1px solid #e5e7eb;
                     border-radius:10px;
                     padding:12px;
+                    height:90px;
                     box-shadow:0 1px 3px rgba(0,0,0,0.05);
                 ">
                     <div style="font-size:13px;color:#475569;font-weight:600;">
                         {title}
                     </div>
-                    <div style="font-size:20px;font-weight:800;color:#0f172a;margin-top:4px;">
-                        ₹ {amount:,.0f}
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+                        <div style="font-size:20px;font-weight:800;color:#0f172a;">
+                            ₹ {amount:,.0f}
+                        </div>
+                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else ""}
                     </div>
-                    {f"<div style='font-size:12px;color:#64748b;margin-top:2px;'>{subtitle}</div>" if subtitle else ""}
                 </div>
                 """,
                 unsafe_allow_html=True
             )
     
-        cols = st.columns(len(dairy_users) + 1)
+        # Overall + investor cards (hide zero investment users)
+        visible_users = []
+        for u in dairy_users:
+            if investment_df[investment_df["InvestedBy"] == u]["Amount"].sum() > 0:
+                visible_users.append(u)
+    
+        cols = st.columns(len(visible_users) + 1)
     
         with cols[0]:
             kpi_card("Overall Investment", total_investment)
     
-        for i, user in enumerate(dairy_users, start=1):
+        for i, user in enumerate(visible_users, start=1):
             user_total = investment_df[investment_df["InvestedBy"] == user]["Amount"].sum()
-            percent = (user_total / total_investment * 100) if total_investment > 0 else 0
+            percent = round((user_total / total_investment) * 100, 1) if total_investment > 0 else 0
     
             with cols[i]:
-                kpi_card(user, user_total, f"{percent:.1f}% contribution")
+                kpi_card(user, user_total, percent)
     
         st.divider()
     
-        # ------------------ ADD INVESTMENT ------------------
-        st.subheader("➕ Add Investment")
+        # =========================================================
+        # ADD INVESTMENT
+        # =========================================================
+        if st.button("➕ Add Investment"):
+            st.session_state.show_add_investment = True
     
-        with st.form("add_investment"):
-            c1, c2, c3 = st.columns(3)
+        if st.session_state.show_add_investment:
     
-            with c1:
-                invested_by = st.selectbox("Invested By", dairy_users)
-                amount = st.number_input(
-                    "Amount",
-                    min_value=0.0,
-                    step=1000.0,
-                    placeholder="Enter amount",
-                    format="%.2f"
+            with st.form("add_investment"):
+                c1, c2, c3 = st.columns(3)
+    
+                with c1:
+                    invested_by = st.selectbox("Invested By", dairy_users)
+                    amount = st.number_input(
+                        "Amount",
+                        min_value=0.0,
+                        value=None,
+                        step=1000.0,
+                        placeholder="Enter investment amount",
+                        format="%.2f"
+                    )
+    
+                with c2:
+                    inv_type = st.selectbox(
+                        "Investment Type",
+                        ["Owner Capital", "Partner Investment", "Loan", "Temporary Advance", "Other"]
+                    )
+                    destination = st.selectbox(
+                        "Fund Destination",
+                        ["Company Account", "User Wallet"]
+                    )
+    
+                    wallet_user = ""
+                    if destination == "User Wallet":
+                        wallet_user = st.selectbox("Select User Wallet", dairy_users)
+    
+                with c3:
+                    proof = st.file_uploader(
+                        "Upload Proof (Optional)",
+                        type=["jpg", "png", "pdf"]
+                    )
+                    notes = st.text_area("Notes (Optional)", height=80)
+    
+                save, cancel = st.columns(2)
+    
+            if cancel.form_submit_button("Cancel"):
+                st.session_state.show_add_investment = False
+                st.rerun()
+    
+            if save.form_submit_button("Save"):
+    
+                if amount is None or amount <= 0:
+                    st.error("❌ Amount must be greater than 0")
+                    st.stop()
+    
+                final_destination = (
+                    f"User Wallet: {wallet_user}"
+                    if destination == "User Wallet"
+                    else "Company Account"
                 )
     
-            with c2:
-                inv_type = st.selectbox(
-                    "Investment Type",
-                    ["Owner Capital", "Partner Investment", "Loan", "Temporary Advance", "Other"]
+                file_url = upload_to_cloudinary(proof) if proof else ""
+    
+                open_investment_sheet().append_row(
+                    [
+                        f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        dt.date.today().strftime("%Y-%m-%d"),
+                        invested_by,
+                        amount,
+                        inv_type,
+                        final_destination,
+                        file_url,
+                        notes,
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
+                    value_input_option="USER_ENTERED"
                 )
-                destination = st.selectbox(
-                    "Fund Destination",
-                    ["Company Account", "User Wallet"]
-                )
     
-            with c3:
-                proof = st.file_uploader("Upload Proof (Optional)", type=["jpg","png","pdf"])
-                notes = st.text_area("Notes (Optional)", height=80)
-    
-            save, cancel = st.columns(2)
-    
-        if cancel.form_submit_button("Cancel"):
-            st.rerun()
-    
-        if save.form_submit_button("Save"):
-            if amount <= 0:
-                st.error("❌ Amount must be greater than 0")
-                st.stop()
-    
-            file_url = ""
-            if proof:
-                file_url = upload_to_cloudinary(proof)
-    
-            open_investment_sheet().append_row(
-                [
-                    f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    dt.date.today().strftime("%Y-%m-%d"),
-                    invested_by,
-                    amount,
-                    inv_type,
-                    destination,
-                    file_url,
-                    notes,
-                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                ],
-                value_input_option="USER_ENTERED"
-            )
-    
-            st.success("Investment added successfully ✅")
-            st.rerun()
+                st.success("Investment added successfully ✅")
+                st.session_state.show_add_investment = False
+                st.rerun()
     
         st.divider()
     
-        # ------------------ INVESTMENT LIST ------------------
+        # =========================================================
+        # INVESTMENT LIST
+        # =========================================================
         st.subheader("📋 Investment List")
     
         if investment_df.empty:
             st.info("No investments recorded yet.")
         else:
-            for i, row in investment_df.sort_values("Date", ascending=False).iterrows():
+            investment_df = investment_df.sort_values("Date", ascending=False)
+    
+            for i, row in investment_df.iterrows():
                 st.markdown(
                     f"""
                     <div style="
@@ -870,6 +919,7 @@ else:
                     """,
                     unsafe_allow_html=True
                 )
+
 
 
     elif page=="Payment":
