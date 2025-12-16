@@ -572,53 +572,65 @@ else:
         else:
             expense_df = expense_df.sort_values("Date", ascending=False).reset_index(drop=True)
         
+            # ---- OUTER FRAME ----
+            st.markdown(
+                """
+                <div style="
+                    border:1px solid #2d3748;
+                    border-radius:16px;
+                    padding:16px;
+                    background:#0f172a;
+                ">
+                """,
+                unsafe_allow_html=True
+            )
+        
             for i, row in expense_df.iterrows():
         
-                if i % 3 == 0:
-                    cols = st.columns(3)
+                if i % 5 == 0:   # 5 cards per row
+                    cols = st.columns(5)
         
                 bill_html = ""
                 if row["FileURL"]:
                     bill_html = (
                         f"<a href='{row['FileURL']}' target='_blank' "
-                        "style='font-size:12px;font-weight:600;"
-                        "color:#00c6ff;text-decoration:none;'>"
-                        "📎 View Bill</a>"
+                        "style='font-size:11px;font-weight:600;"
+                        "color:#38bdf8;text-decoration:none;'>"
+                        "📎 Bill</a>"
                     )
         
                 card_html = f"""
                 <div style="
-                    padding:12px;
-                    border-radius:14px;
-                    background:#1f2933;
+                    padding:10px;
+                    border-radius:12px;
+                    background:#1e293b;
                     color:white;
-                    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+                    box-shadow:0 4px 10px rgba(0,0,0,0.25);
                     font-family:Arial;
+                    height:180px;
                 ">
         
-                    <!-- Top Row -->
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div style="font-size:18px;font-weight:800;">
-                            ₹ {float(row['Amount']):,.2f}
-                        </div>
-                        <div style="font-size:12px;opacity:0.8;">
-                            📅 {pd.to_datetime(row['Date']).strftime('%Y-%m-%d')}
-                        </div>
+                    <!-- Amount + Date -->
+                    <div style="font-size:17px;font-weight:800;">
+                        ₹ {float(row['Amount']):,.0f}
+                    </div>
+                    <div style="font-size:11px;opacity:0.7;">
+                        {pd.to_datetime(row['Date']).strftime('%d %b %Y')}
                     </div>
         
                     <!-- Category -->
-                    <div style="font-size:13px;margin-top:4px;">
-                        📂 <b>{row['Category']}</b>
+                    <div style="font-size:12px;margin-top:4px;">
+                        <b>{row['Category']}</b>
                     </div>
         
-                    <!-- Meta -->
-                    <div style="font-size:12px;opacity:0.9;margin-top:2px;">
-                        🐄 {row['CowID']} • 💳 {row['PaymentMode']}
+                    <!-- Cow + Payment -->
+                    <div style="font-size:11px;opacity:0.85;margin-top:2px;">
+                        🐄 {row['CowID']} &nbsp;•&nbsp; 💳 {row['PaymentMode']}
                     </div>
         
-                    <!-- Notes -->
+                    <!-- Notes (trimmed) -->
                     <div style="
-                        font-size:12px;
+                        font-size:11px;
                         margin-top:6px;
                         opacity:0.85;
                         display:-webkit-box;
@@ -630,20 +642,25 @@ else:
                     </div>
         
                     <!-- Footer -->
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-                        <div style="font-size:12px;opacity:0.8;">
-                            👤 {row['ExpenseBy']}
-                        </div>
-                        <div>
-                            {bill_html}
-                        </div>
+                    <div style="
+                        font-size:11px;
+                        opacity:0.75;
+                        margin-top:6px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    ">
+                        <span>👤 {row['ExpenseBy']}</span>
+                        <span>{bill_html}</span>
                     </div>
         
                 </div>
                 """
         
-                with cols[i % 3]:
+                with cols[i % 5]:
                     components.html(card_html, height=200)
+        
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 
