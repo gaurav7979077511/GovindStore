@@ -1309,6 +1309,7 @@ else:
                         "Rate per Litre (₹)",
                         min_value=0.0,
                         step=1.0,
+                        value=None,
                         placeholder="Optional"
                     )
                     status = st.selectbox("Status", ["Active","Inactive"])
@@ -1391,7 +1392,7 @@ else:
                             e_rate = st.number_input(
                                         "Rate per Litre (₹)",
                                         min_value=0.0,
-                                        value=float(row["RatePerLitre"]) if row["RatePerLitre"] else 0.0,
+                                        value=None if not row["RatePerLitre"] else float(row["RatePerLitre"]),
                                         step=1.0
                                     )
 
