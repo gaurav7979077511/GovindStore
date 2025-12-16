@@ -28,6 +28,7 @@ INVESTMENT_TAB = "Investment"
 PAYMENT_TAB = "Payment"
 BILLING_TAB = "Billing"
 MEDICATION_TAB="Medication"
+TRANSACTION_TAB="Transaction"
 
 # ============================================================
 # GOOGLE SHEETS AUTH (SINGLE SOURCE OF TRUTH)
@@ -171,7 +172,8 @@ else:
             "Payment",
             "Billing",
             "Cow Profile",
-            "Medication"
+            "Medication",
+            "Transaction"
 
             
         ],
@@ -1263,8 +1265,15 @@ else:
                         unsafe_allow_html=True,
                     )
 
+    elif page=="Transaction":
+        st.title("Transaction")
+        
     elif page=="Medication":
         st.title("Medication")
+
+    
+
+        
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
