@@ -614,7 +614,7 @@ else:
                             border-radius:10px;
                             padding:8px;
                             font-family:Arial;
-                            height:135px;
+                            height:115px;
                             box-shadow:0 1px 2px rgba(0,0,0,0.05);
                         ">
                     
