@@ -384,186 +384,108 @@ else:
     #--------
     elif page == "Expense":
 
-        st.title("💸 Expense")
+        st.title("💸 Expense Entry")
     
-        # ======================================================
-        # CONSTANTS
-        # ======================================================
-        EXPENSE_HEADER = [
-            "ExpenseID","Date","Category","SubCategory","CowID",
-            "Amount","PaymentMode","ExpenseBy",
-            "Reference","FileURL","Notes","Timestamp"
-        ]
+        # ================= STATE =================
+        if "show_expense_form" not in st.session_state:
+            st.session_state.show_expense_form = False
     
-        DRIVE_FOLDER_ID = "15Psaa910zDiStFNH76MMtPRhqdmgNe98"
+        # ================= CLOUDINARY =================
+        import cloudinary
+        import cloudinary.uploader
     
-        # ======================================================
-        # SHEET HELPERS
-        # ======================================================
+        cloudinary.config(
+            cloud_name=st.secrets["cloudinary"]["cloud_name"],
+            api_key=st.secrets["cloudinary"]["api_key"],
+            api_secret=st.secrets["cloudinary"]["api_secret"],
+            secure=True
+        )
+    
+        def upload_to_cloudinary(file):
+            result = cloudinary.uploader.upload(
+                file,
+                folder="dairy/expenses",
+                resource_type="auto"
+            )
+            return result["secure_url"]
+    
+        # ================= GSHEET =================
         def open_expense_sheet():
             return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
     
-        def load_expenses():
-            ws = open_expense_sheet()
-            rows = ws.get_all_values()
+        # ================= ADD BUTTON =================
+        if st.button("➕ Add Expense"):
+            st.session_state.show_expense_form = True
     
-            if not rows or rows[0] != EXPENSE_HEADER:
-                ws.clear()
-                ws.insert_row(EXPENSE_HEADER, 1)
-                return pd.DataFrame(columns=EXPENSE_HEADER)
+        # ================= FORM =================
+        if st.session_state.show_expense_form:
+            with st.form("expense_form"):
+                c1, c2, c3 = st.columns(3)
     
-            return pd.DataFrame(rows[1:], columns=rows[0])
+                with c1:
+                    date = st.date_input("Date")
+                    category = st.text_input("Category")
+                    sub_category = st.text_input("Sub Category")
     
-        def append_expense(row):
-            open_expense_sheet().append_row(
-                row, value_input_option="USER_ENTERED"
-            )
+                with c2:
+                    cows_df = load_cows()
+                    cow_ids = ["All"] + cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
+                    cow_id = st.selectbox("Cow ID", cow_ids)
+                    amount = st.number_input("Amount", min_value=0.0)
     
-        # ======================================================
-        # GOOGLE DRIVE UPLOAD (SHARED DRIVE SAFE)
-        # ======================================================
-        def upload_to_drive(file):
-            from googleapiclient.discovery import build
-            from googleapiclient.http import MediaIoBaseUpload
-            from google.oauth2.service_account import Credentials
-            import io
-        
-            creds_dict = dict(st.secrets["gcp_service_account"])
-            creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-        
-            creds = Credentials.from_service_account_info(
-                creds_dict,
-                scopes=["https://www.googleapis.com/auth/drive"]
-            )
-        
-            service = build("drive", "v3", credentials=creds, cache_discovery=False)
-        
-            file_metadata = {
-                "name": file.name,
-                "parents": ["15Psaa910zDiStFNH76MMtPRhqdmgNe98"]  # Expense_Uploads_Service
-            }
-        
-            media = MediaIoBaseUpload(
-                io.BytesIO(file.getbuffer()),
-                mimetype=file.type,
-                resumable=False
-            )
-        
-            uploaded = service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields="id, webViewLink",
-                supportsAllDrives=True
-            ).execute()
-        
-            # Make file public
-            service.permissions().create(
-                fileId=uploaded["id"],
-                body={"type": "anyone", "role": "reader"},
-                supportsAllDrives=True
-            ).execute()
-        
-            return uploaded["webViewLink"]
-
+                with c3:
+                    payment_mode = st.selectbox(
+                        "Payment Mode",
+                        ["Cash", "UPI", "Bank Transfer", "Cheque"]
+                    )
+                    expense_by = st.session_state.user_name
+                    reference = st.text_input("Reference")
     
-        # ======================================================
-        # ADD EXPENSE
-        # ======================================================
-        st.subheader("➕ Add Expense")
+                notes = st.text_area("Notes")
+                file = st.file_uploader("Upload Bill (Image / PDF)", type=["jpg","jpeg","png","pdf"])
     
-        with st.form("add_expense"):
+                save, cancel = st.columns(2)
     
-            c1, c2, c3 = st.columns(3)
+            # ---------- CANCEL ----------
+            if cancel.form_submit_button("Cancel"):
+                st.session_state.show_expense_form = False
+                st.rerun()
     
-            with c1:
-                date = st.date_input("Date", value=dt.date.today())
-                category = st.selectbox(
-                    "Category",
-                    ["Feed","Medicine","Labour","Electricity","Maintenance","Other"]
-                )
-                sub_category = st.text_input("Sub Category")
+            # ---------- SAVE ----------
+            if save.form_submit_button("Save Expense"):
+                file_url = ""
     
-            with c2:
-                cows_df = load_cows()
-                cow_ids = ["All"] + cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
-                cow_id = st.selectbox("CowID", cow_ids)
+                if file:
+                    try:
+                        with st.spinner("Uploading bill..."):
+                            file_url = upload_to_cloudinary(file)
+                    except Exception as e:
+                        st.error(f"❌ File upload failed: {e}")
+                        st.stop()
     
-                amount = st.number_input("Amount", min_value=0.0, step=10.0)
-                payment_mode = st.selectbox("Payment Mode", ["Cash","UPI","Bank"])
+                expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     
-            with c3:
-                st.text_input(
-                    "Expense By",
-                    value=st.session_state.user_name,
-                    disabled=True
-                )
-                reference = st.text_input("Reference / Bill No")
-                file = st.file_uploader(
-                    "Upload Bill (Image / PDF)",
-                    type=["png","jpg","jpeg","pdf"]
+                open_expense_sheet().append_row(
+                    [
+                        expense_id,
+                        date.strftime("%Y-%m-%d"),
+                        category,
+                        sub_category,
+                        cow_id,
+                        amount,
+                        payment_mode,
+                        expense_by,
+                        reference,
+                        file_url,
+                        notes,
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
+                    value_input_option="USER_ENTERED"
                 )
     
-            notes = st.text_area("Notes")
-    
-            save, cancel = st.columns(2)
-            save_btn = save.form_submit_button("💾 Save")
-            cancel_btn = cancel.form_submit_button("❌ Cancel")
-    
-        if cancel_btn:
-            st.rerun()
-    
-        if save_btn:
-    
-            if amount <= 0:
-                st.error("❌ Amount must be greater than zero")
-                st.stop()
-    
-            file_url = ""
-            if file:
-                try:
-                    file_url = upload_to_drive(file)
-                except Exception as e:
-                    st.error("❌ DRIVE UPLOAD ERROR (REAL MESSAGE BELOW)")
-                    st.code(str(e))
-                    st.stop()
-
-    
-            expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
-            ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-            append_expense([
-                expense_id,
-                date.strftime("%Y-%m-%d"),
-                category,
-                sub_category,
-                cow_id,
-                amount,
-                payment_mode,
-                st.session_state.user_name,
-                reference,
-                file_url,
-                notes,
-                ts
-            ])
-    
-            st.success("Expense saved successfully ✅")
-            st.rerun()
-    
-        # ======================================================
-        # EXPENSE LIST
-        # ======================================================
-        st.subheader("📋 Expense Records")
-    
-        df_exp = load_expenses()
-    
-        if df_exp.empty:
-            st.info("No expenses recorded yet.")
-        else:
-            df_exp["Amount"] = pd.to_numeric(df_exp["Amount"], errors="coerce")
-            st.dataframe(
-                df_exp.sort_values("Date", ascending=False),
-                use_container_width=True
-            )
+                st.success("✅ Expense saved successfully")
+                st.session_state.show_expense_form = False
+                st.rerun()
 
 
     
