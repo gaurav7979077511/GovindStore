@@ -589,67 +589,74 @@ else:
                         "style='text-decoration:none;color:#475569;"
                         "font-size:11px;'>📎</a>"
                     )
-        
+
+                #---Card Html
                 card_html = f"""
-                <div style="
-                    background:#f8fafc;
-                    color:#0f172a;
-                    border:1px solid #e5e7eb;
-                    border-radius:8px;
-                    padding:8px;
-                    font-family:Arial;
-                    height:135px;
-                    box-shadow:0 1px 2px rgba(0,0,0,0.05);
-                ">
-        
-                    <!-- Amount & Date -->
-                    <div style="display:flex;justify-content:space-between;">
-                        <div style="font-size:15px;font-weight:700;">
-                            ₹ {float(row['Amount']):,.0f}
-                        </div>
-                        <div style="font-size:11px;color:#64748b;">
-                            {pd.to_datetime(row['Date']).strftime('%d %b')}
-                        </div>
-                    </div>
-        
-                    <!-- Category -->
-                    <div style="font-size:12px;font-weight:600;margin-top:1px;">
-                        {row['Category']}
-                    </div>
-        
-                    <!-- Meta -->
-                    <div style="font-size:11px;color:#475569;margin-top:1px;">
-                        {row['PaymentMode']} | {row['CowID']}
-                    </div>
-        
-                    <!-- Notes -->
                     <div style="
-                        font-size:11px;
-                        color:#334155;
-                        margin-top:4px;
-                        display:-webkit-box;
-                        -webkit-line-clamp:3;
-                        -webkit-box-orient:vertical;
+                        border-radius:10px;
                         overflow:hidden;
                     ">
-                        {row['Notes']}
+                        <div style="
+                            background:#f8fafc;
+                            color:#0f172a;
+                            border:1px solid #e5e7eb;
+                            border-radius:10px;
+                            padding:8px;
+                            font-family:Arial;
+                            height:135px;
+                            box-shadow:0 1px 2px rgba(0,0,0,0.05);
+                        ">
+                    
+                            <!-- Amount & Date -->
+                            <div style="display:flex;justify-content:space-between;">
+                                <div style="font-size:15px;font-weight:700;">
+                                    ₹ {float(row['Amount']):,.0f}
+                                </div>
+                                <div style="font-size:11px;color:#64748b;">
+                                    {pd.to_datetime(row['Date']).strftime('%d %b')}
+                                </div>
+                            </div>
+                    
+                            <!-- Category -->
+                            <div style="font-size:12px;font-weight:600;margin-top:1px;">
+                                {row['Category']}
+                            </div>
+                    
+                            <!-- Meta -->
+                            <div style="font-size:11px;color:#475569;margin-top:1px;">
+                                {row['PaymentMode']} | {row['CowID']}
+                            </div>
+                    
+                            <!-- Notes -->
+                            <div style="
+                                font-size:11px;
+                                color:#334155;
+                                margin-top:4px;
+                                display:-webkit-box;
+                                -webkit-line-clamp:3;
+                                -webkit-box-orient:vertical;
+                                overflow:hidden;
+                            ">
+                                {row['Notes']}
+                            </div>
+                    
+                            <!-- Footer -->
+                            <div style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                margin-top:4px;
+                                font-size:11px;
+                                color:#64748b;
+                            ">
+                                <span>{row['ExpenseBy']}</span>
+                                <span>{bill_html}</span>
+                            </div>
+                    
+                        </div>
                     </div>
-        
-                    <!-- Footer -->
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        margin-top:4px;
-                        font-size:11px;
-                        color:#64748b;
-                    ">
-                        <span>{row['ExpenseBy']}</span>
-                        <span>{bill_html}</span>
-                    </div>
-        
-                </div>
-                """
+                    """
+
         
                 with cols[i % 5]:
                     components.html(card_html, height=125)
