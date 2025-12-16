@@ -712,7 +712,16 @@ else:
             investment_df["Amount"], errors="coerce"
         ).fillna(0)
     
-        dairy_users = auth_df[auth_df["Access"] == "Dairy"]["Name"].unique().tolist()
+        dairy_users = (
+            auth_df[
+                auth_df["Access"]
+                .fillna("")
+                .str.contains(r"\bDairy\b", case=False)
+            ]["Name"]
+            .unique()
+            .tolist()
+        )
+
     
         total_investment = investment_df["Amount"].sum()
     
