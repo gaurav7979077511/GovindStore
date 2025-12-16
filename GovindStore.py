@@ -978,7 +978,7 @@ else:
         
         </div>
         """,
-                        height=125,
+                        height=135,
                     )
 
 
