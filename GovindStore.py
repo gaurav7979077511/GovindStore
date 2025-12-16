@@ -1089,7 +1089,24 @@ else:
             from_date = dt.date(year, month, 1)
             to_date = (from_date + pd.offsets.MonthEnd(1)).date()
     
-            selected_customers = customers_df[customers_df["Status"] == "Active"]
+            active_customers = customers_df[customers_df["Status"] == "Active"]
+
+            customer_options = (
+                active_customers["CustomerID"] + " - " + active_customers["Name"]
+            ).tolist()
+            
+            selected_customer_options = st.multiselect(
+                "Select Customers (Unselect to exclude)",
+                options=customer_options,
+                default=customer_options
+            )
+            
+            # Map back to dataframe
+            selected_customers = active_customers[
+                (active_customers["CustomerID"] + " - " + active_customers["Name"])
+                .isin(selected_customer_options)
+            ]
+
     
         else:
             cname = st.selectbox("Customer", customers_df["Name"].tolist())
@@ -1098,7 +1115,10 @@ else:
             to_date = st.date_input("To Date")
     
         due_date = st.date_input("Due Date", value=to_date + dt.timedelta(days=7))
-    
+        if selected_customers.empty:
+            st.warning("⚠️ Please select at least one customer")
+            st.stop()
+
         if st.button("📄 Generate Bill"):
             ws = open_billing_sheet()
             generated = 0
