@@ -857,7 +857,7 @@ else:
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        ["Company Account"] dairy_users,
+                        ["Company Account"] + dairy_users,
                     )
     
                     wallet_user = ""
