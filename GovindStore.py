@@ -1269,7 +1269,7 @@ else:
             if len(data) <= 1:
                 return pd.DataFrame(columns=[
                     "CustomerID","Name","Phone","Email",
-                    "DateOfJoining","Shift","Status","Timestamp"
+                    "DateOfJoining","Shift","RatePerLitre","Status","Timestamp"
                 ])
             return pd.DataFrame(data[1:], columns=data[0])
 
@@ -1305,7 +1305,14 @@ else:
 
                 with c3:
                     shift = st.selectbox("Shift", ["Morning","Evening","Both"])
+                    rate = st.number_input(
+                        "Rate per Litre (₹)",
+                        min_value=0.0,
+                        step=1.0,
+                        placeholder="Optional"
+                    )
                     status = st.selectbox("Status", ["Active","Inactive"])
+
 
                 a, b = st.columns(2)
                 create = a.form_submit_button("Create")
@@ -1321,7 +1328,7 @@ else:
                 ws.append_row([
                     cid, name, phone, email,
                     doj.strftime("%Y-%m-%d"),
-                    shift, status,
+                    shift,rate if rate > 0 else "", status,
                     dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 ])
                 st.success("Customer added")
@@ -1381,6 +1388,13 @@ else:
                         with e1:
                             e_name = st.text_input("Name", row["Name"])
                             e_phone = st.text_input("Phone", row["Phone"])
+                            e_rate = st.number_input(
+                                        "Rate per Litre (₹)",
+                                        min_value=0.0,
+                                        value=float(row["RatePerLitre"]) if row["RatePerLitre"] else 0.0,
+                                        step=1.0
+                                    )
+
                         with e2:
                             e_email = st.text_input("Email", row["Email"])
                             e_doj = st.date_input(
@@ -1416,6 +1430,7 @@ else:
                                 "Email": e_email,
                                 "DateOfJoining": e_doj.strftime("%Y-%m-%d"),
                                 "Shift": e_shift,
+                                "RatePerLitre": e_rate if e_rate > 0 else "",
                                 "Status": e_status,
                             }
                         )
