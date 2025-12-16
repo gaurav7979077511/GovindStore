@@ -117,10 +117,10 @@ if not st.session_state.authenticated:
             row = user_data.iloc[0]
             if verify_password(row["password"], password):
                 st.session_state.authenticated = True
-                st.session_state.user_role = row["Role"]
+                st.session_state.user_role = row["role"]
                 st.session_state.username = username
-                st.session_state.user_name = row["Name"]
-                st.success(f"✅ Welcome, {row['Name']}")
+                st.session_state.user_name = row["name"]
+                st.success(f"✅ Welcome, {row['name']}")
                 st.rerun()
             else:
                 st.error("❌ Invalid Credentials")
