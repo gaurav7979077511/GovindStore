@@ -55,6 +55,16 @@ def open_sheet(sheet_id: str, tab: str):
     except gspread.WorksheetNotFound:
         return sh.get_worksheet(0)
 
+def get_customers_df():
+            ws = open_customer_sheet()
+            data = ws.get_all_values()
+            if len(data) <= 1:
+                return pd.DataFrame(columns=[
+                    "CustomerID","Name","Phone","Email",
+                    "DateOfJoining","Shift","RatePerLitre","Status","Timestamp"
+                ])
+            return pd.DataFrame(data[1:], columns=data[0])
+
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1431,15 +1441,7 @@ else:
             sh = client.open_by_key(MAIN_SHEET_ID)
             return sh.worksheet(CUSTOMER_TAB)
 
-        def get_customers_df():
-            ws = open_customer_sheet()
-            data = ws.get_all_values()
-            if len(data) <= 1:
-                return pd.DataFrame(columns=[
-                    "CustomerID","Name","Phone","Email",
-                    "DateOfJoining","Shift","RatePerLitre","Status","Timestamp"
-                ])
-            return pd.DataFrame(data[1:], columns=data[0])
+        
 
         def update_customer_by_id(customer_id, updated):
             ws = open_customer_sheet()
