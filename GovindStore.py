@@ -384,11 +384,7 @@ else:
     #--------
     elif page == "Expense":
 
-        st.title("💸 Expense Entry")
-    
-        # ================= STATE =================
-        if "show_expense_form" not in st.session_state:
-            st.session_state.show_expense_form = False
+        st.title("💸 Expense Management")
     
         # ================= CLOUDINARY =================
         import cloudinary
@@ -413,25 +409,106 @@ else:
         def open_expense_sheet():
             return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
     
-        # ================= ADD BUTTON =================
+        def load_expenses():
+            ws = open_expense_sheet()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame(columns=rows[0])
+            return pd.DataFrame(rows[1:], columns=rows[0])
+    
+        # ================= LOAD DATA =================
+        expense_df = load_expenses()
+        if not expense_df.empty:
+            expense_df["Amount"] = pd.to_numeric(expense_df["Amount"], errors="coerce").fillna(0)
+            expense_df["Date"] = pd.to_datetime(expense_df["Date"])
+    
+        # ================= KPI CALCULATIONS =================
+        today = pd.Timestamp.today()
+        month_df = expense_df[
+            (expense_df["Date"].dt.month == today.month) &
+            (expense_df["Date"].dt.year == today.year)
+        ] if not expense_df.empty else pd.DataFrame()
+    
+        total_overall = expense_df["Amount"].sum() if not expense_df.empty else 0
+        total_month = month_df["Amount"].sum() if not month_df.empty else 0
+    
+        avg_daily = (
+            month_df.groupby(month_df["Date"].dt.date)["Amount"].sum().mean()
+            if not month_df.empty else 0
+        )
+    
+        top_category = (
+            month_df.groupby("Category")["Amount"].sum().idxmax()
+            if not month_df.empty else "-"
+        )
+    
+        # ================= KPI CARDS =================
+        st.subheader("📊 Expense Summary")
+    
+        k1, k2, k3, k4 = st.columns(4)
+    
+        def kpi_card(title, value):
+            st.markdown(
+                f"""
+                <div style="
+                    padding:16px;
+                    border-radius:14px;
+                    background:linear-gradient(135deg,#141E30,#243B55);
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                ">
+                    <div style="font-size:13px;opacity:0.85">{title}</div>
+                    <div style="font-size:22px;font-weight:800">₹ {value:,.2f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    
+        with k1:
+            kpi_card("Total Expense (Overall)", total_overall)
+        with k2:
+            kpi_card("Total Expense (This Month)", total_month)
+        with k3:
+            kpi_card("Top Category (This Month)", 0)
+            st.caption(top_category)
+        with k4:
+            kpi_card("Avg Daily Expense (This Month)", avg_daily)
+    
+        st.divider()
+    
+        # ================= ADD EXPENSE =================
+        if "show_expense_form" not in st.session_state:
+            st.session_state.show_expense_form = False
+    
         if st.button("➕ Add Expense"):
             st.session_state.show_expense_form = True
     
-        # ================= FORM =================
         if st.session_state.show_expense_form:
             with st.form("expense_form"):
+    
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
                     date = st.date_input("Date")
-                    category = st.text_input("Category")
-                    sub_category = st.text_input("Sub Category")
+                    category = st.selectbox(
+                        "Category",
+                        [
+                            "Feed", "Medicine", "Labour", "Electricity",
+                            "Maintenance", "Transport", "Veterinary",
+                            "Equipment", "Other"
+                        ]
+                    )
     
                 with c2:
                     cows_df = load_cows()
                     cow_ids = ["All"] + cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
                     cow_id = st.selectbox("Cow ID", cow_ids)
-                    amount = st.number_input("Amount", min_value=0.0)
+                    amount = st.number_input(
+                        "Amount",
+                        min_value=0.0,
+                        value=None,
+                        placeholder="Enter expense amount"
+                    )
     
                 with c3:
                     payment_mode = st.selectbox(
@@ -439,10 +516,12 @@ else:
                         ["Cash", "UPI", "Bank Transfer", "Cheque"]
                     )
                     expense_by = st.session_state.user_name
-                    reference = st.text_input("Reference")
     
                 notes = st.text_area("Notes")
-                file = st.file_uploader("Upload Bill (Image / PDF)", type=["jpg","jpeg","png","pdf"])
+                file = st.file_uploader(
+                    "Upload Bill (Optional)",
+                    type=["jpg", "jpeg", "png", "pdf"]
+                )
     
                 save, cancel = st.columns(2)
     
@@ -453,15 +532,15 @@ else:
     
             # ---------- SAVE ----------
             if save.form_submit_button("Save Expense"):
-                file_url = ""
     
+                if not category or not cow_id or not payment_mode or not notes or not amount or amount <= 0:
+                    st.error("❌ All fields are mandatory except bill upload")
+                    st.stop()
+    
+                file_url = ""
                 if file:
-                    try:
-                        with st.spinner("Uploading bill..."):
-                            file_url = upload_to_cloudinary(file)
-                    except Exception as e:
-                        st.error(f"❌ File upload failed: {e}")
-                        st.stop()
+                    with st.spinner("Uploading bill..."):
+                        file_url = upload_to_cloudinary(file)
     
                 expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     
@@ -470,12 +549,10 @@ else:
                         expense_id,
                         date.strftime("%Y-%m-%d"),
                         category,
-                        sub_category,
                         cow_id,
                         amount,
                         payment_mode,
                         expense_by,
-                        reference,
                         file_url,
                         notes,
                         dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -486,6 +563,26 @@ else:
                 st.success("✅ Expense saved successfully")
                 st.session_state.show_expense_form = False
                 st.rerun()
+    
+        # ================= EXPENSE LIST =================
+        st.subheader("📋 Recent Expenses")
+    
+        if not expense_df.empty:
+            display_df = expense_df.sort_values("Date", ascending=False).head(20)
+    
+            display_df["Bill"] = display_df["FileURL"].apply(
+                lambda x: f"[View]({x})" if x else "—"
+            )
+    
+            st.dataframe(
+                display_df[
+                    ["Date", "Category", "CowID", "Amount", "PaymentMode", "ExpenseBy", "Bill", "Notes"]
+                ],
+                use_container_width=True
+            )
+        else:
+            st.info("No expenses recorded yet.")
+
 
 
     
