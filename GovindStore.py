@@ -109,7 +109,7 @@ if not st.session_state.authenticated:
     password = st.text_input("🔑 Password", type="password")
 
     if st.button("Login"):
-        user_data = auth_df[auth_df["Username"] == username]
+        user_data = auth_df[auth_df["username"] == username]
 
         if user_data.empty:
             st.error("❌ User not found")
