@@ -452,6 +452,7 @@ else:
                 f"""
                 <div style="
                     padding:16px;
+                    margin:12px 0;
                     border-radius:14px;
                     background:linear-gradient(135deg,#141E30,#243B55);
                     color:white;
@@ -470,7 +471,6 @@ else:
             kpi_card("Total Expense (This Month)", total_month)
         with k3:
             kpi_card("Top Category (This Month)", 0)
-            st.caption(top_category)
         with k4:
             kpi_card("Avg Daily Expense (This Month)", avg_daily)
     
