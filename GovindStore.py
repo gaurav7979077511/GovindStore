@@ -935,7 +935,7 @@ else:
             border:1px solid #e5e7eb;
             border-radius:10px;
             padding:8px;
-            height:120px;
+            height:95px;
             box-sizing:border-box;
             box-shadow:0 1px 2px rgba(0,0,0,0.04);
             font-family:Arial, sans-serif;
@@ -989,7 +989,7 @@ else:
         
         </div>
         """,
-                        height=135,
+                        height=125,
                     )
 
 
