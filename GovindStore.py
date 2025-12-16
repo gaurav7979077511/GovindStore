@@ -565,23 +565,72 @@ else:
                 st.rerun()
     
         # ================= EXPENSE LIST =================
-        st.subheader("📋 Recent Expenses")
-    
-        if not expense_df.empty:
-            display_df = expense_df.sort_values("Date", ascending=False).head(20)
-    
-            display_df["Bill"] = display_df["FileURL"].apply(
-                lambda x: f"[View]({x})" if x else "—"
-            )
-    
-            st.dataframe(
-                display_df[
-                    ["Date", "Category", "CowID", "Amount", "PaymentMode", "ExpenseBy", "Bill", "Notes"]
-                ],
-                use_container_width=True
-            )
-        else:
+        st.subheader("📋 Expense History")
+
+        if expense_df.empty:
             st.info("No expenses recorded yet.")
+        else:
+            expense_df = expense_df.sort_values("Date", ascending=False).reset_index(drop=True)
+        
+            for i, row in expense_df.iterrows():
+        
+                if i % 3 == 0:
+                    cols = st.columns(3)
+        
+                if row["FileURL"]:
+                    bill_button = (
+                        f"<a href='{row['FileURL']}' target='_blank' "
+                        "style='display:inline-block;padding:6px 12px;"
+                        "background:#00c6ff;color:black;border-radius:8px;"
+                        "text-decoration:none;font-weight:600;'>"
+                        "📎 View Bill</a>"
+                    )
+                else:
+                    bill_button = "<span style='opacity:0.6'>No Bill</span>"
+        
+                card_html = f"""
+                <div style="
+                    padding:16px;
+                    margin:10px 0;
+                    border-radius:16px;
+                    background:linear-gradient(135deg,#232526,#414345);
+                    color:white;
+                    box-shadow:0 8px 20px rgba(0,0,0,0.3);
+                    font-family:Arial;
+                ">
+                    <div style="font-size:13px;opacity:0.85">
+                        📅 {row['Date']}
+                    </div>
+        
+                    <div style="font-size:22px;font-weight:800;margin:6px 0">
+                        ₹ {float(row['Amount']):,.2f}
+                    </div>
+        
+                    <div style="font-size:14px">
+                        📂 <b>{row['Category']}</b>
+                    </div>
+        
+                    <div style="font-size:13px;opacity:0.9">
+                        🐄 Cow: {row['CowID']}
+                    </div>
+        
+                    <div style="font-size:13px;opacity:0.9">
+                        💳 {row['PaymentMode']} • 👤 {row['ExpenseBy']}
+                    </div>
+        
+                    <div style="font-size:12px;margin-top:6px;opacity:0.85">
+                        📝 {row['Notes']}
+                    </div>
+        
+                    <div style="margin-top:10px">
+                        {bill_button}
+                    </div>
+                </div>
+                """
+        
+                with cols[i % 3]:
+                    components.html(card_html, height=280)
+
 
 
 
