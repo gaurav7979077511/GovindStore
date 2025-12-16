@@ -54,6 +54,11 @@ def open_sheet(sheet_id: str, tab: str):
         return sh.worksheet(tab)
     except gspread.WorksheetNotFound:
         return sh.get_worksheet(0)
+        
+def open_customer_sheet():
+            client = init_gsheets()
+            sh = client.open_by_key(MAIN_SHEET_ID)
+            return sh.worksheet(CUSTOMER_TAB)
 
 def get_customers_df():
             ws = open_customer_sheet()
@@ -1436,10 +1441,7 @@ else:
 
     
 
-        def open_customer_sheet():
-            client = init_gsheets()
-            sh = client.open_by_key(MAIN_SHEET_ID)
-            return sh.worksheet(CUSTOMER_TAB)
+        
 
         
 
