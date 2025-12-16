@@ -911,39 +911,70 @@ else:
             investment_df = investment_df.sort_values("Date", ascending=False)
     
             for _, row in investment_df.iterrows():
-                components.html(
-                        f"""
-                    <div style="background:#ffffff;
-                                border:1px solid #e5e7eb;
-                                border-radius:10px;
-                                padding:10px;
-                                margin-bottom:10px;">
-                    
-                        <div style="display:flex;justify-content:space-between;">
-                            <div style="font-weight:700;">₹ {float(row['Amount']):,.0f}</div>
-                            <div style="font-size:12px;color:#64748b;">{row['Date']}</div>
+                with cols[i % 5]:
+                    components.html(
+                f"""
+                <div style="
+                    background:#f9fafb;
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    padding:8px;
+                    height:120px;
+                    box-sizing:border-box;
+                    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+                    font-family:Arial, sans-serif;
+                ">
+                
+                    <!-- Amount & Date -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div style="font-size:15px;font-weight:700;color:#0f172a;">
+                            ₹ {float(row['Amount']):,.0f}
                         </div>
-                    
-                        <div style="font-size:13px;margin-top:4px;">
-                            {row['InvestmentType']} → {row['FundDestination']}
+                        <div style="font-size:11px;color:#64748b;">
+                            {pd.to_datetime(row['Date']).strftime('%d %b')}
                         </div>
-                    
-                        <div style="font-size:12px;color:#475569;margin-top:4px;">
-                            {row['Notes'][:120] if row['Notes'] else ""}
-                        </div>
-                    
-                        <div style="display:flex;justify-content:space-between;margin-top:6px;">
-                            <div style="font-size:12px;font-weight:600;">
-                                {row['InvestedBy']}
-                            </div>
-                            {"<a href='"+row['FileURL']+"' target='_blank'>📎</a>" if row['FileURL'] else ""}
-                        </div>
-                    
                     </div>
-                    """,
-                        height=140,
-                    )
-
+                
+                    <!-- Type -->
+                    <div style="font-size:12px;font-weight:600;color:#334155;margin-top:2px;">
+                        {row['InvestmentType']}
+                    </div>
+                
+                    <!-- Destination -->
+                    <div style="font-size:11px;color:#475569;margin-top:1px;">
+                        {row['FundDestination']}
+                    </div>
+                
+                    <!-- Notes (max 3 lines) -->
+                    <div style="
+                        font-size:11px;
+                        color:#334155;
+                        margin-top:4px;
+                        display:-webkit-box;
+                        -webkit-line-clamp:3;
+                        -webkit-box-orient:vertical;
+                        overflow:hidden;
+                    ">
+                        {row['Notes'] or ""}
+                    </div>
+                
+                    <!-- Footer -->
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        margin-top:4px;
+                        font-size:11px;
+                        color:#475569;
+                    ">
+                        <span>{row['InvestedBy']}</span>
+                        {f"<a href='{row['FileURL']}' target='_blank' style='text-decoration:none;'>📎</a>" if row['FileURL'] else "<span></span>"}
+                    </div>
+                
+                </div>
+                """,
+                    height=125,
+                )
 
 
 
