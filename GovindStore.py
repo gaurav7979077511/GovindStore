@@ -670,7 +670,7 @@ else:
 
         
                 with cols[i % 5]:
-                    components.html(card_html, height=125)
+                    components.html(card_html, height=135)
 
 
 
