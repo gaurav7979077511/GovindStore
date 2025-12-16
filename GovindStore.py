@@ -769,27 +769,36 @@ else:
         st.subheader("📊 Investment Summary")
     
         def kpi_card(title, amount, percent=None):
-            percent_html = (
-                f"<div style='font-size:13px;color:#94a3b8;'>({percent}%)</div>"
-                if percent is not None
-                else ""
-            )
+
+            percent_html = ""
+            if percent is not None:
+                percent_html = f"""
+                <div style="font-size:12px;color:#94a3b8;">
+                    {percent}%
+                </div>
+                """
         
-            st.markdown(
+            components.html(
                 f"""
                 <div style="
-                    padding:14px;
-                    margin:8px 0;
+                    padding:12px;
                     border-radius:12px;
-                    background:linear-gradient(135deg,#0f172a,#1e293b);
+                    background:#0f172a;
                     color:white;
-                    box-shadow:0 4px 12px rgba(0,0,0,0.18);
+                    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+                    height:90px;
+                    font-family:Arial,sans-serif;
                 ">
-                    <div style="font-size:12px;opacity:0.85">
+                    <div style="font-size:12px;opacity:0.85;">
                         {title}
                     </div>
         
-                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:8px;
+                        margin-top:6px;
+                    ">
                         <div style="font-size:20px;font-weight:800;">
                             ₹ {amount:,.0f}
                         </div>
@@ -797,7 +806,7 @@ else:
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True,
+                height=100,
             )
 
         # --- Overall + Per User Cards (hide zero users) ---
