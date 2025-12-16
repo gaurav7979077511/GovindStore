@@ -470,7 +470,7 @@ else:
         with k2:
             kpi_card("Total Expense (This Month)", total_month)
         with k3:
-            kpi_card("Top Category (This Month)", 0)
+            kpi_card("Top Category (This Month)", top_category)
         with k4:
             kpi_card("Avg Daily Expense (This Month)", avg_daily)
     
