@@ -574,52 +574,74 @@ else:
         
             for i, row in expense_df.iterrows():
         
-                if i % 3 == 0:
-                    cols = st.columns(3)
+                if i % 4 == 0:   # 4 cards per row
+                    cols = st.columns(4)
         
+                # ---- Bill button (same space always) ----
                 if row["FileURL"]:
                     bill_button = (
                         f"<a href='{row['FileURL']}' target='_blank' "
-                        "style='display:inline-block;padding:6px 12px;"
-                        "background:#00c6ff;color:black;border-radius:8px;"
-                        "text-decoration:none;font-weight:600;'>"
+                        "style='display:inline-block;width:100%;"
+                        "padding:6px 0;text-align:center;"
+                        "background:#00c6ff;color:black;"
+                        "border-radius:8px;text-decoration:none;"
+                        "font-size:13px;font-weight:600;'>"
                         "📎 View Bill</a>"
                     )
                 else:
-                    bill_button = "<span style='opacity:0.6'>No Bill</span>"
+                    bill_button = (
+                        "<div style='width:100%;padding:6px 0;"
+                        "text-align:center;border-radius:8px;"
+                        "background:#555;color:#aaa;"
+                        "font-size:13px;'>No Bill</div>"
+                    )
         
                 card_html = f"""
                 <div style="
-                    padding:16px;
-                    margin:10px 0;
+                    height:260px;
+                    padding:12px;
                     border-radius:16px;
                     background:linear-gradient(135deg,#232526,#414345);
                     color:white;
-                    box-shadow:0 8px 20px rgba(0,0,0,0.3);
+                    box-shadow:0 8px 18px rgba(0,0,0,0.3);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
                     font-family:Arial;
                 ">
-                    <div style="font-size:13px;opacity:0.85">
-                        📅 {row['Date']}
-                    </div>
         
-                    <div style="font-size:22px;font-weight:800;margin:6px 0">
-                        ₹ {float(row['Amount']):,.2f}
-                    </div>
+                    <div>
+                        <div style="font-size:12px;opacity:0.8">
+                            📅 {row['Date']}
+                        </div>
         
-                    <div style="font-size:14px">
-                        📂 <b>{row['Category']}</b>
-                    </div>
+                        <div style="font-size:20px;font-weight:800;margin:4px 0">
+                            ₹ {float(row['Amount']):,.2f}
+                        </div>
         
-                    <div style="font-size:13px;opacity:0.9">
-                        🐄 Cow: {row['CowID']}
-                    </div>
+                        <div style="font-size:13px">
+                            📂 <b>{row['Category']}</b>
+                        </div>
         
-                    <div style="font-size:13px;opacity:0.9">
-                        💳 {row['PaymentMode']} • 👤 {row['ExpenseBy']}
-                    </div>
+                        <div style="font-size:12px;opacity:0.9">
+                            🐄 {row['CowID']}
+                        </div>
         
-                    <div style="font-size:12px;margin-top:6px;opacity:0.85">
-                        📝 {row['Notes']}
+                        <div style="font-size:12px;opacity:0.9">
+                            💳 {row['PaymentMode']} • 👤 {row['ExpenseBy']}
+                        </div>
+        
+                        <div style="
+                            font-size:12px;
+                            margin-top:6px;
+                            opacity:0.85;
+                            display:-webkit-box;
+                            -webkit-line-clamp:2;
+                            -webkit-box-orient:vertical;
+                            overflow:hidden;
+                        ">
+                            📝 {row['Notes']}
+                        </div>
                     </div>
         
                     <div style="margin-top:10px">
@@ -628,7 +650,7 @@ else:
                 </div>
                 """
         
-                with cols[i % 3]:
+                with cols[i % 4]:
                     components.html(card_html, height=280)
 
 
