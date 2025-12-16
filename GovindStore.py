@@ -904,77 +904,83 @@ else:
         # INVESTMENT LIST
         # =========================================================
         st.subheader("📋 Investment List")
-    
+
         if investment_df.empty:
             st.info("No investments recorded yet.")
         else:
-            investment_df = investment_df.sort_values("Date", ascending=False)
-    
-            for _, row in investment_df.iterrows():
+            investment_df = investment_df.sort_values("Date", ascending=False).reset_index(drop=True)
+        
+            for i, row in investment_df.iterrows():
+        
+                # 🔹 Create 5 columns per row
+                if i % 5 == 0:
+                    cols = st.columns(5, gap="small")
+        
                 with cols[i % 5]:
                     components.html(
-                f"""
-                <div style="
-                    background:#f9fafb;
-                    border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:8px;
-                    height:120px;
-                    box-sizing:border-box;
-                    box-shadow:0 1px 2px rgba(0,0,0,0.04);
-                    font-family:Arial, sans-serif;
-                ">
-                
-                    <!-- Amount & Date -->
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div style="font-size:15px;font-weight:700;color:#0f172a;">
-                            ₹ {float(row['Amount']):,.0f}
-                        </div>
-                        <div style="font-size:11px;color:#64748b;">
-                            {pd.to_datetime(row['Date']).strftime('%d %b')}
-                        </div>
-                    </div>
-                
-                    <!-- Type -->
-                    <div style="font-size:12px;font-weight:600;color:#334155;margin-top:2px;">
-                        {row['InvestmentType']}
-                    </div>
-                
-                    <!-- Destination -->
-                    <div style="font-size:11px;color:#475569;margin-top:1px;">
-                        {row['FundDestination']}
-                    </div>
-                
-                    <!-- Notes (max 3 lines) -->
-                    <div style="
-                        font-size:11px;
-                        color:#334155;
-                        margin-top:4px;
-                        display:-webkit-box;
-                        -webkit-line-clamp:3;
-                        -webkit-box-orient:vertical;
-                        overflow:hidden;
-                    ">
-                        {row['Notes'] or ""}
-                    </div>
-                
-                    <!-- Footer -->
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        margin-top:4px;
-                        font-size:11px;
-                        color:#475569;
-                    ">
-                        <span>{row['InvestedBy']}</span>
-                        {f"<a href='{row['FileURL']}' target='_blank' style='text-decoration:none;'>📎</a>" if row['FileURL'] else "<span></span>"}
-                    </div>
-                
+        f"""
+        <div style="
+            background:#f9fafb;
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            padding:8px;
+            height:120px;
+            box-sizing:border-box;
+            box-shadow:0 1px 2px rgba(0,0,0,0.04);
+            font-family:Arial, sans-serif;
+        ">
+        
+            <!-- Amount & Date -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:15px;font-weight:700;color:#0f172a;">
+                    ₹ {float(row['Amount']):,.0f}
                 </div>
-                """,
-                    height=125,
-                )
+                <div style="font-size:11px;color:#64748b;">
+                    {pd.to_datetime(row['Date']).strftime('%d %b')}
+                </div>
+            </div>
+        
+            <!-- Type -->
+            <div style="font-size:12px;font-weight:600;color:#334155;margin-top:2px;">
+                {row['InvestmentType']}
+            </div>
+        
+            <!-- Destination -->
+            <div style="font-size:11px;color:#475569;margin-top:1px;">
+                {row['FundDestination']}
+            </div>
+        
+            <!-- Notes -->
+            <div style="
+                font-size:11px;
+                color:#334155;
+                margin-top:4px;
+                display:-webkit-box;
+                -webkit-line-clamp:3;
+                -webkit-box-orient:vertical;
+                overflow:hidden;
+            ">
+                {row['Notes'] or ""}
+            </div>
+        
+            <!-- Footer -->
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-top:4px;
+                font-size:11px;
+                color:#475569;
+            ">
+                <span>{row['InvestedBy']}</span>
+                {f"<a href='{row['FileURL']}' target='_blank' style='text-decoration:none;'>📎</a>" if row['FileURL'] else "<span></span>"}
+            </div>
+        
+        </div>
+        """,
+                        height=125,
+                    )
+
 
 
 
