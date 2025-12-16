@@ -574,54 +574,54 @@ else:
         
             for i, row in expense_df.iterrows():
         
-                if i % 4 == 0:
-                    cols = st.columns(4)
+                if i % 5 == 0:   # 5 cards per row
+                    cols = st.columns(5)
         
                 bill_html = ""
                 if row["FileURL"]:
                     bill_html = (
                         f"<a href='{row['FileURL']}' target='_blank' "
-                        "style='text-decoration:none;font-size:12px;"
-                        "color:#2563eb;font-weight:600;'>📎</a>"
+                        "style='text-decoration:none;color:#475569;"
+                        "font-size:11px;'>📎</a>"
                     )
         
                 card_html = f"""
                 <div style="
-                    background:#ffffff;
-                    color:#111827;
+                    background:#f8fafc;
+                    color:#0f172a;
                     border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:10px;
-                    font-family:Inter, Arial;
-                    height:160px;
-                    box-shadow:0 1px 4px rgba(0,0,0,0.06);
+                    border-radius:8px;
+                    padding:8px;
+                    font-family:Arial;
+                    height:135px;
+                    box-shadow:0 1px 2px rgba(0,0,0,0.05);
                 ">
         
-                    <!-- Amount + Date -->
+                    <!-- Amount & Date -->
                     <div style="display:flex;justify-content:space-between;">
-                        <div style="font-size:18px;font-weight:700;color:#111827;">
+                        <div style="font-size:15px;font-weight:700;">
                             ₹ {float(row['Amount']):,.0f}
                         </div>
-                        <div style="font-size:12px;color:#6b7280;">
-                            {pd.to_datetime(row['Date']).strftime('%d %b %Y')}
+                        <div style="font-size:11px;color:#64748b;">
+                            {pd.to_datetime(row['Date']).strftime('%d %b')}
                         </div>
                     </div>
         
                     <!-- Category -->
-                    <div style="font-size:13px;font-weight:600;margin-top:2px;">
+                    <div style="font-size:12px;font-weight:600;margin-top:1px;">
                         {row['Category']}
                     </div>
         
                     <!-- Meta -->
-                    <div style="font-size:12px;color:#374151;margin-top:2px;">
+                    <div style="font-size:11px;color:#475569;margin-top:1px;">
                         {row['PaymentMode']} | {row['CowID']}
                     </div>
         
                     <!-- Notes -->
                     <div style="
-                        font-size:12px;
-                        color:#4b5563;
-                        margin-top:6px;
+                        font-size:11px;
+                        color:#334155;
+                        margin-top:4px;
                         display:-webkit-box;
                         -webkit-line-clamp:3;
                         -webkit-box-orient:vertical;
@@ -635,19 +635,20 @@ else:
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        margin-top:8px;
-                        font-size:12px;
-                        color:#6b7280;
+                        margin-top:4px;
+                        font-size:11px;
+                        color:#64748b;
                     ">
-                        <div>{row['ExpenseBy']}</div>
-                        <div>{bill_html}</div>
+                        <span>{row['ExpenseBy']}</span>
+                        <span>{bill_html}</span>
                     </div>
         
                 </div>
                 """
         
-                with cols[i % 4]:
-                    components.html(card_html, height=170)
+                with cols[i % 5]:
+                    components.html(card_html, height=145)
+
 
 
 
