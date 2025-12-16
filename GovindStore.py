@@ -732,7 +732,7 @@ else:
         # Dairy users from AUTH sheet
         dairy_users = (
             auth_df[
-                auth_df["accesslevel"]
+                auth_df["AccessLevel"]
                 .fillna("")
                 .str.contains(r"\bdairy\b", case=False)
             ]["name"]
