@@ -74,6 +74,7 @@ def load_auth_data():
     return pd.DataFrame(AUTH_sheet.get_all_records())
 
 auth_df = load_auth_data()
+auth_df.columns = auth_df.columns.str.strip()
 
 # ============================================================
 # PASSWORD VERIFY
