@@ -74,7 +74,14 @@ def load_auth_data():
     return pd.DataFrame(AUTH_sheet.get_all_records())
 
 auth_df = load_auth_data()
-auth_df.columns = auth_df.columns.astype(str).str.strip()
+auth_df.columns = (
+    auth_df.columns
+    .astype(str)
+    .str.replace("\u00a0", "", regex=False)
+    .str.strip()
+    .str.lower()
+)
+
 
 
 # ============================================================
