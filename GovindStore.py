@@ -772,21 +772,21 @@ else:
             st.markdown(
                 f"""
                 <div style="
-                    background:#f8fafc;
-                    border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:12px;
-                    height:90px;
-                    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+                    padding:16px;
+                    margin:8px 0;
+                    border-radius:14px;
+                    background:linear-gradient(135deg,#141E30,#243B55);
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
                 ">
-                    <div style="font-size:13px;color:#475569;font-weight:600;">
+                    <div style="font-size:13px;opacity:0.85">
                         {title}
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                        <div style="font-size:20px;font-weight:800;color:#0f172a;">
+                        <div style="font-size:22px;font-weight:800">
                             ₹ {amount:,.0f}
                         </div>
-                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else "100"}
+                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else "0"}
                     </div>
                 </div>
                 """,
