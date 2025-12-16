@@ -666,9 +666,199 @@ else:
 
 
 
+    #-----investment
+    elif page == "Investment":
+
+        st.title("💼 Investment")
     
-    elif page=="Investment":
-        st.title("Investment")
+        INVESTMENT_HEADER = [
+            "InvestmentID", "Date", "InvestedBy", "Amount",
+            "InvestmentType", "FundDestination",
+            "FileURL", "Notes", "Timestamp"
+        ]
+    
+        # ------------------ SHEET FUNCTIONS ------------------
+        def open_investment_sheet():
+            return open_sheet(MAIN_SHEET_ID, INVESTMENT_TAB)
+    
+        def load_investments():
+            ws = open_investment_sheet()
+            rows = ws.get_all_values()
+    
+            if not rows or rows[0] != INVESTMENT_HEADER:
+                ws.clear()
+                ws.insert_row(INVESTMENT_HEADER, 1)
+                return pd.DataFrame(columns=INVESTMENT_HEADER)
+    
+            return pd.DataFrame(rows[1:], columns=rows[0])
+    
+        # ------------------ CLOUDINARY UPLOAD ------------------
+        def upload_to_cloudinary(file):
+            import cloudinary
+            import cloudinary.uploader
+    
+            cloudinary.config(
+                cloud_name=st.secrets["cloudinary"]["cloud_name"],
+                api_key=st.secrets["cloudinary"]["api_key"],
+                api_secret=st.secrets["cloudinary"]["api_secret"],
+            )
+    
+            result = cloudinary.uploader.upload(file)
+            return result["secure_url"]
+    
+        # ------------------ LOAD DATA ------------------
+        investment_df = load_investments()
+        investment_df["Amount"] = pd.to_numeric(
+            investment_df["Amount"], errors="coerce"
+        ).fillna(0)
+    
+        dairy_users = auth_df[auth_df["Access"] == "Dairy"]["Name"].unique().tolist()
+    
+        total_investment = investment_df["Amount"].sum()
+    
+        # ------------------ KPI SECTION ------------------
+        st.subheader("📊 Investment Summary")
+    
+        def kpi_card(title, amount, subtitle=None):
+            st.markdown(
+                f"""
+                <div style="
+                    background:#f8fafc;
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    padding:12px;
+                    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+                ">
+                    <div style="font-size:13px;color:#475569;font-weight:600;">
+                        {title}
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#0f172a;margin-top:4px;">
+                        ₹ {amount:,.0f}
+                    </div>
+                    {f"<div style='font-size:12px;color:#64748b;margin-top:2px;'>{subtitle}</div>" if subtitle else ""}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    
+        cols = st.columns(len(dairy_users) + 1)
+    
+        with cols[0]:
+            kpi_card("Overall Investment", total_investment)
+    
+        for i, user in enumerate(dairy_users, start=1):
+            user_total = investment_df[investment_df["InvestedBy"] == user]["Amount"].sum()
+            percent = (user_total / total_investment * 100) if total_investment > 0 else 0
+    
+            with cols[i]:
+                kpi_card(user, user_total, f"{percent:.1f}% contribution")
+    
+        st.divider()
+    
+        # ------------------ ADD INVESTMENT ------------------
+        st.subheader("➕ Add Investment")
+    
+        with st.form("add_investment"):
+            c1, c2, c3 = st.columns(3)
+    
+            with c1:
+                invested_by = st.selectbox("Invested By", dairy_users)
+                amount = st.number_input(
+                    "Amount",
+                    min_value=0.0,
+                    step=1000.0,
+                    placeholder="Enter amount",
+                    format="%.2f"
+                )
+    
+            with c2:
+                inv_type = st.selectbox(
+                    "Investment Type",
+                    ["Owner Capital", "Partner Investment", "Loan", "Temporary Advance", "Other"]
+                )
+                destination = st.selectbox(
+                    "Fund Destination",
+                    ["Company Account", "User Wallet"]
+                )
+    
+            with c3:
+                proof = st.file_uploader("Upload Proof (Optional)", type=["jpg","png","pdf"])
+                notes = st.text_area("Notes (Optional)", height=80)
+    
+            save, cancel = st.columns(2)
+    
+        if cancel.form_submit_button("Cancel"):
+            st.rerun()
+    
+        if save.form_submit_button("Save"):
+            if amount <= 0:
+                st.error("❌ Amount must be greater than 0")
+                st.stop()
+    
+            file_url = ""
+            if proof:
+                file_url = upload_to_cloudinary(proof)
+    
+            open_investment_sheet().append_row(
+                [
+                    f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    dt.date.today().strftime("%Y-%m-%d"),
+                    invested_by,
+                    amount,
+                    inv_type,
+                    destination,
+                    file_url,
+                    notes,
+                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ],
+                value_input_option="USER_ENTERED"
+            )
+    
+            st.success("Investment added successfully ✅")
+            st.rerun()
+    
+        st.divider()
+    
+        # ------------------ INVESTMENT LIST ------------------
+        st.subheader("📋 Investment List")
+    
+        if investment_df.empty:
+            st.info("No investments recorded yet.")
+        else:
+            for i, row in investment_df.sort_values("Date", ascending=False).iterrows():
+                st.markdown(
+                    f"""
+                    <div style="
+                        background:#ffffff;
+                        border:1px solid #e5e7eb;
+                        border-radius:10px;
+                        padding:10px;
+                        margin-bottom:10px;
+                    ">
+                        <div style="display:flex;justify-content:space-between;">
+                            <div style="font-weight:700;">₹ {float(row['Amount']):,.0f}</div>
+                            <div style="font-size:12px;color:#64748b;">{row['Date']}</div>
+                        </div>
+    
+                        <div style="font-size:13px;margin-top:4px;">
+                            {row['InvestmentType']} → {row['FundDestination']}
+                        </div>
+    
+                        <div style="font-size:12px;color:#475569;margin-top:4px;">
+                            {row['Notes'][:120] if row['Notes'] else ""}
+                        </div>
+    
+                        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+                            <div style="font-size:12px;font-weight:600;">
+                                {row['InvestedBy']}
+                            </div>
+                            {f"<a href='{row['FileURL']}' target='_blank'>📎</a>" if row['FileURL'] else ""}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
 
     elif page=="Payment":
         st.title("Payment")
