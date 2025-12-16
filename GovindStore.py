@@ -683,9 +683,15 @@ else:
         # CONSTANTS
         # =========================================================
         INVESTMENT_HEADER = [
-            "InvestmentID", "Date", "InvestedBy", "Amount",
-            "InvestmentType", "FundDestination",
-            "FileURL", "Notes", "Timestamp"
+            "InvestmentID",
+            "Date",
+            "InvestedBy",
+            "Amount",
+            "InvestmentType",
+            "FundDestination",
+            "FileURL",
+            "Notes",
+            "Timestamp",
         ]
     
         # =========================================================
@@ -708,31 +714,39 @@ else:
         # =========================================================
         # CLOUDINARY UPLOAD
         # =========================================================
+        import cloudinary
+        import cloudinary.uploader
+    
+        cloudinary.config(
+            cloud_name=st.secrets["cloudinary"]["cloud_name"],
+            api_key=st.secrets["cloudinary"]["api_key"],
+            api_secret=st.secrets["cloudinary"]["api_secret"],
+            secure=True,
+        )
+    
         def upload_to_cloudinary(file):
-            import cloudinary
-            import cloudinary.uploader
-    
-            cloudinary.config(
-                cloud_name=st.secrets["cloudinary"]["cloud_name"],
-                api_key=st.secrets["cloudinary"]["api_key"],
-                api_secret=st.secrets["cloudinary"]["api_secret"],
+            result = cloudinary.uploader.upload(
+                file,
+                folder="dairy/investments",
+                resource_type="auto",
             )
-    
-            result = cloudinary.uploader.upload(file)
             return result["secure_url"]
     
         # =========================================================
         # LOAD DATA
         # =========================================================
         investment_df = load_investments()
-        investment_df["Amount"] = pd.to_numeric(
-            investment_df["Amount"], errors="coerce"
-        ).fillna(0)
+        if not investment_df.empty:
+            investment_df["Amount"] = pd.to_numeric(
+                investment_df["Amount"], errors="coerce"
+            ).fillna(0)
     
-        # Dairy users from AUTH sheet
+        # =========================================================
+        # DAIRY USERS (SAFE)
+        # =========================================================
         dairy_users = (
             auth_df[
-                auth_df["AccessLevel"]
+                auth_df["accesslevel"]
                 .fillna("")
                 .str.contains(r"\bdairy\b", case=False)
             ]["name"]
@@ -740,11 +754,11 @@ else:
             .tolist()
         )
     
-        total_investment = investment_df["Amount"].sum()
-    
         # =========================================================
         # KPI SECTION
         # =========================================================
+        total_investment = investment_df["Amount"].sum() if not investment_df.empty else 0
+    
         st.subheader("📊 Investment Summary")
     
         def kpi_card(title, amount, percent=None):
@@ -761,7 +775,7 @@ else:
                     <div style="font-size:13px;color:#475569;font-weight:600;">
                         {title}
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
                         <div style="font-size:20px;font-weight:800;color:#0f172a;">
                             ₹ {amount:,.0f}
                         </div>
@@ -769,10 +783,10 @@ else:
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
     
-        # Overall + investor cards (hide zero investment users)
+        # --- Overall + Per User Cards (hide zero users) ---
         visible_users = []
         for u in dairy_users:
             if investment_df[investment_df["InvestedBy"] == u]["Amount"].sum() > 0:
@@ -786,7 +800,6 @@ else:
         for i, user in enumerate(visible_users, start=1):
             user_total = investment_df[investment_df["InvestedBy"] == user]["Amount"].sum()
             percent = round((user_total / total_investment) * 100, 1) if total_investment > 0 else 0
-    
             with cols[i]:
                 kpi_card(user, user_total, percent)
     
@@ -809,19 +822,24 @@ else:
                         "Amount",
                         min_value=0.0,
                         value=None,
-                        step=1000.0,
                         placeholder="Enter investment amount",
-                        format="%.2f"
+                        step=1000.0,
                     )
     
                 with c2:
                     inv_type = st.selectbox(
                         "Investment Type",
-                        ["Owner Capital", "Partner Investment", "Loan", "Temporary Advance", "Other"]
+                        [
+                            "Owner Capital",
+                            "Partner Investment",
+                            "Loan",
+                            "Temporary Advance",
+                            "Other",
+                        ],
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        ["Company Account", "User Wallet"]
+                        ["Company Account", "User Wallet"],
                     )
     
                     wallet_user = ""
@@ -831,9 +849,9 @@ else:
                 with c3:
                     proof = st.file_uploader(
                         "Upload Proof (Optional)",
-                        type=["jpg", "png", "pdf"]
+                        type=["jpg", "png", "pdf"],
                     )
-                    notes = st.text_area("Notes (Optional)", height=80)
+                    notes = st.text_area("Notes", height=80)
     
                 save, cancel = st.columns(2)
     
@@ -842,7 +860,6 @@ else:
                 st.rerun()
     
             if save.form_submit_button("Save"):
-    
                 if amount is None or amount <= 0:
                     st.error("❌ Amount must be greater than 0")
                     st.stop()
@@ -867,7 +884,7 @@ else:
                         notes,
                         dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     ],
-                    value_input_option="USER_ENTERED"
+                    value_input_option="USER_ENTERED",
                 )
     
                 st.success("Investment added successfully ✅")
@@ -886,7 +903,7 @@ else:
         else:
             investment_df = investment_df.sort_values("Date", ascending=False)
     
-            for i, row in investment_df.iterrows():
+            for _, row in investment_df.iterrows():
                 st.markdown(
                     f"""
                     <div style="
@@ -917,8 +934,9 @@ else:
                         </div>
                     </div>
                     """,
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
+
 
 
 
