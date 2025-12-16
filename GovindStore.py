@@ -786,7 +786,7 @@ else:
                         <div style="font-size:20px;font-weight:800;color:#0f172a;">
                             ₹ {amount:,.0f}
                         </div>
-                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else ""}
+                        {f"<div style='font-size:13px;color:#64748b;'>{percent}%</div>" if percent else "100"}
                     </div>
                 </div>
                 """,
