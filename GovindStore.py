@@ -781,25 +781,20 @@ else:
             components.html(
                 f"""
                 <div style="
-                    padding:12px;
-                    border-radius:12px;
-                    background:#0f172a;
-                    color:white;
-                    box-shadow:0 4px 10px rgba(0,0,0,0.2);
-                    height:90px;
-                    font-family:Arial,sans-serif;
+                            padding:16px;
+                            margin:8px 0;
+                            border-radius:14px;
+                            background:linear-gradient(135deg,#141E30,#243B55);
+                            color:white;
+                            box-shadow:0 6px 16px rgba(0,0,0,0.25);
                 ">
-                    <div style="font-size:12px;opacity:0.85;">
+                    <div style="font-size:13px;opacity:0.85">
                         {title}
                     </div>
         
-                    <div style="
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                        margin-top:6px;
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"
                     ">
-                        <div style="font-size:20px;font-weight:800;">
+                        <div style="font-size:22px;font-weight:800">
                             ₹ {amount:,.0f}
                         </div>
                         {percent_html}
