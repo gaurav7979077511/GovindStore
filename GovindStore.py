@@ -71,9 +71,22 @@ AUTH_sheet = get_auth_sheet()
 
 @st.cache_resource
 def load_auth_data():
-    return pd.DataFrame(AUTH_sheet.get_all_records())
+    ws = open_sheet(AUTH_SHEET_ID, AUTH_SHEET_NAME)
+    df = pd.DataFrame(ws.get_all_records())
+
+    # 🔥 HARD NORMALIZATION (DO NOT REMOVE)
+    df.columns = (
+        df.columns
+        .astype(str)
+        .str.replace("\u00a0", "", regex=False)
+        .str.strip()
+        .str.lower()
+    )
+    return df
+
 
 auth_df = load_auth_data()
+
 auth_df.columns = auth_df.columns.astype(str).str.strip()
 
 
