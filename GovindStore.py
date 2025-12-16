@@ -447,7 +447,11 @@ else:
     
         k1, k2, k3, k4 = st.columns(4)
     
-        def kpi_card(title, value):
+        def kpi_card(title, value, is_currency=True):
+            display_value = (
+                f"₹ {value:,.2f}" if is_currency else str(value)
+            )
+        
             st.markdown(
                 f"""
                 <div style="
@@ -459,18 +463,19 @@ else:
                     box-shadow:0 6px 16px rgba(0,0,0,0.25);
                 ">
                     <div style="font-size:13px;opacity:0.85">{title}</div>
-                    <div style="font-size:22px;font-weight:800">₹ {value:,.2f}</div>
+                    <div style="font-size:22px;font-weight:800">{display_value}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+
     
         with k1:
             kpi_card("Total Expense (Overall)", total_overall)
         with k2:
             kpi_card("Total Expense (This Month)", total_month)
         with k3:
-            kpi_card("Top Category (This Month)", top_category)
+            kpi_card("Top Category (This Month)", top_category, is_currency=False)
         with k4:
             kpi_card("Avg Daily Expense (This Month)", avg_daily)
     
