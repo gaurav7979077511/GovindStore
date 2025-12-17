@@ -1485,6 +1485,7 @@ else:
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
+                    margin-bottom:14px;
                     cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
                 ">
                     <div style="font-size:15px;font-weight:800;">
