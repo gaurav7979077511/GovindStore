@@ -1514,50 +1514,52 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                card_html = textwrap.dedent(f"""
-                    <div style="
-                        height:165px;
-                        padding:14px;
-                        border-radius:16px;
-                        background:{gradient};
-                        color:white;
-                        box-shadow:0 6px 18px rgba(0,0,0,0.28);
-                        display:flex;
-                        flex-direction:column;
-                        justify-content:space-between;
-                        margin-bottom:16px;
-                    ">
+                from streamlit.components.v1 import html
 
-                        <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
-                            {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                            <span>{row['CowID']}</span>
-                        </div>
+                card_html = f"""
+                <div style="
+                    height:165px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 18px rgba(0,0,0,0.28);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                ">
 
-                        <div style="font-size:13px;">🧬 <b>Breed:</b> {row['Breed']}</div>
-                        <div style="font-size:13px;">⚥ <b>Gender:</b> {row['Gender']}</div>
-                        <div style="font-size:13px;">🎂 <b>Age:</b> {age} yrs</div>
-
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            font-size:12.5px;
-                            font-weight:700;
-                            border-top:1px solid rgba(255,255,255,0.25);
-                            padding-top:6px;
-                        ">
-                            <span>🩺 {row['Status']}</span>
-                            <span>🥛 {row['MilkingStatus']}</span>
-                        </div>
-
+                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
                     </div>
-                    """)
+
+                    <div style="font-size:13px;">🧬 <b>Breed:</b> {row['Breed']}</div>
+                    <div style="font-size:13px;">⚥ <b>Gender:</b> {row['Gender']}</div>
+                    <div style="font-size:13px;">🎂 <b>Age:</b> {age} yrs</div>
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        font-size:12.5px;
+                        font-weight:700;
+                        border-top:1px solid rgba(255,255,255,0.25);
+                        padding-top:6px;
+                    ">
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
+                    </div>
+
+                </div>
+                """
+
 
 
 
 
 
                 with cols[i % 4]:
-                    st.markdown(card_html, unsafe_allow_html=True)
+                    html(card_html, height=180)
 
             
 
