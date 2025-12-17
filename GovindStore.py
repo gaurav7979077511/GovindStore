@@ -1473,31 +1473,55 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                card_html = f"""
-                <div style="
-                    height:170px;
-                    padding:14px;
-                    border-radius:16px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                    line-height:1.3;
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
-                    margin-bottom:14px;
-                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
-                ">
-                    <div style="font-size:15px;font-weight:800;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                card_html = textwrap.dedent(f"""
+                    <div style="
+                        height:180px;
+                        padding:16px;
+                        border-radius:18px;
+                        background:{gradient};
+                        color:white;
+                        box-shadow:0 8px 20px rgba(0,0,0,0.28);
+                        line-height:1.35;
+                        display:flex;
+                        flex-direction:column;
+                        justify-content:space-between;
+                        margin-bottom:18px;
+                        cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                    ">
+
+                        <!-- Header -->
+                        <div style="font-size:16px;font-weight:800;">
+                            {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                        </div>
+
+                        <!-- Body -->
+                        <div style="font-size:13px;">
+                            🧬 <b>Breed:</b> {row['Breed']}
+                        </div>
+
+                        <div style="font-size:13px;">
+                            ⚥ <b>Gender:</b> {row['Gender']}
+                        </div>
+
+                        <div style="font-size:13px;">
+                            🎂 <b>Age:</b> {age} Years
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            font-size:13px;
+                            font-weight:700;
+                        ">
+                            <span>🩺 {row['Status']}</span>
+                            <span>🥛 {row['MilkingStatus']}</span>
+                        </div>
+
                     </div>
-                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
-                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
-                    <div style="font-size:12px;">Age: {age} Years</div>
-                    <div style="font-size:12px;">Status: {row['Status']}</div>
-                    <div style="font-size:12px;">Milking: {row['MilkingStatus']}</div>
-                </div>
-                """
+                    """)
+
 
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
