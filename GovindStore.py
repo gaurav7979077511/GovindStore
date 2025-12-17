@@ -1546,28 +1546,43 @@ else:
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:14px;
-                    cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
-                    opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
+                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                    opacity:{'1' if st.session_state.cow_view_mode=='edit' else '0.95'};
                 ">
 
-                <div style="font-size:15px;font-weight:800;">👤 </div>
+                    <div style="font-size:15px;font-weight:800;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    </div>
 
-                <div style="font-size:12px;">📞 </div>
-                <div style="font-size:12px;">✉️ </div>
+                    <div style="font-size:12px;">
+                        🧬 <b>Breed:</b> {row['Breed']}
+                    </div>
 
-                <div style="font-size:12px;display:flex;justify-content:space-between;">
-                <span></span>
-                <span style="font-weight:700;">💰 </span>
-                </div>
+                    <div style="font-size:12px;">
+                        ⚥ <b>Gender:</b> {row['Gender']}
+                    </div>
 
-                <div style="font-size:12px;">📅 </div>
+                    <div style="font-size:12px;">
+                        🎂 <b>Age:</b> {age} yrs
+                    </div>
 
-                <div style="font-size:13px;font-weight:700;">
-                ⏰ 
-                </div>
+                    {f'<div style="font-size:12px;">{source_line}</div>' if source_line else ''}
+
+                    {f'<div style="font-size:12px;">{sold_line}</div>' if sold_line else ''}
+
+                    <div style="
+                        font-size:13px;
+                        font-weight:700;
+                        display:flex;
+                        justify-content:space-between;
+                    ">
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
+                    </div>
 
                 </div>
                 """)
+
 
 
 
