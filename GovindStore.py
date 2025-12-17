@@ -1534,7 +1534,7 @@ else:
 
                 card_html = f"""
                 <div style="
-                    height:150px;
+                    height:130px;
                     padding:14px 16px;
                     border-radius:14px;
                     background:{gradient};
