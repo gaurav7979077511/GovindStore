@@ -1514,16 +1514,16 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                from streamlit.components.v1 import html
+                #from streamlit.components.v1 import html
 
                 card_html = f"""
                 <div style="
-                    height:170px;
+                    height:150px;
                     padding:14px 16px;
-                    border-radius:16px;
+                    border-radius:14px;
                     background:{gradient};
                     color:white;
-                    box-shadow:0 8px 22px rgba(0,0,0,0.25);
+                    box-shadow:0 6px 18px rgba(0,0,0,0.22);
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
@@ -1532,50 +1532,44 @@ else:
 
                     <!-- Header -->
                     <div style="
-                        font-size:15px;
-                        font-weight:700;
+                        font-size:14.5px;
+                        font-weight:600;
                         display:flex;
                         align-items:center;
-                        gap:8px;
+                        gap:6px;
                     ">
                         {'🐄' if row['AnimalType']=='Cow' else '🐃'}
                         <span>{row['CowID']}</span>
                     </div>
 
                     <!-- Info -->
-                    <div style="font-size:12.5px; line-height:1.4; opacity:0.95;">
-                        <div>🧬 <b>Breed:</b> {row['Breed']}</div>
-                        <div>⚥ <b>Gender:</b> {row['Gender']}</div>
-                        <div>🎂 <b>Age:</b> {age} yrs</div>
+                    <div style="font-size:12px; line-height:1.35; opacity:0.95;">
+                        <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
+                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
+                        <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
                     </div>
-
-                    <!-- Divider -->
-                    <div style="
-                        height:1px;
-                        background:rgba(255,255,255,0.25);
-                        margin:6px 0;
-                    "></div>
 
                     <!-- Footer -->
                     <div style="
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        font-size:12px;
+                        font-size:11.5px;
                         font-weight:600;
+                        margin-top:4px;
                     ">
                         <span style="
-                            background:rgba(255,255,255,0.2);
-                            padding:4px 8px;
+                            padding:3px 8px;
                             border-radius:999px;
+                            background:rgba(255,255,255,0.18);
                         ">
                             🩺 {row['Status']}
                         </span>
 
                         <span style="
-                            background:rgba(0,0,0,0.25);
-                            padding:4px 8px;
+                            padding:3px 8px;
                             border-radius:999px;
+                            background:rgba(0,0,0,0.22);
                         ">
                             🥛 {row['MilkingStatus']}
                         </span>
@@ -1590,8 +1584,9 @@ else:
 
 
 
+
                 with cols[i % 4]:
-                    components.html(card_html, height=190)
+                    components.html(card_html, height=170)
 
 
             
