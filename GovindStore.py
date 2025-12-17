@@ -1526,7 +1526,6 @@ else:
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:16px;
-                    overflow:hidden;
                 ">
 
                     <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
@@ -1552,6 +1551,7 @@ else:
 
                 </div>
                 """
+
 
 
                 with cols[i % 4]:
