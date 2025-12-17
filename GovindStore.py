@@ -1567,6 +1567,8 @@ else:
 
                 </div>
                 """)
+                st.write(type(card_html))
+
 
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
