@@ -1526,7 +1526,7 @@ else:
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:16px;
-                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                    overflow:hidden;
                 ">
 
                     <!-- Header -->
@@ -1537,11 +1537,10 @@ else:
                         align-items:center;
                         gap:6px;
                     ">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
+                        🐄 <span>{row['CowID']}</span>
                     </div>
 
-                    <!-- Info rows -->
+                    <!-- Info -->
                     <div style="font-size:13px; line-height:1.25;">
                         🧬 <b>Breed:</b> {row['Breed']}
                     </div>
@@ -1570,6 +1569,7 @@ else:
 
                 </div>
                 """
+
 
 
 
