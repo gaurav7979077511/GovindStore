@@ -1623,6 +1623,23 @@ else:
             if cancel:
                 st.session_state.edit_customer_id = None
                 st.rerun()
+            
+            if update:
+                update_customer_by_id(
+                    row["CustomerID"],
+                    {
+                        "Name": e_name,
+                        "Phone": e_phone,
+                        "Email": e_email,
+                        "Shift": e_shift,
+                        "RatePerLitre": e_rate if e_rate > 0 else "",
+                        "Status": e_status,
+                    }
+                )
+                st.success("✅ Customer updated successfully")
+                st.session_state.edit_customer_id = None
+                st.rerun()
+
 
         
 
