@@ -1649,7 +1649,6 @@ else:
                         "Rate per Litre (₹)",
                         min_value=0.0,
                         step=1.0,
-                        value=None,
                         value=float(row["RatePerLitre"]) if row.get("RatePerLitre") not in ("", None) else 0.0
                     )
 
