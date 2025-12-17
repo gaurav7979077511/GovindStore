@@ -1514,11 +1514,11 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                #from streamlit.components.v1 import html
+
 
                 card_html = f"""
                 <div style="
-                    height:150px;
+                    height:120px;
                     padding:14px 16px;
                     border-radius:14px;
                     background:{gradient};
