@@ -1514,11 +1514,27 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
+                parent_id = row.get("ParentCowID", "").strip()
+                purchase_price = row.get("PurchasePrice", "")
+                sold_price = row.get("SoldPrice", "")
+
+                # Line 1: Parent OR Purchase
+                if parent_id:
+                    source_line = f"👪 <span style='opacity:0.85;'>Parent:</span> {parent_id}"
+                elif purchase_price:
+                    source_line = f"💰 <span style='opacity:0.85;'>Bought:</span> ₹{purchase_price}"
+                else:
+                    source_line = ""
+
+                # Line 2: Sold amount (only if sold)
+                sold_line = ""
+                if row["Status"] == "Sold" and sold_price:
+                    sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
                 card_html = f"""
                 <div style="
-                    height:120px;
+                    height:150px;
                     padding:14px 16px;
                     border-radius:14px;
                     background:{gradient};
@@ -1545,8 +1561,10 @@ else:
                     <!-- Info -->
                     <div style="font-size:12px; line-height:1.35; opacity:0.95;">
                         <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
-                        <div>⚥⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
+                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
                         <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
+                        {f"<div>{source_line}</div>" if source_line else ""}
+                        {f"<div>{sold_line}</div>" if sold_line else ""}
                     </div>
 
                     <!-- Footer -->
@@ -1577,6 +1595,7 @@ else:
 
                 </div>
                 """
+
 
 
 
