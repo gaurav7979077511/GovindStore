@@ -1590,73 +1590,62 @@ else:
                     st.session_state.edit_customer_id = row["CustomerID"]
                     st.rerun()
 
-                    # ---------- FULL WIDTH EDIT BELOW THIS ROW ----------
-                    if (
-                        st.session_state.get("edit_customer_id")
-                        and st.session_state.get("edit_row_index") == row_block // 4
-                    ):
-                        st.markdown("---")
-                        st.markdown("## ✏️ Edit Customer")
+                # ---------- INLINE EDIT FORM ----------
+                if st.session_state.edit_customer_id == row["CustomerID"]:
+                    with st.form(f"edit_{row['CustomerID']}"):
+                        e1, e2, e3 = st.columns(3)
+                        with e1:
+                            e_name = st.text_input("Name", row["Name"])
+                            e_phone = st.text_input("Phone", row["Phone"])
+                            e_rate = st.number_input(
+                                        "Rate per Litre (₹)",
+                                        min_value=0.0,
+                                        value=None if not row["RatePerLitre"] else float(row["RatePerLitre"]),
+                                        step=1.0
+                                    )
 
-                        row = st.session_state.edit_customer_row
-
-                        with st.form("edit_customer_full"):
-                            c1, c2, c3 = st.columns(3)
-
-                            with c1:
-                                e_name = st.text_input("Name", row["Name"])
-                                e_phone = st.text_input("Phone", row["Phone"])
-                                e_rate = st.number_input(
-                                    "Rate per Litre (₹)",
-                                    min_value=0.0,
-                                    value=float(row["RatePerLitre"]) if row["RatePerLitre"] else 0.0,
-                                    step=1.0
-                                )
-
-                            with c2:
-                                e_email = st.text_input("Email", row["Email"])
-                                e_doj = st.date_input(
-                                    "Date of Joining",
-                                    pd.to_datetime(row["DateOfJoining"]).date()
-                                )
-
-                            with c3:
-                                e_shift = st.selectbox(
-                                    "Shift",
-                                    ["Morning","Evening","Both"],
-                                    index=["Morning","Evening","Both"].index(row["Shift"])
-                                )
-                                e_status = st.selectbox(
-                                    "Status",
-                                    ["Active","Inactive"],
-                                    index=0 if row["Status"] == "Active" else 1
-                                )
-
-                            u, c = st.columns(2)
-                            update = u.form_submit_button("✅ Update")
-                            cancel = c.form_submit_button("❌ Cancel")
-
-                        if cancel:
-                            st.session_state.edit_customer_id = None
-                            st.rerun()
-
-                        if update:
-                            update_customer_by_id(
-                                row["CustomerID"],
-                                {
-                                    "Name": e_name,
-                                    "Phone": e_phone,
-                                    "Email": e_email,
-                                    "DateOfJoining": e_doj.strftime("%Y-%m-%d"),
-                                    "Shift": e_shift,
-                                    "RatePerLitre": e_rate if e_rate > 0 else "",
-                                    "Status": e_status,
-                                }
+                        with e2:
+                            e_email = st.text_input("Email", row["Email"])
+                            e_doj = st.date_input(
+                                "DOJ",
+                                pd.to_datetime(row["DateOfJoining"]).date()
                             )
-                            st.success("Customer updated")
-                            st.session_state.edit_customer_id = None
-                            st.rerun()
+                        with e3:
+                            e_shift = st.selectbox(
+                                "Shift",
+                                ["Morning","Evening","Both"],
+                                index=["Morning","Evening","Both"].index(row["Shift"])
+                            )
+                            e_status = st.selectbox(
+                                "Status",
+                                ["Active","Inactive"],
+                                index=0 if row["Status"] == "Active" else 1
+                            )
 
+                        u, c = st.columns(2)
+                        update = u.form_submit_button("Update")
+                        cancel = c.form_submit_button("Cancel")
+
+                    if cancel:
+                        st.session_state.edit_customer_id = None
+                        st.rerun()
+
+                    if update:
+                        update_customer_by_id(
+                            row["CustomerID"],
+                            {
+                                "Name": e_name,
+                                "Phone": e_phone,
+                                "Email": e_email,
+                                "DateOfJoining": e_doj.strftime("%Y-%m-%d"),
+                                "Shift": e_shift,
+                                "RatePerLitre": e_rate if e_rate > 0 else "",
+                                "Status": e_status,
+                            }
+                        )
+                        st.success("Customer updated")
+                        st.session_state.edit_customer_id = None
+                        st.rerun()
 
     elif page == "Milk Bitran":
 
