@@ -6,6 +6,8 @@ import datetime as dt
 from google.oauth2.service_account import Credentials
 import bcrypt
 import gspread
+import textwrap
+
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -1637,7 +1639,7 @@ else:
                 "Both": "linear-gradient(135deg,#f7971e,#ffd200)"
             }.get(shift, "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-            card_html = f"""
+            card_html = textwrap.dedent(f"""
                 <div style="
                     height:160px;
                     padding:14px;
@@ -1649,22 +1651,29 @@ else:
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
+                    cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
+                    opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
                 ">
-                    <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
-                    <div style="font-size:12px;">📞 {row['Phone']}</div>
-                    <div style="font-size:12px;">✉️ {row['Email']}</div>
 
-                    <div style="font-size:12px;display:flex;justify-content:space-between;">
-                        <span>🆔 {row['CustomerID']}</span>
-                        <span style="font-weight:700;">💰 {rate_text}</span>
-                    </div>
+                <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
 
-                    <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
-                    <div style="font-size:13px;font-weight:700;">
-                        ⏰ {row['Shift']} • {row['Status']}
-                    </div>
+                <div style="font-size:12px;">📞 {row['Phone']}</div>
+                <div style="font-size:12px;">✉️ {row['Email']}</div>
+
+                <div style="font-size:12px;display:flex;justify-content:space-between;">
+                <span>🆔 {row['CustomerID']}</span>
+                <span style="font-weight:700;">💰 {rate_text}</span>
                 </div>
-                """
+
+                <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
+
+                <div style="font-size:13px;font-weight:700;">
+                ⏰ {row['Shift']} • {row['Status']}
+                </div>
+
+                </div>
+                """)
+
 
 
 
