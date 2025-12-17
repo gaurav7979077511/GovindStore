@@ -1651,6 +1651,7 @@ else:
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
+                    margin-bottom:24px;
                     cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
                     opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
                 ">
