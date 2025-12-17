@@ -1534,68 +1534,45 @@ else:
 
                 card_html = f"""
                 <div style="
-                    height:140px;
-                    padding:14px 16px;
-                    border-radius:14px;
+                    height:160px;
+                    padding:14px;
+                    border-radius:16px;
                     background:{gradient};
                     color:white;
-                    box-shadow:0 6px 18px rgba(0,0,0,0.22);
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.35;
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
-                    font-family:Inter, system-ui, sans-serif;
+                    margin-bottom:14px;
+                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
                 ">
 
-                    <!-- Header -->
-                    <div style="
-                        font-size:14.5px;
-                        font-weight:600;
-                        display:flex;
-                        align-items:center;
-                        gap:6px;
-                    ">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
+                    <div style="font-size:15px;font-weight:800;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
                     </div>
 
-                    <!-- Info -->
-                    <div style="font-size:12px; line-height:1.35; opacity:0.95;">
-                        <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
-                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
-                        <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
-                        {f"<div>💰 <span style='opacity:0.85;'>Bought:</span> ₹{row['PurchasePrice']}</div>" if row.get("PurchasePrice") else ""}
-                        {f"<div>🧬 <span style='opacity:0.85;'>Parent:</span> {row['ParentCowID']}</div>" if row.get("ParentCowID") else ""}
-                        {f"<div>💸 <span style='opacity:0.85;'>Sold:</span> ₹{row['SoldPrice']}</div>" if row['Status']=='Sold' and row.get('SoldPrice') else ""}
+                    <div style="font-size:12px;">
+                        🧬 <b>Breed:</b> {row['Breed']}
+                    </div>
+                    <div style="font-size:12px;">
+                        ⚥ <b>Gender:</b> {row['Gender']}
+                    </div>
+                    <div style="font-size:12px;">
+                        🎂 <b>Age:</b> {age} yrs
                     </div>
 
-                    <!-- Footer -->
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        font-size:11.5px;
-                        font-weight:600;
-                        margin-top:6px;
-                    ">
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(255,255,255,0.18);
-                        ">
-                            🩺 {row['Status']}
-                        </span>
+                    {f"<div style='font-size:12px;'>🧬 <b>Parent:</b> {row['ParentCowID']}</div>" if row.get("ParentCowID") else ""}
+                    {f"<div style='font-size:12px;'>💰 <b>Bought:</b> ₹{row['PurchasePrice']}</div>" if row.get("PurchasePrice") else ""}
 
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(0,0,0,0.22);
-                        ">
-                            🥛 {row['MilkingStatus']}
-                        </span>
+                    <div style="font-size:13px;font-weight:700;display:flex;justify-content:space-between;">
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
                     </div>
 
                 </div>
                 """
+
 
 
                 with cols[i % 4]:
@@ -1610,6 +1587,7 @@ else:
                             st.session_state.edit_cow_id = row["CowID"]
                             st.session_state.edit_cow_row = row.to_dict()
                             st.rerun()
+
 
 
 
