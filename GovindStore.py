@@ -1675,24 +1675,39 @@ else:
                     opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
                 ">
 
-                <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
+                    <div style="font-size:15px;font-weight:800;">
+                        👤 {row['Name']}
+                    </div>
 
-                <div style="font-size:12px;">📞 {row['Phone']}</div>
-                <div style="font-size:12px;">✉️ {row['Email']}</div>
+                    <div style="font-size:12px;">
+                        📞 {row['Phone']}
+                    </div>
 
-                <div style="font-size:12px;display:flex;justify-content:space-between;">
-                <span>🆔 {row['CustomerID']}</span>
-                <span style="font-weight:700;">💰 {rate_text}</span>
-                </div>
+                    <div style="font-size:12px;">
+                        ✉️ {row['Email']}
+                    </div>
 
-                <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
+                    <div style="font-size:13px;font-weight:700;">
+                        🆔 {row['CustomerID']}
+                    </div>
 
-                <div style="font-size:13px;font-weight:700;">
-                ⏰ {row['Shift']} • {row['Status']}
-                </div>
+                    <div style="font-size:12px;">
+                        📅 {row['DateOfJoining']}
+                    </div>
+
+                    <div style="
+                        font-size:12px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    ">
+                        <span>⏰ {row['Shift']} • {row['Status']}</span>
+                        <span style="font-weight:700;">💰 {rate_text}</span>
+                    </div>
 
                 </div>
                 """)
+
 
 
 
