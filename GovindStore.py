@@ -86,6 +86,16 @@ if "edit_row_index" not in st.session_state:
     st.session_state.edit_row_index = None
 
 
+if "cow_view_mode" not in st.session_state:
+    st.session_state.cow_view_mode = "display"  # display | edit
+
+if "edit_cow_id" not in st.session_state:
+    st.session_state.edit_cow_id = None
+
+if "edit_cow_row" not in st.session_state:
+    st.session_state.edit_cow_row = None
+
+
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1359,129 +1369,144 @@ else:
         # LIST + EDIT
         # ======================================================
         st.markdown("### 📋 Cow List")
+
+        col1, col2 = st.columns([1, 5])
+
+        with col1:
+            if st.session_state.cow_view_mode == "display":
+                if st.button("✏️ Edit View"):
+                    st.session_state.cow_view_mode = "edit"
+                    st.rerun()
+            else:
+                if st.button("👁️ Display View"):
+                    st.session_state.cow_view_mode = "display"
+                    st.session_state.edit_cow_id = None
+                    st.rerun()
+
         df = load_cows()
     
         if df.empty:
             st.info("No cow records found.")
         else:
             for i, row in df.iterrows():
+
                 if i % 4 == 0:
                     cols = st.columns(4)
-    
+
                 age = CURRENT_YEAR - int(row["BirthYear"])
-    
+
                 gradient = {
                     "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
                     "Sick": "linear-gradient(135deg,#f7971e,#ffd200)",
                     "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
-    
+
+                card_html = f"""
+                <div style="
+                    height:170px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.3;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                ">
+                    <div style="font-size:15px;font-weight:800;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    </div>
+                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
+                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
+                    <div style="font-size:12px;">Age: {age} Years</div>
+                    <div style="font-size:12px;">Status: {row['Status']}</div>
+                    <div style="font-size:12px;">Milking: {row['MilkingStatus']}</div>
+                </div>
+                """
+
                 with cols[i % 4]:
-                    components.html(
-                        f"""
-                        <div style="
-                            padding:12px;
-                            border-radius:14px;
-                            background:{gradient};
-                            color:white;
-                            box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                            line-height:1.3;
-                        ">
-                            <div style="font-size:15px;font-weight:800;">
-                                {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
-                            </div>
-                            <div style="font-size:12px;">Breed: {row['Breed']}</div>
-                            <div style="font-size:12px;">Gender: {row['Gender']}</div>
-                            <div style="font-size:12px;">Age: {age} Years</div>
-                            <div style="font-size:12px;">Status: {row['Status']}</div>
-                            <div style="font-size:12px;">Milking: {row['MilkingStatus']}</div>
-                        </div>
-                        """,
-                        height=190,
-                    )
-    
-                    if st.button("✏️", key=f"edit_{row['CowID']}"):
-                        st.session_state.edit_cow_id = row["CowID"]
-                        st.rerun()
-    
-                    if st.session_state.edit_cow_id == row["CowID"]:
-                        with st.form(f"edit_{row['CowID']}"):
-    
-                            e1, e2, e3 = st.columns(3)
-    
-                            with e1:
-                                e_breed = st.text_input("Breed", row["Breed"])
-                                e_age = st.number_input("Age (Years)", min_value=0, value=age, step=1)
-    
-                            with e2:
-                                e_status = st.selectbox(
-                                    "Status",
-                                    ["Active", "Sick", "Sold", "Dead"],
-                                    index=["Active", "Sick", "Sold", "Dead"].index(row["Status"]),
-                                )
-                                e_milking = st.selectbox(
-                                    "Milking Status",
-                                    ["Milking", "Dry", "Pregnant", "Not Pregnant", "Heifer"],
-                                    index=[
-                                        "Milking",
-                                        "Dry",
-                                        "Pregnant",
-                                        "Not Pregnant",
-                                        "Heifer",
-                                    ].index(row["MilkingStatus"]),
-                                )
-    
-                            with e3:
-                                e_sold_price = ""
-                                e_sold_date = ""
-    
-                                if e_status == "Sold":
-                                    e_sold_price = st.number_input(
-                                        "Sold Price",
-                                        min_value=0.0,
-                                        value=float(row["SoldPrice"]) if row["SoldPrice"] else 0.0,
-                                        step=100.0,
-                                    )
-                                    e_sold_date = st.date_input(
-                                        "Sold Date",
-                                        value=pd.to_datetime(row["SoldDate"]).date()
-                                        if row["SoldDate"]
-                                        else dt.date.today(),
-                                    )
-    
-                            e_notes = st.text_area("Notes", row["Notes"])
-    
-                            u, c = st.columns(2)
-                            update = u.form_submit_button("Update")
-                            cancel = c.form_submit_button("Cancel")
-    
-                        if cancel:
-                            st.session_state.edit_cow_id = None
+                    st.markdown(card_html, unsafe_allow_html=True)
+
+                    if st.session_state.cow_view_mode == "edit":
+                        if st.button("✏️ Edit", key=f"edit_{row['CowID']}", use_container_width=True):
+                            st.session_state.edit_cow_id = row["CowID"]
+                            st.session_state.edit_cow_row = row.to_dict()
                             st.rerun()
-    
-                        if update:
-                            if e_status == "Sold" and (e_sold_price == "" or e_sold_date == ""):
-                                st.error("❌ Sold Price and Sold Date are required")
-                                st.stop()
-    
-                            update_cow_by_id(
-                                row["CowID"],
-                                {
-                                    "Breed": e_breed,
-                                    "AgeYears": e_age,
-                                    "Status": e_status,
-                                    "MilkingStatus": e_milking,
-                                    "SoldPrice": e_sold_price if e_status == "Sold" else "",
-                                    "SoldDate": e_sold_date.strftime("%Y-%m-%d") if e_status == "Sold" else "",
-                                    "Notes": e_notes,
-                                    "BirthYear": CURRENT_YEAR - int(e_age),
-                                },
+
+            if st.session_state.cow_view_mode == "edit" and st.session_state.edit_cow_id:
+
+                st.markdown("---")
+                st.markdown("## ✏️ Edit Cow Profile")
+
+                row = st.session_state.edit_cow_row
+                age = CURRENT_YEAR - int(row["BirthYear"])
+
+                with st.form("edit_cow_form"):
+                    c1, c2, c3 = st.columns(3)
+
+                    with c1:
+                        e_breed = st.text_input("Breed", row["Breed"])
+                        e_age = st.number_input("Age (Years)", min_value=0, value=age, step=1)
+
+                    with c2:
+                        e_status = st.selectbox(
+                            "Status",
+                            ["Active", "Sick", "Sold", "Dead"],
+                            index=["Active","Sick","Sold","Dead"].index(row["Status"])
+                        )
+                        e_milking = st.selectbox(
+                            "Milking Status",
+                            ["Milking","Dry","Pregnant","Not Pregnant","Heifer"],
+                            index=["Milking","Dry","Pregnant","Not Pregnant","Heifer"].index(row["MilkingStatus"])
+                        )
+
+                    with c3:
+                        e_sold_price = ""
+                        e_sold_date = ""
+
+                        if e_status == "Sold":
+                            e_sold_price = st.number_input(
+                                "Sold Price",
+                                min_value=0.0,
+                                value=float(row["SoldPrice"]) if row["SoldPrice"] else 0.0,
+                                step=100.0
                             )
-    
-                            st.success("Cow profile updated ✅")
-                            st.session_state.edit_cow_id = None
-                            st.rerun()
+                            e_sold_date = st.date_input(
+                                "Sold Date",
+                                value=pd.to_datetime(row["SoldDate"]).date()
+                                if row["SoldDate"] else dt.date.today()
+                            )
+
+                    e_notes = st.text_area("Notes", row["Notes"])
+
+                    u, c = st.columns(2)
+                    update = u.form_submit_button("✅ Update")
+                    cancel = c.form_submit_button("❌ Cancel")
+
+                if cancel:
+                    st.session_state.edit_cow_id = None
+                    st.rerun()
+
+                if update:
+                    update_cow_by_id(
+                        row["CowID"],
+                        {
+                            "Breed": e_breed,
+                            "AgeYears": e_age,
+                            "Status": e_status,
+                            "MilkingStatus": e_milking,
+                            "SoldPrice": e_sold_price if e_status == "Sold" else "",
+                            "SoldDate": e_sold_date.strftime("%Y-%m-%d") if e_status == "Sold" else "",
+                            "Notes": e_notes,
+                            "BirthYear": CURRENT_YEAR - int(e_age),
+                        }
+                    )
+                    st.success("Cow profile updated ✅")
+                    st.session_state.edit_cow_id = None
+                    st.rerun()
 
     elif page == "Customers":   
 
