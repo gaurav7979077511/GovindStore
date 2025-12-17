@@ -1649,12 +1649,8 @@ else:
                 display:flex;
                 flex-direction:column;
                 justify-content:space-between;
-                cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
-                opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
             ">
-
                 <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
-
                 <div style="font-size:12px;">📞 {row['Phone']}</div>
                 <div style="font-size:12px;">✉️ {row['Email']}</div>
 
@@ -1664,13 +1660,12 @@ else:
                 </div>
 
                 <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
-
                 <div style="font-size:13px;font-weight:700;">
                     ⏰ {row['Shift']} • {row['Status']}
                 </div>
-
             </div>
             """
+
 
 
             with cols[i % 4]:
