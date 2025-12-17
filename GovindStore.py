@@ -1532,7 +1532,8 @@ else:
                     sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
-                card_html = f"""<div style="
+                card_html = f"""
+                <div style="
                     height:160px;
                     padding:14px;
                     border-radius:16px;
@@ -1544,31 +1545,47 @@ else:
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:14px;
+                ">
+
+                    <!-- Header -->
+                    <div style="
+                        font-size:15px;
+                        font-weight:800;
+                        display:flex;
+                        gap:6px;
                     ">
-                    
-                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
-                    {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                    <span>{row['CowID']}</span>
+                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
                     </div>
-                    
+
+                    <!-- Breed -->
                     <div style="font-size:12px;">
-                    🧬 <b>Breed:</b> {row['Breed']}
+                        🧬 <b>Breed:</b> {row['Breed']}
                     </div>
-                    
+
+                    <!-- Gender -->
                     <div style="font-size:12px;">
-                    ⚥ <b>Gender:</b> {row['Gender']}
+                        ⚥ <b>Gender:</b> {row['Gender']}
                     </div>
-                    
+
+                    <!-- Age -->
                     <div style="font-size:12px;">
-                    🎂 <b>Age:</b> {age} yrs
+                        🎂 <b>Age:</b> {age} yrs
                     </div>
-                    
-                    <div style="font-size:13px;font-weight:700;display:flex;justify-content:space-between;">
-                    <span>🩺 {row['Status']}</span>
-                    <span>🥛 {row['MilkingStatus']}</span>
+
+                    <!-- Status Row -->
+                    <div style="
+                        font-size:13px;
+                        font-weight:700;
+                        display:flex;
+                        justify-content:space-between;
+                    ">
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
                     </div>
-                    
-                    </div>"""
+
+                </div>
+                """
 
 
 
