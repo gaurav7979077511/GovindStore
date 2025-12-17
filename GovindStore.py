@@ -1545,7 +1545,7 @@ else:
                     <!-- Info -->
                     <div style="font-size:12px; line-height:1.35; opacity:0.95;">
                         <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
-                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row[' Gender']}</div>
+                        <div>⚥ <span style="opacity:0.85;"> Gender:</span> {row['Gender']}</div>
                         <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
                     </div>
 
