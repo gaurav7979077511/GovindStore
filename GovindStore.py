@@ -1529,7 +1529,6 @@ else:
                     overflow:hidden;
                 ">
 
-                    <!-- Header -->
                     <div style="
                         font-size:15px;
                         font-weight:800;
@@ -1537,10 +1536,10 @@ else:
                         align-items:center;
                         gap:6px;
                     ">
-                        🐄 <span>{row['CowID']}</span>
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
                     </div>
 
-                    <!-- Info -->
                     <div style="font-size:13px; line-height:1.25;">
                         🧬 <b>Breed:</b> {row['Breed']}
                     </div>
@@ -1553,14 +1552,13 @@ else:
                         🎂 <b>Age:</b> {age} yrs
                     </div>
 
-                    <!-- Footer -->
                     <div style="
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
                         font-size:12.5px;
                         font-weight:700;
-                        padding-top:4px;
+                        padding-top:6px;
                         border-top:1px solid rgba(255,255,255,0.25);
                     ">
                         <span>🩺 {row['Status']}</span>
@@ -1569,6 +1567,7 @@ else:
 
                 </div>
                 """
+
 
 
 
