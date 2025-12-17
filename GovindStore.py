@@ -1518,36 +1518,67 @@ else:
 
                 card_html = f"""
                 <div style="
-                    height:165px;
-                    padding:14px;
+                    height:170px;
+                    padding:14px 16px;
                     border-radius:16px;
                     background:{gradient};
                     color:white;
-                    box-shadow:0 6px 18px rgba(0,0,0,0.28);
+                    box-shadow:0 8px 22px rgba(0,0,0,0.25);
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
+                    font-family:Inter, system-ui, sans-serif;
                 ">
 
-                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
+                    <!-- Header -->
+                    <div style="
+                        font-size:15px;
+                        font-weight:700;
+                        display:flex;
+                        align-items:center;
+                        gap:8px;
+                    ">
                         {'🐄' if row['AnimalType']=='Cow' else '🐃'}
                         <span>{row['CowID']}</span>
                     </div>
 
-                    <div style="font-size:13px;">🧬 <b>Breed:</b> {row['Breed']}</div>
-                    <div style="font-size:13px;">⚥ <b>Gender:</b> {row['Gender']}</div>
-                    <div style="font-size:13px;">🎂 <b>Age:</b> {age} yrs</div>
+                    <!-- Info -->
+                    <div style="font-size:12.5px; line-height:1.4; opacity:0.95;">
+                        <div>🧬 <b>Breed:</b> {row['Breed']}</div>
+                        <div>⚥ <b>Gender:</b> {row['Gender']}</div>
+                        <div>🎂 <b>Age:</b> {age} yrs</div>
+                    </div>
 
+                    <!-- Divider -->
+                    <div style="
+                        height:1px;
+                        background:rgba(255,255,255,0.25);
+                        margin:6px 0;
+                    "></div>
+
+                    <!-- Footer -->
                     <div style="
                         display:flex;
                         justify-content:space-between;
-                        font-size:12.5px;
-                        font-weight:700;
-                        border-top:1px solid rgba(255,255,255,0.25);
-                        padding-top:6px;
+                        align-items:center;
+                        font-size:12px;
+                        font-weight:600;
                     ">
-                        <span>🩺 {row['Status']}</span>
-                        <span>🥛 {row['MilkingStatus']}</span>
+                        <span style="
+                            background:rgba(255,255,255,0.2);
+                            padding:4px 8px;
+                            border-radius:999px;
+                        ">
+                            🩺 {row['Status']}
+                        </span>
+
+                        <span style="
+                            background:rgba(0,0,0,0.25);
+                            padding:4px 8px;
+                            border-radius:999px;
+                        ">
+                            🥛 {row['MilkingStatus']}
+                        </span>
                     </div>
 
                 </div>
@@ -1558,8 +1589,10 @@ else:
 
 
 
+
                 with cols[i % 4]:
-                    html(card_html, height=180)
+                    components.html(card_html, height=190)
+
 
             
 
