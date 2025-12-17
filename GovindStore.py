@@ -1597,9 +1597,11 @@ else:
 
                 with c2:
                     e_email = st.text_input("Email", row["Email"])
-                    e_doj = st.date_input(
-                        "Date of Joining",
-                        pd.to_datetime(row["DateOfJoining"]).date()
+                    e_rate = st.number_input(
+                        "Rate per Litre (₹)",
+                        min_value=0.0,
+                        step=1.0,
+                        value=float(row["RatePerLitre"]) if row.get("RatePerLitre") not in ("", None) else 0.0
                     )
 
                 with c3:
