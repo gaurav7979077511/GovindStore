@@ -1528,6 +1528,7 @@ else:
                     margin-bottom:16px;
                     overflow:hidden;
                 ">
+
                     <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
                         {'🐄' if row['AnimalType']=='Cow' else '🐃'}
                         <span>{row['CowID']}</span>
@@ -1548,8 +1549,10 @@ else:
                         <span>🩺 {row['Status']}</span>
                         <span>🥛 {row['MilkingStatus']}</span>
                     </div>
+
                 </div>
                 """
+
 
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
