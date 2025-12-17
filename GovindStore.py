@@ -1532,46 +1532,84 @@ else:
                     sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
-                card_html = f"""<div style="
-                font-size:15px;
-                font-weight:800;
-                display:flex;
-                gap:6px;
-                ">
-                🐄 <span>COW20251214135318</span>
-                </div>
-
-                <div style="font-size:12px;">
-                🧬 <b>Breed:</b> Jersy
-                </div>
-
-                <div style="font-size:12px;">
-                ⚥ <b>Gender:</b> Female
-                </div>
-
-                <div style="font-size:12px;">
-                🎂 <b>Age:</b> 2 yrs
-                </div>
-
+                card_html = f"""
                 <div style="
-                font-size:13px;
-                font-weight:700;
-                display:flex;
-                justify-content:space-between;
+                    height:130px;
+                    padding:14px 16px;
+                    border-radius:14px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 18px rgba(0,0,0,0.22);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    margin-bottom:14px;
+                    font-family:Inter, system-ui, sans-serif;
                 ">
-                <span>🩺 Active</span>
-                <span>🥛 Milking</span>
-                </div>"""
 
+                    <!-- Header -->
+                    <div style="
+                        font-size:14.5px;
+                        font-weight:600;
+                        display:flex;
+                        align-items:center;
+                        gap:6px;
+                    ">
+                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
+                    </div>
 
+                    <!-- Info -->
+                    <div style="
+                        font-size:12px;
+                        line-height:1.35;
+                        opacity:0.95;
+                    ">
+                        <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
+                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
+                        <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
+
+                        {f"<div>{source_line}</div>" if source_line else ""}
+                        {f"<div>{sold_line}</div>" if sold_line else ""}
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        font-size:11.5px;
+                        font-weight:600;
+                        margin-top:4px;
+                    ">
+                        <span style="
+                            padding:3px 8px;
+                            border-radius:999px;
+                            background:rgba(255,255,255,0.18);
+                        ">
+                            🩺 {row['Status']}
+                        </span>
+
+                        <span style="
+                            padding:3px 8px;
+                            border-radius:999px;
+                            background:rgba(0,0,0,0.22);
+                        ">
+                            🥛 {row['MilkingStatus']}
+                        </span>
+                    </div>
+
+                </div>
+                """
 
 
 
 
 
                 with cols[i % 4]:
-                    st.markdown(card_html, unsafe_allow_html=True)
+                    components.html(card_html, height=170)
 
+                    # Render Edit button ONLY in edit mode
                     if st.session_state.cow_view_mode == "edit":
                         if st.button(
                             "✏️ Edit",
@@ -1581,6 +1619,7 @@ else:
                             st.session_state.edit_cow_id = row["CowID"]
                             st.session_state.edit_cow_row = row.to_dict()
                             st.rerun()
+
 
 
 
@@ -1764,91 +1803,60 @@ else:
                 "Both": "linear-gradient(135deg,#f7971e,#ffd200)"
             }.get(shift, "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-            with cols[i % 4]:
-
-                card_html = f"""
+            card_html = textwrap.dedent(f"""
                 <div style="
-                    height:130px;
-                    padding:14px 16px;
-                    border-radius:14px;
+                    height:160px;
+                    padding:14px;
+                    border-radius:16px;
                     background:{gradient};
                     color:white;
-                    box-shadow:0 6px 18px rgba(0,0,0,0.22);
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.35;
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:14px;
-                    font-family:Inter, system-ui, sans-serif;
+                    cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
+                    opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
                 ">
 
-                    <!-- Header -->
-                    <div style="
-                        font-size:14.5px;
-                        font-weight:600;
-                        display:flex;
-                        align-items:center;
-                        gap:6px;
-                    ">
-                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
-                    </div>
+                <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
 
-                    <!-- Info -->
-                    <div style="
-                        font-size:12px;
-                        line-height:1.35;
-                        opacity:0.95;
-                    ">
-                        <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
-                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
-                        <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
+                <div style="font-size:12px;">📞 {row['Phone']}</div>
+                <div style="font-size:12px;">✉️ {row['Email']}</div>
 
-                        {f"<div>{source_line}</div>" if source_line else ""}
-                        {f"<div>{sold_line}</div>" if sold_line else ""}
-                    </div>
+                <div style="font-size:12px;display:flex;justify-content:space-between;">
+                <span>🆔 {row['CustomerID']}</span>
+                <span style="font-weight:700;">💰 {rate_text}</span>
+                </div>
 
-                    <!-- Footer -->
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        font-size:11.5px;
-                        font-weight:600;
-                        margin-top:4px;
-                    ">
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(255,255,255,0.18);
-                        ">
-                            🩺 {row['Status']}
-                        </span>
+                <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
 
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(0,0,0,0.22);
-                        ">
-                            🥛 {row['MilkingStatus']}
-                        </span>
-                    </div>
+                <div style="font-size:13px;font-weight:700;">
+                ⏰ {row['Shift']} • {row['Status']}
+                </div>
 
                 </div>
-                """
+                """)
 
-                components.html(card_html, height=170)
 
-                # Render Edit button ONLY in edit mode
-                if st.session_state.cow_view_mode == "edit":
+
+
+            with cols[i % 4]:
+                # Always render card correctly
+                st.markdown(card_html, unsafe_allow_html=True)
+
+                # Only allow edit in Edit View
+                if st.session_state.view_mode == "edit":
                     if st.button(
                         "✏️ Edit",
-                        key=f"edit_cow_{row['CowID']}",
+                        key=f"edit_{row['CustomerID']}",
                         use_container_width=True
                     ):
-                        st.session_state.edit_cow_id = row["CowID"]
-                        st.session_state.edit_cow_row = row.to_dict()
+                        st.session_state.edit_customer_id = row["CustomerID"]
+                        st.session_state.edit_customer_row = row.to_dict()
+                        st.session_state.edit_row_index = i // 4
                         st.rerun()
-
 
 
         
