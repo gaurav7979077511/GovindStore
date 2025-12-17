@@ -1532,8 +1532,7 @@ else:
                     sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
-                card_html = f"""
-                <div style="
+                card_html = f"""<div style="
                     height:160px;
                     padding:14px;
                     border-radius:16px;
@@ -1545,11 +1544,11 @@ else:
                     flex-direction:column;
                     justify-content:space-between;
                     margin-bottom:14px;
-                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
                 ">
 
-                    <div style="font-size:15px;font-weight:800;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
                     </div>
 
                     <div style="font-size:12px;">
@@ -1562,16 +1561,13 @@ else:
                         🎂 <b>Age:</b> {age} yrs
                     </div>
 
-                    {f"<div style='font-size:12px;'>🧬 <b>Parent:</b> {row['ParentCowID']}</div>" if row.get("ParentCowID") else ""}
-                    {f"<div style='font-size:12px;'>💰 <b>Bought:</b> ₹{row['PurchasePrice']}</div>" if row.get("PurchasePrice") else ""}
-
                     <div style="font-size:13px;font-weight:700;display:flex;justify-content:space-between;">
                         <span>🩺 {row['Status']}</span>
                         <span>🥛 {row['MilkingStatus']}</span>
                     </div>
 
-                </div>
-                """
+                </div>"""
+
 
 
 
