@@ -1388,54 +1388,6 @@ else:
         if df.empty:
             st.info("No cow records found.")
         else:
-            for i, row in df.iterrows():
-
-                if i % 4 == 0:
-                    cols = st.columns(4)
-
-                age = CURRENT_YEAR - int(row["BirthYear"])
-
-                gradient = {
-                    "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
-                    "Sick": "linear-gradient(135deg,#f7971e,#ffd200)",
-                    "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
-                    "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
-                }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
-
-                card_html = f"""
-                <div style="
-                    height:170px;
-                    padding:14px;
-                    border-radius:16px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                    line-height:1.3;
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
-                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
-                ">
-                    <div style="font-size:15px;font-weight:800;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
-                    </div>
-                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
-                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
-                    <div style="font-size:12px;">Age: {age} Years</div>
-                    <div style="font-size:12px;">Status: {row['Status']}</div>
-                    <div style="font-size:12px;">Milking: {row['MilkingStatus']}</div>
-                </div>
-                """
-
-                with cols[i % 4]:
-                    st.markdown(card_html, unsafe_allow_html=True)
-
-                    if st.session_state.cow_view_mode == "edit":
-                        if st.button("✏️ Edit", key=f"edit_{row['CowID']}", use_container_width=True):
-                            st.session_state.edit_cow_id = row["CowID"]
-                            st.session_state.edit_cow_row = row.to_dict()
-                            st.rerun()
-
             if st.session_state.cow_view_mode == "edit" and st.session_state.edit_cow_id:
 
                 st.markdown("---")
@@ -1507,6 +1459,55 @@ else:
                     st.success("Cow profile updated ✅")
                     st.session_state.edit_cow_id = None
                     st.rerun()
+            for i, row in df.iterrows():
+
+                if i % 4 == 0:
+                    cols = st.columns(4)
+
+                age = CURRENT_YEAR - int(row["BirthYear"])
+
+                gradient = {
+                    "Active": "linear-gradient(135deg,#43cea2,#185a9d)",
+                    "Sick": "linear-gradient(135deg,#f7971e,#ffd200)",
+                    "Sold": "linear-gradient(135deg,#2193b0,#6dd5ed)",
+                    "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
+                }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
+
+                card_html = f"""
+                <div style="
+                    height:170px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.3;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                ">
+                    <div style="font-size:15px;font-weight:800;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    </div>
+                    <div style="font-size:12px;">Breed: {row['Breed']}</div>
+                    <div style="font-size:12px;">Gender: {row['Gender']}</div>
+                    <div style="font-size:12px;">Age: {age} Years</div>
+                    <div style="font-size:12px;">Status: {row['Status']}</div>
+                    <div style="font-size:12px;">Milking: {row['MilkingStatus']}</div>
+                </div>
+                """
+
+                with cols[i % 4]:
+                    st.markdown(card_html, unsafe_allow_html=True)
+
+                    if st.session_state.cow_view_mode == "edit":
+                        if st.button("✏️ Edit", key=f"edit_{row['CowID']}", use_container_width=True):
+                            st.session_state.edit_cow_id = row["CowID"]
+                            st.session_state.edit_cow_row = row.to_dict()
+                            st.rerun()
+
+            
 
     elif page == "Customers":   
 
