@@ -1534,7 +1534,7 @@ else:
 
                 card_html = f"""
                 <div style="
-                    height:130px;
+                    height:140px;
                     padding:14px 16px;
                     border-radius:14px;
                     background:{gradient};
@@ -1543,7 +1543,6 @@ else:
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
-                    margin-bottom:14px;
                     font-family:Inter, system-ui, sans-serif;
                 ">
 
@@ -1564,8 +1563,9 @@ else:
                         <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
                         <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
                         <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
-                        {f"<div>{source_line}</div>" if source_line else ""}
-                        {f"<div>{sold_line}</div>" if sold_line else ""}
+                        {f"<div>💰 <span style='opacity:0.85;'>Bought:</span> ₹{row['PurchasePrice']}</div>" if row.get("PurchasePrice") else ""}
+                        {f"<div>🧬 <span style='opacity:0.85;'>Parent:</span> {row['ParentCowID']}</div>" if row.get("ParentCowID") else ""}
+                        {f"<div>💸 <span style='opacity:0.85;'>Sold:</span> ₹{row['SoldPrice']}</div>" if row['Status']=='Sold' and row.get('SoldPrice') else ""}
                     </div>
 
                     <!-- Footer -->
@@ -1575,7 +1575,7 @@ else:
                         align-items:center;
                         font-size:11.5px;
                         font-weight:600;
-                        margin-top:4px;
+                        margin-top:6px;
                     ">
                         <span style="
                             padding:3px 8px;
@@ -1597,6 +1597,7 @@ else:
                 </div>
                 """
 
+
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
 
@@ -1609,6 +1610,7 @@ else:
                             st.session_state.edit_cow_id = row["CowID"]
                             st.session_state.edit_cow_row = row.to_dict()
                             st.rerun()
+
 
 
 
