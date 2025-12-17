@@ -1476,12 +1476,6 @@ else:
         if "edit_customer_id" not in st.session_state:
             st.session_state.edit_customer_id = None
 
-    
-
-        
-
-        
-
         def update_customer_by_id(customer_id, updated):
             ws = open_customer_sheet()
             rows = ws.get_all_values()
@@ -1572,6 +1566,26 @@ else:
                 line-height:1.3;
             ">
 
+                <!-- Edit Button -->
+                <button
+                    style="
+                        position:absolute;
+                        top:8px;
+                        right:8px;
+                        background:rgba(255,255,255,0.25);
+                        border:none;
+                        border-radius:50%;
+                        width:32px;
+                        height:32px;
+                        cursor:pointer;
+                        font-size:16px;
+                    "
+                    onclick="document.getElementById('edit_{row['CustomerID']}').click()"
+                    title="Edit Customer"
+                >
+                    ✏️
+                </button>
+
                 <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
                 <div style="font-size:12px;">📞 {row['Phone']}</div>
                 <div style="font-size:12px;">✉️ {row['Email']}</div>
@@ -1583,12 +1597,22 @@ else:
             </div>
             """
 
-            with cols[i % 4]:
-                components.html(card_html, height=150)
 
-                if st.button("✏️", key=f"edit_{row['CustomerID']}"):
+            with cols[i % 4]:
+                components.html(card_html, height=160)
+
+                # Hidden trigger button
+                st.markdown(
+                    f"""
+                    <button id="edit_{row['CustomerID']}" style="display:none"></button>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                if st.button("EDIT", key=f"edit_real_{row['CustomerID']}", help="hidden"):
                     st.session_state.edit_customer_id = row["CustomerID"]
                     st.rerun()
+
 
                 # ---------- INLINE EDIT FORM ----------
                 if st.session_state.edit_customer_id == row["CustomerID"]:
