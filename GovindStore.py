@@ -1533,40 +1533,43 @@ else:
 
 
                 card_html = f"""<div style="
-                    height:160px;
-                    padding:14px;
-                    border-radius:16px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                    line-height:1.35;
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
-                    margin-bottom:14px;
+                height:160px;
+                padding:14px;
+                border-radius:16px;
+                background:{gradient};
+                color:white;
+                box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                line-height:1.35;
+                display:flex;
+                flex-direction:column;
+                justify-content:space-between;
+                margin-bottom:14px;
                 ">
 
-                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
-                    </div>
+                <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
+                {'🐄' if row['AnimalType']=='Cow' else '🐃'}
+                <span>{row['CowID']}</span>
+                </div>
 
-                    <div style="font-size:12px;">
-                        🧬 <b>Breed:</b> {row['Breed']}
-                    </div>
-                    <div style="font-size:12px;">
-                        ⚥ <b>Gender:</b> {row['Gender']}
-                    </div>
-                    <div style="font-size:12px;">
-                        🎂 <b>Age:</b> {age} yrs
-                    </div>
+                <div style="font-size:12px;">
+                🧬 <b>Breed:</b> {row['Breed']}
+                </div>
 
-                    <div style="font-size:13px;font-weight:700;display:flex;justify-content:space-between;">
-                        <span>🩺 {row['Status']}</span>
-                        <span>🥛 {row['MilkingStatus']}</span>
-                    </div>
+                <div style="font-size:12px;">
+                ⚥ <b>Gender:</b> {row['Gender']}
+                </div>
+
+                <div style="font-size:12px;">
+                🎂 <b>Age:</b> {age} yrs
+                </div>
+
+                <div style="font-size:13px;font-weight:700;display:flex;justify-content:space-between;">
+                <span>🩺 {row['Status']}</span>
+                <span>🥛 {row['MilkingStatus']}</span>
+                </div>
 
                 </div>"""
+
 
 
 
