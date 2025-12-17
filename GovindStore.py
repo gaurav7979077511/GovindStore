@@ -1620,13 +1620,15 @@ else:
                 st.session_state.edit_customer_id = None
                 st.rerun()
 
-        rate = row.get("RatePerLitre", "")
-        rate_text = f"₹{float(rate):.2f}/L" if rate not in ("", None) else "₹—/L"
+        
 
         for i, row in df.iterrows():
 
             if i % 4 == 0:
                 cols = st.columns(4)
+            
+            rate = row.get("RatePerLitre", "")
+            rate_text = f"₹{float(rate):.2f}/L" if rate not in ("", None) else "₹—/L"
 
             shift = row["Shift"]
             gradient = {
