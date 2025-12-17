@@ -1635,16 +1635,15 @@ else:
 
             card_html = f"""
             <div style="
-                height:160px;
-                padding:14px;
-                border-radius:16px;
+                position:relative;
+                padding:12px;
+                border-radius:14px;
                 background:{gradient};
                 color:white;
                 box-shadow:0 6px 16px rgba(0,0,0,0.25);
                 line-height:1.3;
-                cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
-                opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
             ">
+
                 <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
                 <div style="font-size:12px;">📞 {row['Phone']}</div>
                 <div style="font-size:12px;">✉️ {row['Email']}</div>
