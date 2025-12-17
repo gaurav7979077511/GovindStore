@@ -1567,7 +1567,6 @@ else:
 
                 </div>
                 """)
-                st.write(type(card_html))
 
 
                 with cols[i % 4]:
