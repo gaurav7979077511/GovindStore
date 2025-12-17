@@ -1588,6 +1588,17 @@ else:
                 with cols[i % 4]:
                     components.html(card_html, height=170)
 
+                    # Render Edit button ONLY in edit mode
+                    if st.session_state.cow_view_mode == "edit":
+                        if st.button(
+                            "✏️ Edit",
+                            key=f"edit_cow_{row['CowID']}",
+                            use_container_width=True
+                        ):
+                            st.session_state.edit_cow_id = row["CowID"]
+                            st.session_state.edit_cow_row = row.to_dict()
+                            st.rerun()
+
 
             
 
