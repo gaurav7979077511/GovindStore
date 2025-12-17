@@ -1674,14 +1674,21 @@ else:
 
 
             with cols[i % 4]:
+                # Always render card correctly
+                st.markdown(card_html, unsafe_allow_html=True)
+
+                # Only allow edit in Edit View
                 if st.session_state.view_mode == "edit":
-                    if st.button(card_html, key=f"card_{row['CustomerID']}"):
+                    if st.button(
+                        "✏️ Edit",
+                        key=f"edit_{row['CustomerID']}",
+                        use_container_width=True
+                    ):
                         st.session_state.edit_customer_id = row["CustomerID"]
                         st.session_state.edit_customer_row = row.to_dict()
                         st.session_state.edit_row_index = i // 4
                         st.rerun()
-                else:
-                    st.markdown(card_html, unsafe_allow_html=True)
+
 
         
 
