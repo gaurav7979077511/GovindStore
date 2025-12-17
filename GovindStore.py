@@ -1532,7 +1532,8 @@ else:
                     sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
-                card_html = f"""
+
+                card_html = textwrap.dedent(f"""
                 <div style="
                     height:130px;
                     padding:14px 16px;
@@ -1543,73 +1544,33 @@ else:
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
-                    margin-bottom:14px;
-                    font-family:Inter, system-ui, sans-serif;
+                    margin-bottom:12px;
                 ">
 
-                    <!-- Header -->
-                    <div style="
-                        font-size:14.5px;
-                        font-weight:600;
-                        display:flex;
-                        align-items:center;
-                        gap:6px;
-                    ">
-                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
+                    <div style="font-size:14.5px;font-weight:600;display:flex;gap:6px;">
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
                         <span>{row['CowID']}</span>
                     </div>
 
-                    <!-- Info -->
-                    <div style="
-                        font-size:12px;
-                        line-height:1.35;
-                        opacity:0.95;
-                    ">
-                        <div>🧬 <span style="opacity:0.85;">Breed:</span> {row['Breed']}</div>
-                        <div>⚥ <span style="opacity:0.85;">Gender:</span> {row['Gender']}</div>
-                        <div>🎂 <span style="opacity:0.85;">Age:</span> {age} yrs</div>
-
+                    <div style="font-size:12px;line-height:1.35;">
+                        <div>🧬 <b>Breed:</b> {row['Breed']}</div>
+                        <div>⚥ <b>Gender:</b> {row['Gender']}</div>
+                        <div>🎂 <b>Age:</b> {age} yrs</div>
                         {f"<div>{source_line}</div>" if source_line else ""}
                         {f"<div>{sold_line}</div>" if sold_line else ""}
                     </div>
 
-                    <!-- Footer -->
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        font-size:11.5px;
-                        font-weight:600;
-                        margin-top:4px;
-                    ">
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(255,255,255,0.18);
-                        ">
-                            🩺 {row['Status']}
-                        </span>
-
-                        <span style="
-                            padding:3px 8px;
-                            border-radius:999px;
-                            background:rgba(0,0,0,0.22);
-                        ">
-                            🥛 {row['MilkingStatus']}
-                        </span>
+                    <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;">
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
                     </div>
 
                 </div>
-                """
-
-
-
-
+                """)
 
                 with cols[i % 4]:
-                    components.html(card_html, height=170)
+                    st.markdown(card_html, unsafe_allow_html=True)
 
-                    # Render Edit button ONLY in edit mode
                     if st.session_state.cow_view_mode == "edit":
                         if st.button(
                             "✏️ Edit",
@@ -1620,13 +1581,7 @@ else:
                             st.session_state.edit_cow_row = row.to_dict()
                             st.rerun()
 
-
-
-
-
-
-
-            
+         
 
     elif page == "Customers":   
 
