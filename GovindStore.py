@@ -1473,7 +1473,7 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                card_html = textwrap.dedent(f"""
+                card_html = f"""
                     <div style="
                         height:180px;
                         padding:16px;
@@ -1489,38 +1489,35 @@ else:
                         cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
                     ">
 
-                        <!-- Header -->
-                        <div style="font-size:16px;font-weight:800;">
-                            {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
-                        </div>
+                    <div style="font-size:16px;font-weight:800;">
+                    {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                    </div>
 
-                        <!-- Body -->
-                        <div style="font-size:13px;">
-                            🧬 <b>Breed:</b> {row['Breed']}
-                        </div>
+                    <div style="font-size:13px;">
+                    🧬 <b>Breed:</b> {row['Breed']}
+                    </div>
 
-                        <div style="font-size:13px;">
-                            ⚥ <b>Gender:</b> {row['Gender']}
-                        </div>
+                    <div style="font-size:13px;">
+                    ⚥ <b>Gender:</b> {row['Gender']}
+                    </div>
 
-                        <div style="font-size:13px;">
-                            🎂 <b>Age:</b> {age} Years
-                        </div>
+                    <div style="font-size:13px;">
+                    🎂 <b>Age:</b> {age} Years
+                    </div>
 
-                        <!-- Footer -->
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            font-size:13px;
-                            font-weight:700;
-                        ">
-                            <span>🩺 {row['Status']}</span>
-                            <span>🥛 {row['MilkingStatus']}</span>
-                        </div>
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        font-size:13px;
+                        font-weight:700;
+                    ">
+                    <span>🩺 {row['Status']}</span>
+                    <span>🥛 {row['MilkingStatus']}</span>
+                    </div>
 
                     </div>
-                    """)
+                    """
 
 
                 with cols[i % 4]:
