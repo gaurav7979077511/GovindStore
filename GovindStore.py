@@ -1533,7 +1533,7 @@ else:
 
 
 
-                card_html = textwrap.dedent(f"""
+                card_html = f"""
                 <div style="
                     height:130px;
                     padding:14px 16px;
@@ -1566,7 +1566,8 @@ else:
                     </div>
 
                 </div>
-                """)
+                """.strip()
+
 
 
                 with cols[i % 4]:
