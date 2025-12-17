@@ -1528,58 +1528,31 @@ else:
                     margin-bottom:16px;
                     overflow:hidden;
                 ">
-
-                    <div style="
-                        font-size:15px;
-                        font-weight:800;
-                        display:flex;
-                        align-items:center;
-                        gap:6px;
-                    ">
+                    <div style="font-size:15px;font-weight:800;display:flex;gap:6px;">
                         {'🐄' if row['AnimalType']=='Cow' else '🐃'}
                         <span>{row['CowID']}</span>
                     </div>
 
-                    <div style="font-size:13px; line-height:1.25;">
-                        🧬 <b>Breed:</b> {row['Breed']}
-                    </div>
-
-                    <div style="font-size:13px; line-height:1.25;">
-                        ⚥ <b>Gender:</b> {row['Gender']}
-                    </div>
-
-                    <div style="font-size:13px; line-height:1.25;">
-                        🎂 <b>Age:</b> {age} yrs
-                    </div>
+                    <div style="font-size:13px;">🧬 <b>Breed:</b> {row['Breed']}</div>
+                    <div style="font-size:13px;">⚥ <b>Gender:</b> {row['Gender']}</div>
+                    <div style="font-size:13px;">🎂 <b>Age:</b> {age} yrs</div>
 
                     <div style="
                         display:flex;
                         justify-content:space-between;
-                        align-items:center;
                         font-size:12.5px;
                         font-weight:700;
-                        padding-top:6px;
                         border-top:1px solid rgba(255,255,255,0.25);
+                        padding-top:6px;
                     ">
                         <span>🩺 {row['Status']}</span>
                         <span>🥛 {row['MilkingStatus']}</span>
                     </div>
-
                 </div>
                 """
 
-
-
-
-
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
-
-                    if st.session_state.cow_view_mode == "edit":
-                        if st.button("✏️ Edit", key=f"edit_{row['CowID']}", use_container_width=True):
-                            st.session_state.edit_cow_id = row["CowID"]
-                            st.session_state.edit_cow_row = row.to_dict()
-                            st.rerun()
 
             
 
