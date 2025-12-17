@@ -1532,60 +1532,37 @@ else:
                     sold_line = f"🏷️ <span style='opacity:0.85;'>Sold:</span> ₹{sold_price}"
 
 
-                card_html = f"""
-                <div style="
-                    height:160px;
-                    padding:14px;
-                    border-radius:16px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                    line-height:1.35;
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
-                    margin-bottom:14px;
+                card_html = f"""<div style="
+                font-size:15px;
+                font-weight:800;
+                display:flex;
+                gap:6px;
                 ">
-
-                    <!-- Header -->
-                    <div style="
-                        font-size:15px;
-                        font-weight:800;
-                        display:flex;
-                        gap:6px;
-                    ">
-                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
-                    </div>
-
-                    <!-- Breed -->
-                    <div style="font-size:12px;">
-                        🧬 <b>Breed:</b> {row['Breed']}
-                    </div>
-
-                    <!-- Gender -->
-                    <div style="font-size:12px;">
-                        ⚥ <b>Gender:</b> {row['Gender']}
-                    </div>
-
-                    <!-- Age -->
-                    <div style="font-size:12px;">
-                        🎂 <b>Age:</b> {age} yrs
-                    </div>
-
-                    <!-- Status Row -->
-                    <div style="
-                        font-size:13px;
-                        font-weight:700;
-                        display:flex;
-                        justify-content:space-between;
-                    ">
-                        <span>🩺 {row['Status']}</span>
-                        <span>🥛 {row['MilkingStatus']}</span>
-                    </div>
-
+                🐄 <span>COW20251214135318</span>
                 </div>
-                """
+
+                <div style="font-size:12px;">
+                🧬 <b>Breed:</b> Jersy
+                </div>
+
+                <div style="font-size:12px;">
+                ⚥ <b>Gender:</b> Female
+                </div>
+
+                <div style="font-size:12px;">
+                🎂 <b>Age:</b> 2 yrs
+                </div>
+
+                <div style="
+                font-size:13px;
+                font-weight:700;
+                display:flex;
+                justify-content:space-between;
+                ">
+                <span>🩺 Active</span>
+                <span>🥛 Milking</span>
+                </div>"""
+
 
 
 
