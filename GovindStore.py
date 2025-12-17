@@ -1533,38 +1533,41 @@ else:
 
 
 
-                card_html = f"""<div style="
-                        height:130px;
-                        padding:14px 16px;
-                        border-radius:14px;
-                        background:{gradient};
-                        color:white;
-                        box-shadow:0 6px 18px rgba(0,0,0,0.22);
-                        display:flex;
-                        flex-direction:column;
-                        justify-content:space-between;
-                        margin-bottom:12px;">
+                card_html = textwrap.dedent(f"""
+                <div style="
+                    height:160px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.35;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    margin-bottom:14px;
+                    cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
+                    opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
+                ">
 
-                    <div style="font-size:14.5px;font-weight:600;display:flex;gap:6px;">
-                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
-                    </div>
+                <div style="font-size:15px;font-weight:800;">👤 </div>
 
-                    <div style="font-size:12px;line-height:1.35;">
-                        <div>🧬 <b>Breed:</b> {row['Breed']}</div>
-                        <div>⚥ <b>Gender:</b> {row['Gender']}</div>
-                        <div>🎂 <b>Age:</b> {age} yrs</div>
-                        {f"<div>{source_line}</div>" if source_line else ""}
-                        {f"<div>{sold_line}</div>" if sold_line else ""}
-                    </div>
+                <div style="font-size:12px;">📞 </div>
+                <div style="font-size:12px;">✉️ </div>
 
-                    <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;">
-                        <span>🩺 {row['Status']}</span>
-                        <span>🥛 {row['MilkingStatus']}</span>
-                    </div>
+                <div style="font-size:12px;display:flex;justify-content:space-between;">
+                <span></span>
+                <span style="font-weight:700;">💰 </span>
+                </div>
+
+                <div style="font-size:12px;">📅 </div>
+
+                <div style="font-size:13px;font-weight:700;">
+                ⏰ 
+                </div>
 
                 </div>
-                """
+                """)
 
 
 
