@@ -1638,33 +1638,33 @@ else:
             }.get(shift, "linear-gradient(135deg,#757f9a,#d7dde8)")
 
             card_html = f"""
-            <div style="
-                height:160px;
-                padding:14px;
-                border-radius:16px;
-                background:{gradient};
-                color:white;
-                box-shadow:0 6px 16px rgba(0,0,0,0.25);
-                line-height:1.35;
-                display:flex;
-                flex-direction:column;
-                justify-content:space-between;
-            ">
-                <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
-                <div style="font-size:12px;">📞 {row['Phone']}</div>
-                <div style="font-size:12px;">✉️ {row['Email']}</div>
+                <div style="
+                    height:160px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+                    line-height:1.35;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                ">
+                    <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
+                    <div style="font-size:12px;">📞 {row['Phone']}</div>
+                    <div style="font-size:12px;">✉️ {row['Email']}</div>
 
-                <div style="font-size:12px;display:flex;justify-content:space-between;">
-                    <span>🆔 {row['CustomerID']}</span>
-                    <span style="font-weight:700;">💰 {rate_text}</span>
-                </div>
+                    <div style="font-size:12px;display:flex;justify-content:space-between;">
+                        <span>🆔 {row['CustomerID']}</span>
+                        <span style="font-weight:700;">💰 {rate_text}</span>
+                    </div>
 
-                <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
-                <div style="font-size:13px;font-weight:700;">
-                    ⏰ {row['Shift']} • {row['Status']}
+                    <div style="font-size:12px;">📅 {row['DateOfJoining']}</div>
+                    <div style="font-size:13px;font-weight:700;">
+                        ⏰ {row['Shift']} • {row['Status']}
+                    </div>
                 </div>
-            </div>
-            """
+                """
 
 
 
