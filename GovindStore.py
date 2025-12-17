@@ -1515,50 +1515,62 @@ else:
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
                 card_html = f"""
+                <div style="
+                    height:165px;
+                    padding:14px;
+                    border-radius:16px;
+                    background:{gradient};
+                    color:white;
+                    box-shadow:0 6px 18px rgba(0,0,0,0.28);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    margin-bottom:16px;
+                    cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                ">
+
+                    <!-- Header -->
                     <div style="
-                        height:180px;
-                        padding:16px;
-                        border-radius:18px;
-                        background:{gradient};
-                        color:white;
-                        box-shadow:0 8px 20px rgba(0,0,0,0.28);
-                        line-height:1.35;
+                        font-size:15px;
+                        font-weight:800;
                         display:flex;
-                        flex-direction:column;
-                        justify-content:space-between;
-                        margin-bottom:18px;
-                        cursor:{'pointer' if st.session_state.cow_view_mode=='edit' else 'default'};
+                        align-items:center;
+                        gap:6px;
                     ">
-
-                    <div style="font-size:16px;font-weight:800;">
-                    {'🐄' if row['AnimalType']=='Cow' else '🐃'} {row['CowID']}
+                        {'🐄' if row['AnimalType']=='Cow' else '🐃'}
+                        <span>{row['CowID']}</span>
                     </div>
 
-                    <div style="font-size:13px;">
-                    🧬 <b>Breed:</b> {row['Breed']}
+                    <!-- Info rows -->
+                    <div style="font-size:13px; line-height:1.25;">
+                        🧬 <b>Breed:</b> {row['Breed']}
                     </div>
 
-                    <div style="font-size:13px;">
-                    ⚥ <b>Gender:</b> {row['Gender']}
+                    <div style="font-size:13px; line-height:1.25;">
+                        ⚥ <b>Gender:</b> {row['Gender']}
                     </div>
 
-                    <div style="font-size:13px;">
-                    🎂 <b>Age:</b> {age} Years
+                    <div style="font-size:13px; line-height:1.25;">
+                        🎂 <b>Age:</b> {age} yrs
                     </div>
 
+                    <!-- Footer -->
                     <div style="
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        font-size:13px;
+                        font-size:12.5px;
                         font-weight:700;
+                        padding-top:4px;
+                        border-top:1px solid rgba(255,255,255,0.25);
                     ">
-                    <span>🩺 {row['Status']}</span>
-                    <span>🥛 {row['MilkingStatus']}</span>
+                        <span>🩺 {row['Status']}</span>
+                        <span>🥛 {row['MilkingStatus']}</span>
                     </div>
 
-                    </div>
-                    """
+                </div>
+                """
+
 
 
                 with cols[i % 4]:
