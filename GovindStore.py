@@ -1601,11 +1601,15 @@ else:
                     st.markdown(card_html, unsafe_allow_html=True)
 
                     if st.session_state.cow_view_mode == "edit":
-                        st.button(
+                        if st.button(
                             "✏️ Edit",
                             key=f"edit_cow_{row['CowID']}",
                             use_container_width=True
-                        )
+                        ):
+                            st.session_state.edit_cow_id = row["CowID"]
+                            st.session_state.edit_cow_row = row.to_dict()
+                            st.rerun()
+
 
 
 
