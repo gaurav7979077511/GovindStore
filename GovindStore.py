@@ -70,6 +70,20 @@ def get_customers_df():
                 ])
             return pd.DataFrame(data[1:], columns=data[0])
 
+# ---------- VIEW MODE STATE ----------
+if "view_mode" not in st.session_state:
+    st.session_state.view_mode = "display"   # display | edit
+
+if "edit_customer_id" not in st.session_state:
+    st.session_state.edit_customer_id = None
+
+if "edit_customer_row" not in st.session_state:
+    st.session_state.edit_customer_row = None
+
+if "edit_row_index" not in st.session_state:
+    st.session_state.edit_row_index = None
+
+
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -151,6 +165,8 @@ else:
         st.session_state.user_name = None
         st.experimental_set_query_params(logged_in="false")
         st.rerun()
+    
+
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
 
@@ -1547,6 +1563,21 @@ else:
 
         # ---------- CUSTOMER CARDS ----------
         st.markdown("### 📋 Customers List")
+
+        col1, col2 = st.columns([1, 5])
+
+        with col1:
+            if st.session_state.view_mode == "display":
+                if st.button("✏️ Edit View"):
+                    st.session_state.view_mode = "edit"
+                    st.rerun()
+            else:
+                if st.button("👁️ Display View"):
+                    st.session_state.view_mode = "display"
+                    st.session_state.edit_customer_id = None
+                    st.session_state.edit_row_index = None
+                    st.rerun()
+
         df = get_customers_df()
 
         for i, row in df.iterrows():
@@ -1563,15 +1594,16 @@ else:
 
             card_html = f"""
             <div style="
-                position:relative;
-                padding:12px;
-                border-radius:14px;
+                height:160px;
+                padding:14px;
+                border-radius:16px;
                 background:{gradient};
                 color:white;
                 box-shadow:0 6px 16px rgba(0,0,0,0.25);
                 line-height:1.3;
+                cursor:{'pointer' if st.session_state.view_mode=='edit' else 'default'};
+                opacity:{'1' if st.session_state.view_mode=='edit' else '0.95'};
             ">
-
                 <div style="font-size:15px;font-weight:800;">👤 {row['Name']}</div>
                 <div style="font-size:12px;">📞 {row['Phone']}</div>
                 <div style="font-size:12px;">✉️ {row['Email']}</div>
@@ -1584,69 +1616,56 @@ else:
             """
 
             with cols[i % 4]:
-                components.html(card_html, height=150)
-
-                if st.button("✏️", key=f"edit_{row['CustomerID']}"):
-                    st.session_state.edit_customer_id = row["CustomerID"]
-                    st.rerun()
-
-                # ---------- INLINE EDIT FORM ----------
-                if st.session_state.edit_customer_id == row["CustomerID"]:
-                    with st.form(f"edit_{row['CustomerID']}"):
-
-                        e1, e2, e3 = st.columns(3)
-                        with e1:
-                            e_name = st.text_input("Name", row["Name"])
-                            e_phone = st.text_input("Phone", row["Phone"])
-                            e_rate = st.number_input(
-                                        "Rate per Litre (₹)",
-                                        min_value=0.0,
-                                        value=None if not row["RatePerLitre"] else float(row["RatePerLitre"]),
-                                        step=1.0
-                                    )
-
-                        with e2:
-                            e_email = st.text_input("Email", row["Email"])
-                            e_doj = st.date_input(
-                                "DOJ",
-                                pd.to_datetime(row["DateOfJoining"]).date()
-                            )
-                        with e3:
-                            e_shift = st.selectbox(
-                                "Shift",
-                                ["Morning","Evening","Both"],
-                                index=["Morning","Evening","Both"].index(row["Shift"])
-                            )
-                            e_status = st.selectbox(
-                                "Status",
-                                ["Active","Inactive"],
-                                index=0 if row["Status"] == "Active" else 1
-                            )
-
-                        u, c = st.columns(2)
-                        update = u.form_submit_button("Update")
-                        cancel = c.form_submit_button("Cancel")
-
-                    if cancel:
-                        st.session_state.edit_customer_id = None
+                if st.session_state.view_mode == "edit":
+                    if st.button(card_html, key=f"card_{row['CustomerID']}"):
+                        st.session_state.edit_customer_id = row["CustomerID"]
+                        st.session_state.edit_customer_row = row.to_dict()
+                        st.session_state.edit_row_index = i // 4
                         st.rerun()
+                else:
+                    st.markdown(card_html, unsafe_allow_html=True)
 
-                    if update:
-                        update_customer_by_id(
-                            row["CustomerID"],
-                            {
-                                "Name": e_name,
-                                "Phone": e_phone,
-                                "Email": e_email,
-                                "DateOfJoining": e_doj.strftime("%Y-%m-%d"),
-                                "Shift": e_shift,
-                                "RatePerLitre": e_rate if e_rate > 0 else "",
-                                "Status": e_status,
-                            }
-                        )
-                        st.success("Customer updated")
-                        st.session_state.edit_customer_id = None
-                        st.rerun()
+        if st.session_state.view_mode == "edit" and st.session_state.edit_customer_id:
+
+            st.markdown("---")
+            st.markdown("## ✏️ Edit Customer")
+
+            row = st.session_state.edit_customer_row
+
+            with st.form("edit_customer_form"):
+                c1, c2, c3 = st.columns(3)
+
+                with c1:
+                    e_name = st.text_input("Name", row["Name"])
+                    e_phone = st.text_input("Phone", row["Phone"])
+
+                with c2:
+                    e_email = st.text_input("Email", row["Email"])
+                    e_doj = st.date_input(
+                        "Date of Joining",
+                        pd.to_datetime(row["DateOfJoining"]).date()
+                    )
+
+                with c3:
+                    e_shift = st.selectbox(
+                        "Shift",
+                        ["Morning","Evening","Both"],
+                        index=["Morning","Evening","Both"].index(row["Shift"])
+                    )
+                    e_status = st.selectbox(
+                        "Status",
+                        ["Active","Inactive"],
+                        index=0 if row["Status"] == "Active" else 1
+                    )
+
+                u, c = st.columns(2)
+                update = u.form_submit_button("✅ Update")
+                cancel = c.form_submit_button("❌ Cancel")
+
+            if cancel:
+                st.session_state.edit_customer_id = None
+                st.rerun()
+
 
     elif page == "Milk Bitran":
 
