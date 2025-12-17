@@ -1675,7 +1675,7 @@ else:
 
             with cols[i % 4]:
                 # Always render card correctly
-                st.markdown("<h3 style='color:red'>HTML TEST</h3>", unsafe_allow_html=True)
+                st.markdown(card_html, unsafe_allow_html=True)
 
                 # Only allow edit in Edit View
                 if st.session_state.view_mode == "edit":
