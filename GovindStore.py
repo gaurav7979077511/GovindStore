@@ -1554,6 +1554,7 @@ else:
 
 
 
+
                 with cols[i % 4]:
                     st.markdown(card_html, unsafe_allow_html=True)
 
