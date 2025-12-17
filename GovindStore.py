@@ -1533,19 +1533,17 @@ else:
 
 
 
-                card_html = f"""
-                <div style="
-                    height:130px;
-                    padding:14px 16px;
-                    border-radius:14px;
-                    background:{gradient};
-                    color:white;
-                    box-shadow:0 6px 18px rgba(0,0,0,0.22);
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
-                    margin-bottom:12px;
-                ">
+                card_html = f"""<div style="
+                        height:130px;
+                        padding:14px 16px;
+                        border-radius:14px;
+                        background:{gradient};
+                        color:white;
+                        box-shadow:0 6px 18px rgba(0,0,0,0.22);
+                        display:flex;
+                        flex-direction:column;
+                        justify-content:space-between;
+                        margin-bottom:12px;">
 
                     <div style="font-size:14.5px;font-weight:600;display:flex;gap:6px;">
                         {'🐄' if row['AnimalType']=='Cow' else '🐃'}
@@ -1566,7 +1564,7 @@ else:
                     </div>
 
                 </div>
-                """.strip()
+                """
 
 
 
