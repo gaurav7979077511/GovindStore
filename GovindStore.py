@@ -59,20 +59,27 @@ def open_sheet(sheet_id: str, tab: str):
     except gspread.WorksheetNotFound:
         return sh.get_worksheet(0)
         
+@st.cache_resource
 def open_customer_sheet():
-            client = init_gsheets()
-            sh = client.open_by_key(MAIN_SHEET_ID)
-            return sh.worksheet(CUSTOMER_TAB)
+    client = init_gsheets()
+    sh = client.open_by_key(MAIN_SHEET_ID)
+    return sh.worksheet(CUSTOMER_TAB)
 
+@st.cache_data(ttl=300)  # cache for 5 minutes
 def get_customers_df():
-            ws = open_customer_sheet()
-            data = ws.get_all_values()
-            if len(data) <= 1:
-                return pd.DataFrame(columns=[
-                    "CustomerID","Name","Phone","Email",
-                    "DateOfJoining","Shift","RatePerLitre","Status","Timestamp"
-                ])
-            return pd.DataFrame(data[1:], columns=data[0])
+    ws = open_customer_sheet()
+    data = ws.get_all_values()
+
+    if len(data) <= 1:
+        return pd.DataFrame(columns=[
+            "CustomerID","Name","Phone","Email",
+            "DateOfJoining","Shift","RatePerLitre","Status","Timestamp"
+        ])
+
+    df = pd.DataFrame(data[1:], columns=data[0])
+    df.columns = df.columns.astype(str).str.strip()
+    return df
+
 
 # ---------- VIEW MODE STATE ----------
 if "view_mode" not in st.session_state:
