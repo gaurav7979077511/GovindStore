@@ -1393,38 +1393,113 @@ else:
         # ======================================================
         st.subheader("📋 Bills")
 
-        # ---- FIX: define today ----
         today = pd.Timestamp.today().normalize()
 
-        # ---- FIX: ensure datetime columns ----
+        # Ensure datetime
         bills_df["FromDate"] = pd.to_datetime(bills_df["FromDate"])
         bills_df["ToDate"] = pd.to_datetime(bills_df["ToDate"])
-        bills_df["GeneratedOn"] = pd.to_datetime(bills_df["GeneratedOn"])
         bills_df["DueDate"] = pd.to_datetime(bills_df["DueDate"])
+        bills_df["GeneratedOn"] = pd.to_datetime(bills_df["GeneratedOn"])
 
+        # Show pending + last 4 months paid
         show_df = bills_df[
             (bills_df["BillStatus"] != "Paid") |
             (bills_df["FromDate"] >= today - pd.DateOffset(months=4))
         ].sort_values("GeneratedOn", ascending=False)
 
-        for _, r in show_df.iterrows():
-            color = "#fde68a" if r["BillStatus"] != "Paid" else "#bbf7d0"
+        if show_df.empty:
+            st.info("No bills to display.")
+        else:
+            cols = st.columns(4)
 
-            # Overdue unpaid bills
-            if r["BillStatus"] != "Paid" and r["DueDate"] < today:
-                color = "#fecaca"
+            for i, r in show_df.iterrows():
+                # -------- STATUS COLOR --------
+                if r["BillStatus"] == "Paid":
+                    gradient = "linear-gradient(135deg,#22c55e,#15803d)"
+                    badge = "🟢 Paid"
+                elif r["DueDate"] < today:
+                    gradient = "linear-gradient(135deg,#ef4444,#991b1b)"
+                    badge = "🔴 Overdue"
+                else:
+                    gradient = "linear-gradient(135deg,#facc15,#ca8a04)"
+                    badge = "🟡 Pending"
 
-            st.markdown(
-                f"""
-                <div style="padding:12px;border-radius:10px;
-                background:{color};margin-bottom:8px">
-                    <b>{r['CustomerName']}</b><br>
-                    {r['FromDate'].date()} → {r['ToDate'].date()}<br>
-                    ₹ {r['BillAmount']} | Status: {r['BillStatus']}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+                # Missing dates display (chips)
+                missing_html = ""
+                if "MissingDates" in r and r["MissingDates"]:
+                    for d in str(r["MissingDates"]).split(","):
+                        missing_html += f"""
+                        <span style="
+                            padding:2px 6px;
+                            background:#ffffff22;
+                            border-radius:6px;
+                            font-size:11px;
+                            margin-right:4px;
+                        ">{d.strip()}</span>
+                        """
+
+                with cols[i % 4]:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background:{gradient};
+                            color:white;
+                            padding:14px;
+                            border-radius:16px;
+                            height:210px;
+                            box-shadow:0 6px 18px rgba(0,0,0,0.25);
+                            display:flex;
+                            flex-direction:column;
+                            justify-content:space-between;
+                            font-family:Inter,system-ui,sans-serif;
+                        ">
+
+                            <!-- Header -->
+                            <div>
+                                <div style="font-size:15px;font-weight:800;">
+                                    {r['CustomerName']}
+                                </div>
+                                <div style="font-size:11px;opacity:0.9;">
+                                    Bill ID: {r['BillID']}
+                                </div>
+                            </div>
+
+                            <!-- Period -->
+                            <div style="font-size:12px;margin-top:6px;">
+                                📅 {r['FromDate'].date()} → {r['ToDate'].date()}
+                            </div>
+
+                            <!-- Milk & Amount -->
+                            <div style="margin-top:6px;">
+                                <div style="font-size:13px;">
+                                    🥛 <b>{r['TotalMilk']} L</b>
+                                </div>
+                                <div style="font-size:18px;font-weight:900;">
+                                    ₹ {float(r['BillAmount']):,.0f}
+                                </div>
+                            </div>
+
+                            <!-- Missing Dates -->
+                            <div style="margin-top:6px;">
+                                {missing_html if missing_html else "<span style='font-size:11px;opacity:.8;'>No missing days</span>"}
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                margin-top:8px;
+                                font-size:12px;
+                            ">
+                                <span>{badge}</span>
+                                <span>Due: {r['DueDate'].date()}</span>
+                            </div>
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
 
 
