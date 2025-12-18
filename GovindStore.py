@@ -1078,6 +1078,7 @@ else:
             "RatePerLitre","BillAmount",
             "PaidAmount","BalanceAmount",
             "BillStatus","DueDate",
+            "MissingDates",
             "GeneratedBy","GeneratedOn"
         ]
 
