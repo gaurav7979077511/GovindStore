@@ -1362,6 +1362,15 @@ else:
         # ======================================================
         st.subheader("📋 Bills")
 
+        # ---- FIX: define today ----
+        today = pd.Timestamp.today().normalize()
+
+        # ---- FIX: ensure datetime columns ----
+        bills_df["FromDate"] = pd.to_datetime(bills_df["FromDate"])
+        bills_df["ToDate"] = pd.to_datetime(bills_df["ToDate"])
+        bills_df["GeneratedOn"] = pd.to_datetime(bills_df["GeneratedOn"])
+        bills_df["DueDate"] = pd.to_datetime(bills_df["DueDate"])
+
         show_df = bills_df[
             (bills_df["BillStatus"] != "Paid") |
             (bills_df["FromDate"] >= today - pd.DateOffset(months=4))
@@ -1369,6 +1378,8 @@ else:
 
         for _, r in show_df.iterrows():
             color = "#fde68a" if r["BillStatus"] != "Paid" else "#bbf7d0"
+
+            # Overdue unpaid bills
             if r["BillStatus"] != "Paid" and r["DueDate"] < today:
                 color = "#fecaca"
 
@@ -1383,6 +1394,7 @@ else:
                 """,
                 unsafe_allow_html=True
             )
+
 
 
     
