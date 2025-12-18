@@ -1092,6 +1092,19 @@ else:
                 st.stop()
 
 
+        @st.cache_data(ttl=300)
+        def load_bitran_df():
+            ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
+            rows = ws.get_all_values()
+
+            if len(rows) <= 1:
+                return pd.DataFrame()
+
+            df = pd.DataFrame(rows[1:], columns=rows[0])
+            df["MilkDelivered"] = pd.to_numeric(df["MilkDelivered"], errors="coerce").fillna(0)
+            df["Date"] = pd.to_datetime(df["Date"])
+            return df
+
         @st.cache_data(ttl=30)
         def load_bills():
             ws = open_billing_sheet()
@@ -1118,21 +1131,14 @@ else:
         # ======================================================
         # MILK CALCULATION + MISSING DATES
         # ======================================================
-        def calculate_milk(customer_id, from_date, to_date):
-            ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
-            rows = ws.get_all_values()
-
-            if len(rows) <= 1:
+        def calculate_milk(bitran_df, customer_id, from_date, to_date):
+            if bitran_df.empty:
                 return 0, 0, 0, []
 
-            df = pd.DataFrame(rows[1:], columns=rows[0])
-            df["MilkDelivered"] = pd.to_numeric(df["MilkDelivered"], errors="coerce").fillna(0)
-            df["Date"] = pd.to_datetime(df["Date"])
-
-            df = df[
-                (df["CustomerID"] == customer_id) &
-                (df["Date"] >= pd.to_datetime(from_date)) &
-                (df["Date"] <= pd.to_datetime(to_date))
+            df = bitran_df[
+                (bitran_df["CustomerID"] == customer_id) &
+                (bitran_df["Date"] >= pd.to_datetime(from_date)) &
+                (bitran_df["Date"] <= pd.to_datetime(to_date))
             ]
 
             morning = df[df["Shift"] == "Morning"]["MilkDelivered"].sum()
@@ -1145,11 +1151,14 @@ else:
 
             return round(morning,2), round(evening,2), round(total,2), missing_dates
 
+
         # ======================================================
         # LOAD DATA
         # ======================================================
         customers_df = get_customers_df()
         bills_df = load_bills()
+        bitran_df = load_bitran_df()
+
 
         customers_df["RatePerLitre"] = pd.to_numeric(
             customers_df.get("RatePerLitre", 0), errors="coerce"
@@ -1243,7 +1252,7 @@ else:
                     ).any():
                         continue
 
-                    morning, evening, total, missing = calculate_milk(
+                    morning, evening, total, missing = calculate_milk(bitran_df,
                         c["CustomerID"], from_date, to_date
                     )
 
@@ -1269,8 +1278,10 @@ else:
                     for p in preview:
                         chk = st.checkbox(
                             f"{p['cust']['Name']} | {p['total']} L | ₹ {p['amount']}",
-                            value=True
+                            value=True,
+                            key=f"bulk_{p['cust']['CustomerID']}"
                         )
+
                         selected[p["cust"]["CustomerID"]] = chk
 
                         if p["missing"]:
@@ -1287,27 +1298,25 @@ else:
                             if not selected.get(c["CustomerID"]):
                                 continue
 
-                            rows_to_add.append_row(
-                                [
-                                    f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
-                                    safe(c["CustomerID"]),
-                                    safe(c["Name"]),
-                                    from_date.strftime("%Y-%m-%d"),
-                                    to_date.strftime("%Y-%m-%d"),
-                                    safe(p["morning"]),
-                                    safe(p["evening"]),
-                                    safe(p["total"]),
-                                    safe(c["RatePerLitre"]),
-                                    safe(p["amount"]),
-                                    0,
-                                    safe(p["amount"]),
-                                    "Payment Pending",
-                                    due_date.strftime("%Y-%m-%d"),
-                                    safe(st.session_state.user_name),
-                                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                ],
-                                value_input_option="USER_ENTERED"
-                            )
+                            rows_to_add.append([
+                                f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+                                safe(c["CustomerID"]),
+                                safe(c["Name"]),
+                                from_date.strftime("%Y-%m-%d"),
+                                to_date.strftime("%Y-%m-%d"),
+                                safe(p["morning"]),
+                                safe(p["evening"]),
+                                safe(p["total"]),
+                                safe(c["RatePerLitre"]),
+                                safe(p["amount"]),
+                                0,
+                                safe(p["amount"]),
+                                "Payment Pending",
+                                due_date.strftime("%Y-%m-%d"),
+                                safe(st.session_state.user_name),
+                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            ])
+
                             count += 1
                         ws.append_rows(rows_to_add, value_input_option="USER_ENTERED")
                         st.cache_data.clear()
@@ -1332,7 +1341,7 @@ else:
                 ).any():
                     st.error("❌ Bill already exists in this date range")
                 else:
-                    morning, evening, total, missing = calculate_milk(
+                    morning, evening, total, missing = calculate_milk(bitran_df,
                         cust["CustomerID"], from_date, to_date
                     )
 
