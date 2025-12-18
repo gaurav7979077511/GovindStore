@@ -1068,9 +1068,9 @@ else:
 
         st.title("🧾 Billing")
 
-        # =========================================================
+        # ======================================================
         # CONSTANTS
-        # =========================================================
+        # ======================================================
         BILLING_HEADER = [
             "BillID","CustomerID","CustomerName",
             "FromDate","ToDate",
@@ -1081,28 +1081,13 @@ else:
             "GeneratedBy","GeneratedOn"
         ]
 
-        # =========================================================
-        # HELPERS (VERY IMPORTANT)
-        # =========================================================
-        def safe_cell(val):
-            """Convert pandas / numpy / datetime to JSON-safe values"""
-            if isinstance(val, (np.integer, np.floating)):
-                return float(val)
-            if isinstance(val, (dt.date, dt.datetime)):
-                return val.strftime("%Y-%m-%d")
-            if pd.isna(val):
-                return ""
-            return str(val)
-
-        def month_key(d):
-            return d.strftime("%Y-%m")
-
-        # =========================================================
+        # ======================================================
         # SHEET HELPERS
-        # =========================================================
+        # ======================================================
         def open_billing_sheet():
             return open_sheet(MAIN_SHEET_ID, BILLING_TAB)
 
+        @st.cache_data(ttl=300)
         def load_bills():
             ws = open_billing_sheet()
             rows = ws.get_all_values()
@@ -1114,16 +1099,24 @@ else:
 
             return pd.DataFrame(rows[1:], columns=rows[0])
 
+        # ======================================================
+        # SAFE MILK CALCULATION
+        # ======================================================
+        @st.cache_data(ttl=300)
         def calculate_milk(customer_id, from_date, to_date):
             ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
             rows = ws.get_all_values()
 
-            if len(rows) <= 1:
+            if not rows or len(rows) <= 1:
                 return 0, 0, 0, pd.DataFrame()
 
             df = pd.DataFrame(rows[1:], columns=rows[0])
+
+            if df.empty:
+                return 0, 0, 0, df
+
             df["MilkDelivered"] = pd.to_numeric(df["MilkDelivered"], errors="coerce").fillna(0)
-            df["Date"] = pd.to_datetime(df["Date"])
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
             df = df[
                 (df["CustomerID"] == customer_id) &
@@ -1131,44 +1124,32 @@ else:
                 (df["Date"] <= pd.to_datetime(to_date))
             ]
 
-            morning = df[df["Shift"] == "Morning"]["MilkDelivered"].sum()
-            evening = df[df["Shift"] == "Evening"]["MilkDelivered"].sum()
+            if df.empty:
+                return 0, 0, 0, df
+
+            morning = df.loc[df["Shift"] == "Morning", "MilkDelivered"].sum()
+            evening = df.loc[df["Shift"] == "Evening", "MilkDelivered"].sum()
             total = morning + evening
 
             return round(morning,2), round(evening,2), round(total,2), df
 
-        # =========================================================
+        # ======================================================
         # LOAD DATA
-        # =========================================================
+        # ======================================================
         customers_df = get_customers_df()
         bills_df = load_bills()
 
         customers_df["RatePerLitre"] = pd.to_numeric(
-            customers_df.get("RatePerLitre", 0), errors="coerce"
+            customers_df["RatePerLitre"], errors="coerce"
         ).fillna(0)
 
+        # ======================================================
+        # MONTH SELECTION
+        # ======================================================
         today = dt.date.today()
 
-        # =========================================================
-        # SESSION STATE LOCK
-        # =========================================================
-        if "billing_generated" not in st.session_state:
-            st.session_state.billing_generated = False
-
-        # =========================================================
-        # BILLING MODE
-        # =========================================================
-        billing_mode = st.radio(
-            "Billing Type",
-            ["Monthly Bulk Billing", "Individual Billing"],
-            horizontal=True
-        )
-
-        # =========================================================
-        # MONTH SELECTION
-        # =========================================================
         month_str = st.selectbox(
-            "Select Month",
+            "Select Billing Month",
             pd.date_range(end=today, periods=12, freq="M").strftime("%Y-%m")
         )
 
@@ -1177,167 +1158,139 @@ else:
         to_date = (from_date + pd.offsets.MonthEnd(1)).date()
         due_date = to_date + dt.timedelta(days=7)
 
-        # =========================================================
-        # ALREADY GENERATED CHECK
-        # =========================================================
-        existing_month_bills = bills_df[
-            bills_df["FromDate"].str.startswith(month_str)
-        ]
+        st.divider()
+        st.subheader("🔍 Billing Preview")
 
-        already_billed_customers = set(existing_month_bills["CustomerID"])
-
-        # =========================================================
+        # ======================================================
         # PREVIEW DATA
-        # =========================================================
-        if billing_mode == "Monthly Bulk Billing":
-
-            preview_customers = customers_df[
-                (customers_df["Status"] == "Active") &
-                (customers_df["Name"] != "Dairy-CMS") &
-                (customers_df["RatePerLitre"] > 0) &
-                (~customers_df["CustomerID"].isin(already_billed_customers))
-            ]
-
-        else:
-            cust_name = st.selectbox(
-                "Select Customer",
-                customers_df["Name"].tolist()
-            )
-            preview_customers = customers_df[
-                customers_df["Name"] == cust_name
-            ]
-
-        # =========================================================
-        # PREVIEW
-        # =========================================================
-        st.markdown("### 📋 Billing Preview")
-
+        # ======================================================
         preview_rows = []
 
-        for _, cust in preview_customers.iterrows():
+        eligible_customers = customers_df[
+            (customers_df["Status"] == "Active") &
+            (customers_df["Name"] != "Dairy-CMS")
+        ]
+
+        for _, cust in eligible_customers.iterrows():
             cid = cust["CustomerID"]
             cname = cust["Name"]
-            rate = cust["RatePerLitre"]
+            rate = float(cust["RatePerLitre"])
 
-            morning, evening, total, df = calculate_milk(cid, from_date, to_date)
+            m, e, t, df = calculate_milk(cid, from_date, to_date)
 
-            if total == 0:
-                note = "No milk this period"
-            else:
-                zero_days = (df.groupby(df["Date"].dt.date)["MilkDelivered"].sum() == 0).sum()
-                high_days = (df.groupby(df["Date"].dt.date)["MilkDelivered"].sum() > 2).sum()
-                note = f"No milk on {zero_days} day(s), High milk on {high_days} day(s)"
+            # Duplicate check
+            already_billed = (
+                not bills_df.empty and
+                (
+                    (bills_df["CustomerID"] == cid) &
+                    (bills_df["FromDate"] == from_date.strftime("%Y-%m-%d")) &
+                    (bills_df["ToDate"] == to_date.strftime("%Y-%m-%d"))
+                ).any()
+            )
 
-            amount = round(total * rate, 2)
+            status = (
+                "Already Billed" if already_billed else
+                "No Delivery" if t == 0 else
+                "Rate Missing" if rate <= 0 else
+                "Ready"
+            )
 
             preview_rows.append({
-                "cid": cid,
-                "name": cname,
-                "total": total,
-                "amount": amount,
-                "rate": rate,
-                "note": note
+                "Customer": cname,
+                "Morning": m,
+                "Evening": e,
+                "Total": t,
+                "Rate": rate,
+                "Amount": round(t * rate, 2) if t > 0 and rate > 0 else 0,
+                "Status": status
             })
 
-        if not preview_rows:
-            st.success("✅ Bills already generated for this month")
+        preview_df = pd.DataFrame(preview_rows)
 
+        # ======================================================
+        # PREVIEW CARDS
+        # ======================================================
+        if preview_df.empty:
+            st.info("No customers found.")
         else:
             cols = st.columns(4)
-            for i, r in enumerate(preview_rows):
+
+            for i, row in preview_df.iterrows():
+                bg = (
+                    "#e5f6ff" if row["Status"] == "Ready" else
+                    "#fff4e5" if row["Status"] == "No Delivery" else
+                    "#fdecea"
+                )
+
                 with cols[i % 4]:
                     st.markdown(
                         f"""
                         <div style="
-                            background:#0f172a;
-                            color:#e5e7eb;
-                            border-left:4px solid #22c55e;
+                            background:{bg};
+                            border:1px solid #e5e7eb;
                             border-radius:12px;
                             padding:12px;
                             height:140px;
+                            color:#0f172a;
                         ">
-                            <b>{r['name']}</b><br>
-                            🥛 {r['total']} L<br>
-                            ₹ {r['amount']}<br>
-                            <span style="font-size:12px;color:#94a3b8;">
-                                {r['note']}
-                            </span>
+                            <div style="font-weight:700">{row['Customer']}</div>
+                            <div style="font-size:12px">🥛 {row['Total']} L</div>
+                            <div style="font-size:12px">₹ {row['Rate']} /L</div>
+                            <div style="font-size:14px;font-weight:700;margin-top:4px">
+                                ₹ {row['Amount']}
+                            </div>
+                            <div style="font-size:11px;margin-top:6px;color:#334155">
+                                {row['Status']}
+                            </div>
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
 
-            # =========================================================
-            # GENERATE BUTTON
-            # =========================================================
-            if st.button(
-                "✅ Confirm & Generate Bills",
-                disabled=st.session_state.billing_generated
-            ):
+        # ======================================================
+        # GENERATE BILLS
+        # ======================================================
+        st.divider()
+
+        ready_count = len(preview_df[preview_df["Status"] == "Ready"])
+
+        if ready_count == 0:
+            st.warning("No bills ready to generate.")
+        else:
+            if st.button("📄 Generate Bills"):
                 ws = open_billing_sheet()
                 generated = 0
 
-                for r in preview_rows:
-                    raw_row = [
-                        f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                        r["cid"],
-                        r["name"],
-                        from_date,
-                        to_date,
-                        "", "",
-                        r["total"],
-                        r["rate"],
-                        r["amount"],
-                        0,
-                        r["amount"],
-                        "Payment Pending",
-                        due_date,
-                        st.session_state.user_name,
-                        dt.datetime.now(),
-                    ]
+                for _, row in preview_df.iterrows():
+                    if row["Status"] != "Ready":
+                        continue
 
-                    safe_row = [safe_cell(x) for x in raw_row]
-                    ws.append_row(safe_row, value_input_option="USER_ENTERED")
+                    ws.append_row(
+                        [
+                            f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                            customers_df.loc[customers_df["Name"] == row["Customer"], "CustomerID"].values[0],
+                            row["Customer"],
+                            from_date.strftime("%Y-%m-%d"),
+                            to_date.strftime("%Y-%m-%d"),
+                            row["Morning"],
+                            row["Evening"],
+                            row["Total"],
+                            row["Rate"],
+                            row["Amount"],
+                            0,
+                            row["Amount"],
+                            "Payment Pending",
+                            due_date.strftime("%Y-%m-%d"),
+                            st.session_state.user_name,
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
                     generated += 1
 
-                st.session_state.billing_generated = True
-                st.success(f"✅ {generated} bill(s) generated")
+                load_bills.clear()
+                st.success(f"✅ {generated} bill(s) generated successfully")
                 st.rerun()
-
-        # =========================================================
-        # SHOW GENERATED BILLS
-        # =========================================================
-        st.divider()
-        st.subheader("🧾 Generated Bills")
-
-        month_bills = bills_df[
-            bills_df["FromDate"].str.startswith(month_str)
-        ]
-
-        if month_bills.empty:
-            st.info("No bills generated yet.")
-        else:
-            for _, row in month_bills.iterrows():
-                st.markdown(
-                    f"""
-                    <div style="
-                        background:#020617;
-                        color:#e5e7eb;
-                        border-radius:10px;
-                        padding:12px;
-                        margin-bottom:8px;
-                        width:320px;
-                    ">
-                        <b>{row['CustomerName']}</b><br>
-                        🥛 {row['TotalMilk']} L × ₹{row['RatePerLitre']}<br>
-                        <b>₹ {row['BillAmount']}</b><br>
-                        <span style="font-size:12px;color:#94a3b8;">
-                            Status: {row['BillStatus']}
-                        </span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
 
 
     
