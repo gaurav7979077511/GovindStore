@@ -1355,7 +1355,7 @@ else:
 
                     rate = cust["RatePerLitre"]
                     if rate <= 0:
-                        rate = st.number_input("Enter Rate", min_value=0.1)
+                        rate = st.number_input("Enter Rate", min_value=0.1,value=None)
 
                     amount = round(total * rate, 2)
 
