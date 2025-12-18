@@ -1176,6 +1176,34 @@ else:
 
                     amount = round(total * rate, 2)
 
+
+                    debug_row = [
+                        f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        cid,
+                        cname,
+                        from_date,
+                        to_date,
+                        morning,
+                        evening,
+                        total,
+                        rate,
+                        amount,
+                        0,
+                        amount,
+                        "Payment Pending",
+                        due_date,
+                        st.session_state.user_name,
+                        dt.datetime.now(),
+                    ]
+
+                    st.subheader("🧪 Billing Debug Data")
+                    st.write("Raw values:")
+                    st.write(debug_row)
+
+                    st.write("Types:")
+                    st.write([type(x) for x in debug_row])
+
+
                     ws.append_row(
                         [
                             f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
