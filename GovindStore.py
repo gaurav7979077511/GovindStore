@@ -1085,11 +1085,18 @@ else:
         # SHEET HELPERS
         # ======================================================
         def open_billing_sheet():
-            return open_sheet(MAIN_SHEET_ID, BILLING_TAB)
+            try:
+                return open_sheet(MAIN_SHEET_ID, BILLING_TAB)
+            except Exception:
+                st.error("❌ Unable to access Billing sheet. Please retry.")
+                st.stop()
 
+
+        @st.cache_data(ttl=30)
         def load_bills():
             ws = open_billing_sheet()
             rows = ws.get_all_values()
+
 
             if not rows or rows[0] != BILLING_HEADER:
                 ws.clear()
@@ -1273,14 +1280,16 @@ else:
                         ws = open_billing_sheet()
                         count = 0
 
+                        
+                        rows_to_add = []
                         for p in preview:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
 
-                            ws.append_row(
+                            rows_to_add.append_row(
                                 [
-                                    f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                    f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                     safe(c["CustomerID"]),
                                     safe(c["Name"]),
                                     from_date.strftime("%Y-%m-%d"),
@@ -1300,7 +1309,8 @@ else:
                                 value_input_option="USER_ENTERED"
                             )
                             count += 1
-
+                        ws.append_rows(rows_to_add, value_input_option="USER_ENTERED")
+                        st.cache_data.clear()
                         st.success(f"✅ {count} bill(s) generated")
                         st.session_state.show_bill_window = False
                         st.rerun()
@@ -1340,7 +1350,7 @@ else:
                         ws = open_billing_sheet()
                         ws.append_row(
                             [
-                                f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 cust["CustomerID"], cust["Name"],
                                 from_date.strftime("%Y-%m-%d"),
                                 to_date.strftime("%Y-%m-%d"),
