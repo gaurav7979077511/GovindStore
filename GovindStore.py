@@ -1481,15 +1481,24 @@ else:
                     📅 {r['FromDate'].date()} → {r['ToDate'].date()}
                 </div>
 
-                <!-- Milk & Amount -->
+                <!-- Milk, Rate & Amount -->
                 <div style="margin-top:6px;">
-                    <div style="font-size:13px;">
-                        🥛 <b>{r['TotalMilk']} L</b>
+                    <div style="
+                        font-size:13px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        opacity:0.95;
+                    ">
+                        <span>🥛 <b>{r['TotalMilk']} L</b></span>
+                        <span style="font-size:12px;">₹ {float(r['RatePerLitre']):.2f} / L</span>
                     </div>
-                    <div style="font-size:18px;font-weight:900;">
+
+                    <div style="font-size:18px;font-weight:900;margin-top:2px;">
                         ₹ {float(r['BillAmount']):,.0f}
                     </div>
                 </div>
+
 
                 <!-- Missing Dates -->
                 <div style="margin-top:6px;">
