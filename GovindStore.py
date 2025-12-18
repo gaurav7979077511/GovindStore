@@ -1334,12 +1334,18 @@ else:
                 due_date = to_date + dt.timedelta(days=7)
 
                 # overlap validation
-                if not bills_df.empty and (
+                overlap_df = bills_df[
                     (bills_df["CustomerID"] == cust["CustomerID"]) &
                     (bills_df["FromDate"] <= pd.to_datetime(to_date)) &
                     (bills_df["ToDate"] >= pd.to_datetime(from_date))
-                ).any():
-                    st.error("❌ Bill already exists in this date range")
+                ]
+
+                if not overlap_df.empty:
+                    last_to_date = overlap_df["ToDate"].max().date()
+                    st.error(
+                        f"❌ Bill already exists up to {last_to_date.strftime('%d/%m/%Y')}. "
+                        f"Please generate the bill after this date."
+                    )
                 else:
                     morning, evening, total, missing = calculate_milk(bitran_df,
                         cust["CustomerID"], from_date, to_date
