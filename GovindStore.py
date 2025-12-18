@@ -1453,7 +1453,7 @@ else:
             DailyMilkPattern_html = ""
             if "DailyMilkPattern" in r and pd.notna(r["DailyMilkPattern"]) and r["DailyMilkPattern"]:
                 for d in str(r["DailyMilkPattern"]).split(","):
-                    daily_pattern_html += f"""
+                    DailyMilkPattern_html += f"""
                     <span style="
                         padding:2px 6px;
                         background:#ffffff33;
@@ -1516,7 +1516,7 @@ else:
                 </div>
 
 
-                <!--  DailyMilkPattern_html_html -->
+                <!--  DailyMilkPattern_html -->
                 <div style="margin-top:6px;">
                     {DailyMilkPattern_html}
                 </div>
