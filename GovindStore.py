@@ -1078,7 +1078,7 @@ else:
             "RatePerLitre","BillAmount",
             "PaidAmount","BalanceAmount",
             "BillStatus","DueDate",
-            "MissingDates",
+            "DailyMilkPattern",
             "GeneratedBy","GeneratedOn"
         ]
 
@@ -1134,7 +1134,7 @@ else:
         # ======================================================
         def calculate_milk(bitran_df, customer_id, from_date, to_date):
             if bitran_df.empty:
-                return 0, 0, 0, []
+                return 0, 0, 0, [], []
 
             df = bitran_df[
                 (bitran_df["CustomerID"] == customer_id) &
@@ -1142,15 +1142,31 @@ else:
                 (bitran_df["Date"] <= pd.to_datetime(to_date))
             ]
 
+            df["day"] = df["Date"].dt.date
+
             morning = df[df["Shift"] == "Morning"]["MilkDelivered"].sum()
             evening = df[df["Shift"] == "Evening"]["MilkDelivered"].sum()
             total = morning + evening
 
+            # ---- DAILY PATTERN LOGIC ----
             all_dates = pd.date_range(from_date, to_date)
-            delivered_dates = df[df["MilkDelivered"] > 0]["Date"].dt.date.unique()
-            missing_dates = [d.day for d in all_dates if d.date() not in delivered_dates]
+            daily_pattern = []
+            missing_dates = []
 
-            return round(morning,2), round(evening,2), round(total,2), missing_dates
+            for d in all_dates:
+                day_total = df[df["day"] == d.date()]["MilkDelivered"].sum()
+                daily_pattern.append(round(day_total, 2))
+                if day_total == 0:
+                    missing_dates.append(d.day)
+
+            return (
+                round(morning, 2),
+                round(evening, 2),
+                round(total, 2),
+                missing_dates,
+                daily_pattern
+            )
+
 
 
         # ======================================================
@@ -1253,7 +1269,7 @@ else:
                     ).any():
                         continue
 
-                    morning, evening, total, missing = calculate_milk(bitran_df,
+                    morning, evening, total, missing ,daily_pattern= calculate_milk(bitran_df,
                         c["CustomerID"], from_date, to_date
                     )
 
@@ -1298,7 +1314,7 @@ else:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
-                            missing_str = ",".join(map(str, p["missing"])) if p["missing"] else ""
+                            daily_pattern_str = ",".join(map(str, daily_pattern))
                             rows_to_add.append([
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 safe(c["CustomerID"]),
@@ -1314,7 +1330,7 @@ else:
                                 safe(p["amount"]),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                missing_str, 
+                                daily_pattern_str, 
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ])
@@ -1349,7 +1365,7 @@ else:
                         f"Please generate the bill after this date."
                     )
                 else:
-                    morning, evening, total, missing = calculate_milk(bitran_df,
+                    morning, evening, total, missing, daily_pattern = calculate_milk(bitran_df,
                         cust["CustomerID"], from_date, to_date
                     )
 
@@ -1365,7 +1381,7 @@ else:
 
                     if st.button("✅ Generate Bill"):
                         ws = open_billing_sheet()
-                        missing_str = ",".join(map(str, missing)) if missing else ""
+                        daily_pattern_str = ",".join(map(str, daily_pattern))
                         ws.append_row(
                             [
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
@@ -1382,7 +1398,7 @@ else:
                                 safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                missing_str,
+                                daily_pattern_str,
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ],
@@ -1433,11 +1449,11 @@ else:
                 gradient = "linear-gradient(135deg,#facc15,#ca8a04)"
                 status_badge = "🟡 Pending"
 
-            # ---------- Missing dates ----------
-            missing_html = ""
-            if "MissingDates" in r and pd.notna(r["MissingDates"]) and r["MissingDates"]:
-                for d in str(r["MissingDates"]).split(","):
-                    missing_html += f"""
+            # ---------- daily_pattern  ----------
+            daily_pattern_html = ""
+            if "daily_pattern" in r and pd.notna(r["daily_pattern"]) and r["daily_pattern"]:
+                for d in str(r["daily_pattern"]).split(","):
+                    daily_pattern_html += f"""
                     <span style="
                         padding:2px 6px;
                         background:#ffffff33;
@@ -1449,7 +1465,7 @@ else:
                     ">{d.strip()}</span>
                     """
             else:
-                missing_html = "<span style='font-size:11px;opacity:.9;'>No missing days</span>"
+                daily_pattern_html = "<span style='font-size:11px;opacity:.9;'>No daily_pattern</span>"
 
             card_html = f"""
             <div style="
@@ -1500,9 +1516,9 @@ else:
                 </div>
 
 
-                <!-- Missing Dates -->
+                <!--  daily_pattern_html -->
                 <div style="margin-top:6px;">
-                    {missing_html}
+                    {daily_pattern_html}
                 </div>
 
                 <!-- Footer -->
