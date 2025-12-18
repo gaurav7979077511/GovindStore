@@ -1360,19 +1360,25 @@ else:
                         ws.append_row(
                             [
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
-                                cust["CustomerID"], cust["Name"],
+                                safe(cust["CustomerID"]),
+                                safe(cust["Name"]),
                                 from_date.strftime("%Y-%m-%d"),
                                 to_date.strftime("%Y-%m-%d"),
-                                morning, evening, total,
-                                rate, amount,
-                                0, amount,
+                                safe(morning),
+                                safe(evening),
+                                safe(total),
+                                safe(rate),
+                                safe(amount),
+                                0,
+                                safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                st.session_state.user_name,
-                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                safe(st.session_state.user_name),
+                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ],
                             value_input_option="USER_ENTERED"
                         )
+
                         st.success("Bill generated")
                         st.session_state.show_bill_window = False
                         st.rerun()
