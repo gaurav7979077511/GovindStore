@@ -1491,7 +1491,7 @@ else:
                         opacity:0.95;
                     ">
                         <span>🥛 <b>{r['TotalMilk']} L</b></span>
-                        <span style="font-size:12px;">₹ {float(r['RatePerLitre']):.2f} / L</span>
+                        <span style="font-size:12px;opacity:0.85;">₹ {float(r['RatePerLitre']):.2f} / L</span>
                     </div>
 
                     <div style="font-size:18px;font-weight:900;margin-top:2px;">
