@@ -1213,23 +1213,58 @@ else:
                         st.markdown(
                             f"""
                             <div style="
-                                background:#f8fafc;
+                                background:#ffffff;
                                 border-left:6px solid {alert};
-                                border-radius:10px;
-                                padding:10px;
-                                height:140px;
-                                box-shadow:0 1px 3px rgba(0,0,0,0.08);
+                                border-radius:12px;
+                                padding:12px;
+                                height:150px;
+                                box-shadow:0 4px 10px rgba(0,0,0,0.12);
+                                color:#0f172a;
+                                font-family:Inter, Arial, sans-serif;
                             ">
-                                <div style="font-weight:700;">{row['CustomerName']}</div>
-                                <div style="font-size:12px;">🥛 {row['TotalMilk']} L</div>
-                                <div style="font-size:14px;font-weight:800;">₹ {row['Amount']}</div>
-                                <div style="font-size:11px;color:#475569;margin-top:4px;">
+
+                                <!-- Customer -->
+                                <div style="
+                                    font-size:15px;
+                                    font-weight:700;
+                                    margin-bottom:6px;
+                                ">
+                                    {row['CustomerName']}
+                                </div>
+
+                                <!-- Milk -->
+                                <div style="
+                                    font-size:13px;
+                                    color:#334155;
+                                ">
+                                    🥛 Total Milk: <b>{row['TotalMilk']} L</b>
+                                </div>
+
+                                <!-- Amount -->
+                                <div style="
+                                    font-size:18px;
+                                    font-weight:800;
+                                    margin-top:4px;
+                                    color:#020617;
+                                ">
+                                    ₹ {row['Amount']}
+                                </div>
+
+                                <!-- Notes -->
+                                <div style="
+                                    font-size:12px;
+                                    margin-top:8px;
+                                    color:{'#b91c1c' if row['Notes'] != 'OK' else '#15803d'};
+                                    font-weight:600;
+                                ">
                                     {row['Notes']}
                                 </div>
+
                             </div>
                             """,
                             unsafe_allow_html=True
                         )
+
 
             # ================= CONFIRM =================
             if not preview_df.empty and st.button("✅ Confirm & Generate Bills"):
