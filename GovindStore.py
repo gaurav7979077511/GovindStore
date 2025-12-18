@@ -1186,7 +1186,7 @@ else:
             st.markdown(
                 f"""
                 <div style="padding:14px;border-radius:12px;
-                background:#0f172a;color:white;">
+                background:#0f172a;color:white;margin-bottom:14px;">
                 <div style="font-size:13px;opacity:.8">{title}</div>
                 <div style="font-size:22px;font-weight:800">₹ {value:,.0f}</div>
                 </div>
