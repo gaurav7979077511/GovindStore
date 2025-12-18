@@ -96,28 +96,6 @@ if "edit_cow_row" not in st.session_state:
     st.session_state.edit_cow_row = None
 
 
-def safe_cell(val):
-    if val is None:
-        return ""
-
-    if isinstance(val, float) and pd.isna(val):
-        return ""
-
-    if isinstance(val, (np.integer,)):
-        return int(val)
-
-    if isinstance(val, (np.floating,)):
-        return float(val)
-
-    if isinstance(val, (pd.Timestamp, dt.date, dt.datetime)):
-        return val.strftime("%Y-%m-%d")
-
-    if isinstance(val, (int, float)):
-        return val
-
-    return str(val)
-
-
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1172,11 +1150,7 @@ else:
                 for _, cust in eligible_customers.iterrows():
                     cid = cust["CustomerID"]
                     cname = cust["Name"]
-                    rate_raw = cust.get("RatePerLitre", "")
-                    if pd.isna(rate_raw) or str(rate_raw).strip() == "":
-                        rate = None   # or ""
-                    else:
-                        rate = float(rate_raw)
+                    rate = float(cust["RatePerLitre"])
 
                     # Duplicate check
                     if not bills_df.empty and (
@@ -1192,35 +1166,22 @@ else:
 
                     amount = round(total * rate, 2)
 
-                    raw_row = [
-                        f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                        cid,
-                        cname,
-                        from_date,
-                        to_date,
-                        morning,
-                        evening,
-                        total,
-                        rate,
-                        amount,
-                        0,              # PaidAmount
-                        amount,         # BalanceAmount
-                        "Payment Pending",
-                        due_date,
-                        st.session_state.user_name,
-                        dt.datetime.now(),
-                    ]
-
-                    safe_row = [safe_cell(x) for x in raw_row]
-
-                    try:
-                        ws.append_row(safe_row, value_input_option="USER_ENTERED")
-                        st.success(f"✅ Bill generated for {cname}")
-                    except Exception as e:
-                        st.error("❌ Bill generation failed")
-                        st.exception(e)
-                        st.stop()
-
+                    ws.append_row(
+                        [
+                            f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                            cid, cname,
+                            from_date.strftime("%Y-%m-%d"),
+                            to_date.strftime("%Y-%m-%d"),
+                            morning, evening, total,
+                            rate, amount,
+                            0, amount,
+                            "Payment Pending",
+                            due_date.strftime("%Y-%m-%d"),
+                            st.session_state.user_name,
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
                     generated += 1
 
                 st.success(f"✅ {generated} bill(s) generated")
