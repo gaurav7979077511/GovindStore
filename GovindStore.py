@@ -1297,7 +1297,7 @@ else:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
-
+                            missing_str = ",".join(map(str, p["missing"])) if p["missing"] else ""
                             rows_to_add.append([
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 safe(c["CustomerID"]),
@@ -1313,6 +1313,7 @@ else:
                                 safe(p["amount"]),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
+                                missing_str, 
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ])
@@ -1363,6 +1364,7 @@ else:
 
                     if st.button("✅ Generate Bill"):
                         ws = open_billing_sheet()
+                        missing_str = ",".join(map(str, missing)) if missing else ""
                         ws.append_row(
                             [
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
@@ -1379,6 +1381,7 @@ else:
                                 safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
+                                missing_str,  
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ],
