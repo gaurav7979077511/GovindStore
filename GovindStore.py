@@ -1450,9 +1450,9 @@ else:
                 status_badge = "🟡 Pending"
 
             # ---------- daily_pattern  ----------
-            daily_pattern_html = ""
-            if "daily_pattern" in r and pd.notna(r["daily_pattern"]) and r["daily_pattern"]:
-                for d in str(r["daily_pattern"]).split(","):
+            DailyMilkPattern_html = ""
+            if "DailyMilkPattern" in r and pd.notna(r["DailyMilkPattern"]) and r["DailyMilkPattern"]:
+                for d in str(r["DailyMilkPattern"]).split(","):
                     daily_pattern_html += f"""
                     <span style="
                         padding:2px 6px;
@@ -1465,7 +1465,7 @@ else:
                     ">{d.strip()}</span>
                     """
             else:
-                daily_pattern_html = "<span style='font-size:11px;opacity:.9;'>No daily_pattern</span>"
+                DailyMilkPattern_html = "<span style='font-size:11px;opacity:.9;'>No daily_pattern</span>"
 
             card_html = f"""
             <div style="
@@ -1516,9 +1516,9 @@ else:
                 </div>
 
 
-                <!--  daily_pattern_html -->
+                <!--  DailyMilkPattern_html_html -->
                 <div style="margin-top:6px;">
-                    {daily_pattern_html}
+                    {DailyMilkPattern_html}
                 </div>
 
                 <!-- Footer -->
