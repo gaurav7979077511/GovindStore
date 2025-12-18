@@ -96,6 +96,12 @@ if "edit_cow_row" not in st.session_state:
     st.session_state.edit_cow_row = None
 
 
+def safe(val):
+    if pd.isna(val) or val is None:
+        return ""
+    return val
+
+
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1150,7 +1156,11 @@ else:
                 for _, cust in eligible_customers.iterrows():
                     cid = cust["CustomerID"]
                     cname = cust["Name"]
-                    rate = float(cust["RatePerLitre"])
+                    rate_raw = cust.get("RatePerLitre", "")
+                    if pd.isna(rate_raw) or str(rate_raw).strip() == "":
+                        rate = None   # or ""
+                    else:
+                        rate = float(rate_raw)
 
                     # Duplicate check
                     if not bills_df.empty and (
@@ -1169,19 +1179,25 @@ else:
                     ws.append_row(
                         [
                             f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                            cid, cname,
+                            safe(cid),
+                            safe(cname),
                             from_date.strftime("%Y-%m-%d"),
                             to_date.strftime("%Y-%m-%d"),
-                            morning, evening, total,
-                            rate, amount,
-                            0, amount,
+                            safe(morning),
+                            safe(evening),
+                            safe(total),
+                            safe(rate),
+                            safe(amount),
+                            0,
+                            safe(amount),
                             "Payment Pending",
                             due_date.strftime("%Y-%m-%d"),
-                            st.session_state.user_name,
+                            safe(st.session_state.user_name),
                             dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         ],
-                        value_input_option="USER_ENTERED"
+                        value_input_option="USER_ENTERED",
                     )
+
                     generated += 1
 
                 st.success(f"✅ {generated} bill(s) generated")
