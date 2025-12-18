@@ -96,10 +96,26 @@ if "edit_cow_row" not in st.session_state:
     st.session_state.edit_cow_row = None
 
 
-def safe(val):
-    if pd.isna(val) or val is None:
+def safe_cell(val):
+    if val is None:
         return ""
-    return val
+
+    if isinstance(val, float) and pd.isna(val):
+        return ""
+
+    if isinstance(val, (np.integer,)):
+        return int(val)
+
+    if isinstance(val, (np.floating,)):
+        return float(val)
+
+    if isinstance(val, (pd.Timestamp, dt.date, dt.datetime)):
+        return val.strftime("%Y-%m-%d")
+
+    if isinstance(val, (int, float)):
+        return val
+
+    return str(val)
 
 
 # ============================================================
@@ -1176,8 +1192,7 @@ else:
 
                     amount = round(total * rate, 2)
 
-
-                    debug_row = [
+                    raw_row = [
                         f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
                         cid,
                         cname,
@@ -1188,43 +1203,23 @@ else:
                         total,
                         rate,
                         amount,
-                        0,
-                        amount,
+                        0,              # PaidAmount
+                        amount,         # BalanceAmount
                         "Payment Pending",
                         due_date,
                         st.session_state.user_name,
                         dt.datetime.now(),
                     ]
 
-                    st.subheader("🧪 Billing Debug Data")
-                    st.write("Raw values:")
-                    st.write(debug_row)
+                    safe_row = [safe_cell(x) for x in raw_row]
 
-                    st.write("Types:")
-                    st.write([type(x) for x in debug_row])
-
-
-                    ws.append_row(
-                        [
-                            f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                            safe(cid),
-                            safe(cname),
-                            from_date.strftime("%Y-%m-%d"),
-                            to_date.strftime("%Y-%m-%d"),
-                            safe(morning),
-                            safe(evening),
-                            safe(total),
-                            safe(rate),
-                            safe(amount),
-                            0,
-                            safe(amount),
-                            "Payment Pending",
-                            due_date.strftime("%Y-%m-%d"),
-                            safe(st.session_state.user_name),
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        ],
-                        value_input_option="USER_ENTERED",
-                    )
+                    try:
+                        ws.append_row(safe_row, value_input_option="USER_ENTERED")
+                        st.success(f"✅ Bill generated for {cname}")
+                    except Exception as e:
+                        st.error("❌ Bill generation failed")
+                        st.exception(e)
+                        st.stop()
 
                     generated += 1
 
