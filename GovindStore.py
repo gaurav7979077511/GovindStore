@@ -1382,7 +1382,7 @@ else:
                                 safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                missing_str,  
+                                missing_str,
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ],
@@ -1390,6 +1390,7 @@ else:
                         )
 
                         st.success("Bill generated")
+                        st.cache_data.clear()
                         st.session_state.show_bill_window = False
                         st.rerun()
         # ======================================================
