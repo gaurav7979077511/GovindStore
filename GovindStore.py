@@ -1472,7 +1472,7 @@ else:
                         {r['CustomerName']}
                     </div>
                     <div style="font-size:11px;opacity:0.9;word-wrap:break-word;">
-                        Bill ID: {r['BillID']}
+                        {r['BillID']}
                     </div>
                 </div>
 
