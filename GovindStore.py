@@ -135,6 +135,17 @@ def load_bills():
                 return pd.DataFrame(columns=BILLING_HEADER)
 
             return pd.DataFrame(rows[1:], columns=rows[0])
+
+BILLING_HEADER = [
+            "BillID","CustomerID","CustomerName",
+            "FromDate","ToDate",
+            "MorningMilk","EveningMilk","TotalMilk",
+            "RatePerLitre","BillAmount",
+            "PaidAmount","BalanceAmount",
+            "BillStatus","DueDate",
+            "DailyMilkPattern",
+            "GeneratedBy","GeneratedOn"
+        ]
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1294,16 +1305,7 @@ else:
         # ======================================================
         # CONSTANTS
         # ======================================================
-        BILLING_HEADER = [
-            "BillID","CustomerID","CustomerName",
-            "FromDate","ToDate",
-            "MorningMilk","EveningMilk","TotalMilk",
-            "RatePerLitre","BillAmount",
-            "PaidAmount","BalanceAmount",
-            "BillStatus","DueDate",
-            "DailyMilkPattern",
-            "GeneratedBy","GeneratedOn"
-        ]
+        
 
         # ======================================================
         # SHEET HELPERS
