@@ -1347,8 +1347,21 @@ else:
                 customer = st.selectbox("Customer", customers_df["Name"].tolist())
                 cust = customers_df[customers_df["Name"] == customer].iloc[0]
 
-                from_date = st.date_input("From Date")
-                to_date = st.date_input("To Date")
+                from_date = st.date_input(
+                    "From Date",
+                    value=dt.date.today()
+                )
+
+                to_date = st.date_input(
+                    "To Date",
+                    value=from_date,
+                    min_value=from_date
+                )
+                if to_date < from_date:
+                    st.error("❌ To Date cannot be earlier than From Date.")
+                    st.stop()
+
+
                 due_date = to_date + dt.timedelta(days=7)
 
                 # overlap validation
@@ -1369,11 +1382,19 @@ else:
                         cust["CustomerID"], from_date, to_date
                     )
 
+                    if total <= 0:
+                        st.error("❌ Cannot generate bill. No milk delivered in selected date range.")
+                        st.stop()
+
                     rate = cust["RatePerLitre"]
                     if rate <= 0:
                         rate = st.number_input("Enter Rate", min_value=1,value=1)
 
                     amount = round(total * rate, 2)
+                    if amount <= 0:
+                        st.error("❌ Bill amount is zero. Please check milk delivery or rate.")
+                        st.stop()
+
 
                     st.info(f"Milk: {total} L | Amount: ₹ {amount}")
                     if missing:
