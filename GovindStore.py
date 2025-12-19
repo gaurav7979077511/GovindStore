@@ -1294,10 +1294,16 @@ else:
                     selected = {}
                     for p in preview:
                         chk = st.checkbox(
-                            f"{p['cust']['Name']} | {p['total']} L | ₹ {p['amount']}",
+                            f"{p['cust']['Name']} | 🥛 {p['total']} L | ₹ {p['cust']['RatePerLitre']}/L | 💰 ₹ {p['amount']}",
                             value=True,
                             key=f"bulk_{p['cust']['CustomerID']}"
                         )
+
+                        st.caption(
+                            f"Rate: ₹ {p['cust']['RatePerLitre']} / L"
+                        )
+
+
 
                         selected[p["cust"]["CustomerID"]] = chk
 
@@ -1396,7 +1402,10 @@ else:
                         st.stop()
 
 
-                    st.info(f"Milk: {total} L | Amount: ₹ {amount}")
+                    st.info(
+                        f"🥛 Milk: {total} L | 💵 Rate: ₹ {rate} / L | 💰 Amount: ₹ {amount}"
+                    )
+
                     if missing:
                         st.caption(f"No milk on: {', '.join(map(str,missing))}")
 
