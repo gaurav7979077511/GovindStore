@@ -80,7 +80,12 @@ def get_customers_df():
     df = pd.DataFrame(data[1:], columns=data[0])
     df.columns = df.columns.astype(str).str.strip()
     return df
-
+def open_billing_sheet():
+            try:
+                return open_sheet(MAIN_SHEET_ID, BILLING_TAB)
+            except Exception:
+                st.error("❌ Unable to access Billing sheet. Please retry.")
+                st.stop()
 
 # ---------- VIEW MODE STATE ----------
 if "view_mode" not in st.session_state:
@@ -1303,12 +1308,7 @@ else:
         # ======================================================
         # SHEET HELPERS
         # ======================================================
-        def open_billing_sheet():
-            try:
-                return open_sheet(MAIN_SHEET_ID, BILLING_TAB)
-            except Exception:
-                st.error("❌ Unable to access Billing sheet. Please retry.")
-                st.stop()
+        
 
 
         @st.cache_data(ttl=300)
