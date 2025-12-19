@@ -118,7 +118,18 @@ def safe_cell(val):
         return ""
     return val
 
+@st.cache_data(ttl=30)
+def load_bills():
+            ws = open_billing_sheet()
+            rows = ws.get_all_values()
 
+
+            if not rows or rows[0] != BILLING_HEADER:
+                ws.clear()
+                ws.insert_row(BILLING_HEADER, 1)
+                return pd.DataFrame(columns=BILLING_HEADER)
+
+            return pd.DataFrame(rows[1:], columns=rows[0])
 # ============================================================
 # AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
 # ============================================================
@@ -1313,18 +1324,8 @@ else:
             df["Date"] = pd.to_datetime(df["Date"])
             return df
 
-        @st.cache_data(ttl=30)
-        def load_bills():
-            ws = open_billing_sheet()
-            rows = ws.get_all_values()
-
-
-            if not rows or rows[0] != BILLING_HEADER:
-                ws.clear()
-                ws.insert_row(BILLING_HEADER, 1)
-                return pd.DataFrame(columns=BILLING_HEADER)
-
-            return pd.DataFrame(rows[1:], columns=rows[0])
+        
+        
 
         # ======================================================
         # SAFE VALUE (CRITICAL FIX)
