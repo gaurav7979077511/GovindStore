@@ -1476,22 +1476,45 @@ else:
                 status_badge = "🟡 Pending"
 
             # ---------- daily_pattern  ----------
+            # ---------- DAILY MILK PATTERN (3 ROWS) ----------
             DailyMilkPattern_html = ""
+
             if "DailyMilkPattern" in r and pd.notna(r["DailyMilkPattern"]) and r["DailyMilkPattern"]:
-                for d in str(r["DailyMilkPattern"]).split(","):
-                    DailyMilkPattern_html += f"""
-                    <span style="
-                        padding:2px 6px;
-                        background:#ffffff33;
-                        border-radius:6px;
-                        font-size:11px;
-                        margin-right:4px;
-                        margin-top:4px;
-                        display:inline-block;
-                    ">{d.strip()}</span>
-                    """
+
+                pattern = [x.strip() for x in str(r["DailyMilkPattern"]).split(",")]
+
+                row1 = pattern[:10]
+                row2 = pattern[10:20]
+                row3 = pattern[20:]   # handles 30 / 31 days safely
+
+                rows = [row1, row2, row3]
+
+                for row in rows:
+                    if not row:
+                        continue
+
+                    DailyMilkPattern_html += "<div style='display:flex;gap:6px;margin-bottom:4px;'>"
+
+                    for v in row:
+                        DailyMilkPattern_html += f"""
+                        <span style="
+                            min-width:22px;
+                            text-align:center;
+                            padding:2px 6px;
+                            background:{'#ef4444' if v == '0' else '#ffffff33'};
+                            border-radius:6px;
+                            font-size:11px;
+                            font-weight:600;
+                        ">{v}</span>
+                        """
+
+                    DailyMilkPattern_html += "</div>"
+
             else:
-                DailyMilkPattern_html = "<span style='font-size:11px;opacity:.9;'>No daily_pattern</span>"
+                DailyMilkPattern_html = (
+                    "<span style='font-size:11px;opacity:.9;'>No daily pattern</span>"
+                )
+
 
             card_html = f"""
             <div style="
