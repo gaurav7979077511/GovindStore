@@ -1272,7 +1272,12 @@ else:
                         f"K{bill_row}:L{bill_row}",
                         [[new_paid, new_balance]]
                     )
-                    ws.update(f"M{bill_row}", status)
+
+                    ws.update(
+                        f"M{bill_row}",
+                        [[status]]
+                    )
+
 
                     # ---- WALLET TXN ----
                     open_wallet_sheet().append_row(
