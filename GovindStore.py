@@ -33,6 +33,7 @@ PAYMENT_TAB = "Payment"
 BILLING_TAB = "Billing"
 MEDICATION_TAB="Medication"
 TRANSACTION_TAB="Transaction"
+WALLET_TRANSACTION_TAB="Wallet_Transaction"
 
 # ============================================================
 # GOOGLE SHEETS AUTH (SINGLE SOURCE OF TRUTH)
@@ -1060,8 +1061,214 @@ else:
 
 
 
-    elif page=="Payment":
-        st.title("Payment")
+    elif page == "Payment":
+
+        st.title("💳 Payments")
+
+        # ======================================================
+        # HELPERS
+        # ======================================================
+        def open_payment_sheet():
+            return open_sheet(MAIN_SHEET_ID, PAYMENT_TAB)
+
+        def open_wallet_sheet():
+            return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
+
+        @st.cache_data(ttl=30)
+        def load_payments():
+            ws = open_payment_sheet()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame()
+            return pd.DataFrame(rows[1:], columns=rows[0])
+
+        @st.cache_data(ttl=30)
+        def load_wallet():
+            ws = open_wallet_sheet()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame()
+            df = pd.DataFrame(rows[1:], columns=rows[0])
+            df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce").fillna(0)
+            return df
+
+        bills_df = load_bills()
+        payments_df = load_payments()
+        wallet_df = load_wallet()
+
+        # ======================================================
+        # CALCULATIONS
+        # ======================================================
+        bills_df["BalanceAmount"] = bills_df["BalanceAmount"].astype(float)
+
+        pending_bills = bills_df[bills_df["BalanceAmount"] > 0]
+
+        wallet_balance = (
+            wallet_df[wallet_df["Type"] == "CREDIT"]["Amount"].sum()
+            - wallet_df[wallet_df["Type"] == "DEBIT"]["Amount"].sum()
+            if not wallet_df.empty else 0
+        )
+
+        this_month = dt.date.today().strftime("%Y-%m")
+        monthly_payment = (
+            payments_df[payments_df["Date"].str.startswith(this_month)]["Amount"].astype(float).sum()
+            if not payments_df.empty else 0
+        )
+
+        total_payment = (
+            payments_df["Amount"].astype(float).sum()
+            if not payments_df.empty else 0
+        )
+
+        # ======================================================
+        # KPI CARDS
+        # ======================================================
+        k1, k2, k3, k4 = st.columns(4)
+
+        def kpi(title, value):
+            st.markdown(
+                f"""
+                <div style="background:#0f172a;color:white;
+                padding:14px;border-radius:12px;">
+                <div style="font-size:13px;opacity:.8">{title}</div>
+                <div style="font-size:22px;font-weight:800">₹ {value:,.0f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1: kpi("Wallet Balance", wallet_balance)
+        with k2: kpi("Received This Month", monthly_payment)
+        with k3: kpi("Total Received", total_payment)
+        with k4: kpi("Pending Amount", pending_bills["BalanceAmount"].sum())
+
+        st.divider()
+
+        # ======================================================
+        # PENDING BILL CARDS
+        # ======================================================
+        st.subheader("🧾 Pending Bills")
+
+        cols = st.columns(4)
+        for i, r in pending_bills.iterrows():
+            with cols[i % 4]:
+                st.markdown(
+                    f"""
+                    <div style="background:#fff7ed;border-radius:12px;
+                    padding:12px;border:1px solid #fed7aa">
+                        <b>{r['CustomerName']}</b><br>
+                        <small>{r['BillID']}</small><br>
+                        <b>₹ {r['BalanceAmount']}</b><br>
+                        Due: {r['DueDate']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+        st.divider()
+
+        # ======================================================
+        # RECEIVE PAYMENT PANEL
+        # ======================================================
+        if "show_payment_panel" not in st.session_state:
+            st.session_state.show_payment_panel = False
+
+        if st.button("➕ Receive Payment"):
+            st.session_state.show_payment_panel = not st.session_state.show_payment_panel
+
+        if st.session_state.show_payment_panel:
+
+            bill_id = st.selectbox(
+                "Select Bill",
+                pending_bills["BillID"].tolist()
+            )
+
+            bill = pending_bills[pending_bills["BillID"] == bill_id].iloc[0]
+
+            st.info(f"""
+            Customer: {bill['CustomerName']}
+            \nPending Amount: ₹ {bill['BalanceAmount']}
+            """)
+
+            amount = st.number_input(
+                "Amount Received",
+                min_value=1.0,
+                max_value=float(bill["BalanceAmount"])
+            )
+
+            mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Bank"])
+            notes = st.text_input("Notes (optional)")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("✅ Receive Payment"):
+                    # Payment entry
+                    open_payment_sheet().append_row(
+                        [
+                            bill_id,
+                            bill["CustomerID"],
+                            bill["CustomerName"],
+                            amount,
+                            mode,
+                            notes,
+                            st.session_state.user_name,
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
+
+                    # Wallet CREDIT
+                    open_wallet_sheet().append_row(
+                        [
+                            st.session_state.user_name,
+                            "CREDIT",
+                            amount,
+                            bill_id,
+                            "Payment Received",
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
+
+                    # Update Billing
+                    ws = open_billing_sheet()
+                    row_idx = bills_df.index[bills_df["BillID"] == bill_id][0] + 2
+                    ws.update_cell(row_idx, bills_df.columns.get_loc("PaidAmount") + 1,
+                                float(bill["PaidAmount"]) + amount)
+                    ws.update_cell(row_idx, bills_df.columns.get_loc("BalanceAmount") + 1,
+                                float(bill["BalanceAmount"]) - amount)
+
+                    st.cache_data.clear()
+                    st.session_state.show_payment_panel = False
+                    st.success("✅ Payment received")
+                    st.rerun()
+
+            with col2:
+                if st.button("❌ Cancel"):
+                    st.session_state.show_payment_panel = False
+                    st.rerun()
+
+        # ======================================================
+        # PAYMENT HISTORY
+        # ======================================================
+        st.subheader("📜 Payment History")
+
+        if payments_df.empty:
+            st.info("No payments received yet.")
+        else:
+            for _, r in payments_df.sort_values("Date", ascending=False).iterrows():
+                st.markdown(
+                    f"""
+                    <div style="padding:10px;border-radius:10px;
+                    border:1px solid #e5e7eb;margin-bottom:8px">
+                    <b>₹ {r['Amount']}</b> – {r['CustomerName']}<br>
+                    {r['Mode']} | {r['Date']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
     
     #----Billing------
     elif page == "Billing":
