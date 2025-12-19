@@ -1138,18 +1138,7 @@ else:
 
         this_month = dt.date.today().strftime("%Y-%m")
         monthly_payment = (
-            payments_df["ReceivedOn"] = pd.to_datetime(payments_df["ReceivedOn"], errors="coerce")
-
-            this_month = pd.Timestamp.today().strftime("%Y-%m")
-
-            monthly_received = (
-                payments_df[
-                    payments_df["ReceivedOn"].dt.strftime("%Y-%m") == this_month
-                ]["PaidAmount"]
-                .astype(float)
-                .sum()
-            )
-
+            payments_df[payments_df["ReceivedOn"].str.startswith(this_month)]["Amount"].astype(float).sum()
             if not payments_df.empty else 0
         )
 
