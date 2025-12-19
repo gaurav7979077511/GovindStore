@@ -1202,12 +1202,18 @@ else:
             st.subheader("💰 Receive Payment")
 
             bill_ids = pending_bills["BillID"].tolist()
+            default_index = 0
+
+            if "selected_bill_id" in st.session_state:
+                if st.session_state.selected_bill_id in bill_ids:
+                    default_index = bill_ids.index(st.session_state.selected_bill_id)
+
             selected_bill = st.selectbox(
                 "Select Bill ID",
                 bill_ids,
-                index=bill_ids.index(st.session_state.selected_bill_id)
-                if "selected_bill_id" in st.session_state else 0
+                index=default_index
             )
+
 
             bill = bills_df[bills_df["BillID"] == selected_bill].iloc[0]
 
@@ -1285,6 +1291,7 @@ else:
                     st.success("✅ Payment recorded successfully")
                     st.cache_data.clear()
                     st.session_state.show_payment_window = False
+                    st.session_state.pop("selected_bill_id", None)
                     st.rerun()
 
             with col2:
