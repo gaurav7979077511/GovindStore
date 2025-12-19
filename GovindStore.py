@@ -146,6 +146,27 @@ BILLING_HEADER = [
             "DailyMilkPattern",
             "GeneratedBy","GeneratedOn"
         ]
+PAYMENT_HEADER = [
+    "PaymentID",
+    "BillID",
+    "CustomerID",
+    "CustomerName",
+    "PaidAmount",
+    "PaymentMode",
+    "ReceivedBy",
+    "ReceivedOn",
+    "Remarks"
+]
+
+WALLET_TXN_HEADER = [
+    "TxnID",
+    "UserID",
+    "Amount",
+    "TxnType",
+    "RefID",
+    "Description",
+    "TxnDate"
+]
 
 @st.cache_data(ttl=30)
 def load_payments():
