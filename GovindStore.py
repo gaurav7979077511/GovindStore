@@ -1249,7 +1249,7 @@ else:
                 y, m = map(int, month.split("-"))
                 from_date = dt.date(y, m, 1)
                 to_date = (from_date + pd.offsets.MonthEnd(1)).date()
-                due_date = to_date + dt.timedelta(days=7)
+                due_date = dt.date.today() + dt.timedelta(days=7)
 
                 st.subheader("🔍 Preview")
 
@@ -1362,7 +1362,7 @@ else:
                     st.stop()
 
 
-                due_date = to_date + dt.timedelta(days=7)
+                due_date = dt.date.today() + dt.timedelta(days=7)
 
                 # overlap validation
                 overlap_df = bills_df[
