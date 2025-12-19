@@ -1134,7 +1134,7 @@ else:
         # ======================================================
         def calculate_milk(bitran_df, customer_id, from_date, to_date):
             if bitran_df.empty:
-                return 0, 0, 0, [], []
+                return 0, 0, 0, []
 
             df = bitran_df[
                 (bitran_df["CustomerID"] == customer_id) &
@@ -1142,31 +1142,15 @@ else:
                 (bitran_df["Date"] <= pd.to_datetime(to_date))
             ]
 
-            df["day"] = df["Date"].dt.date
-
             morning = df[df["Shift"] == "Morning"]["MilkDelivered"].sum()
             evening = df[df["Shift"] == "Evening"]["MilkDelivered"].sum()
             total = morning + evening
 
-            # ---- DAILY PATTERN LOGIC ----
             all_dates = pd.date_range(from_date, to_date)
-            daily_pattern = []
-            missing_dates = []
+            delivered_dates = df[df["MilkDelivered"] > 0]["Date"].dt.date.unique()
+            missing_dates = [d.day for d in all_dates if d.date() not in delivered_dates]
 
-            for d in all_dates:
-                day_total = df[df["day"] == d.date()]["MilkDelivered"].sum()
-                daily_pattern.append(round(day_total, 2))
-                if day_total == 0:
-                    missing_dates.append(d.day)
-
-            return (
-                round(morning, 2),
-                round(evening, 2),
-                round(total, 2),
-                missing_dates,
-                daily_pattern
-            )
-
+            return round(morning,2), round(evening,2), round(total,2), missing_dates
 
 
         # ======================================================
@@ -1269,7 +1253,7 @@ else:
                     ).any():
                         continue
 
-                    morning, evening, total, missing ,daily_pattern= calculate_milk(bitran_df,
+                    morning, evening, total, missing = calculate_milk(bitran_df,
                         c["CustomerID"], from_date, to_date
                     )
 
@@ -1314,7 +1298,7 @@ else:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
-                            daily_pattern_str = ",".join(map(str, daily_pattern))
+                            missing_str = ",".join(map(str, p["missing"])) if p["missing"] else ""
                             rows_to_add.append([
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 safe(c["CustomerID"]),
@@ -1330,7 +1314,7 @@ else:
                                 safe(p["amount"]),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                daily_pattern_str, 
+                                missing_str, 
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ])
@@ -1347,21 +1331,8 @@ else:
                 customer = st.selectbox("Customer", customers_df["Name"].tolist())
                 cust = customers_df[customers_df["Name"] == customer].iloc[0]
 
-                from_date = st.date_input(
-                    "From Date",
-                    value=dt.date.today()
-                )
-
-                to_date = st.date_input(
-                    "To Date",
-                    value=from_date,
-                    min_value=from_date
-                )
-                if to_date < from_date:
-                    st.error("❌ To Date cannot be earlier than From Date.")
-                    st.stop()
-
-
+                from_date = st.date_input("From Date")
+                to_date = st.date_input("To Date")
                 due_date = to_date + dt.timedelta(days=7)
 
                 # overlap validation
@@ -1378,23 +1349,15 @@ else:
                         f"Please generate the bill after this date."
                     )
                 else:
-                    morning, evening, total, missing, daily_pattern = calculate_milk(bitran_df,
+                    morning, evening, total, missing = calculate_milk(bitran_df,
                         cust["CustomerID"], from_date, to_date
                     )
-
-                    if total <= 0:
-                        st.error("❌ Cannot generate bill. No milk delivered in selected date range.")
-                        st.stop()
 
                     rate = cust["RatePerLitre"]
                     if rate <= 0:
                         rate = st.number_input("Enter Rate", min_value=1,value=1)
 
                     amount = round(total * rate, 2)
-                    if amount <= 0:
-                        st.error("❌ Bill amount is zero. Please check milk delivery or rate.")
-                        st.stop()
-
 
                     st.info(f"Milk: {total} L | Amount: ₹ {amount}")
                     if missing:
@@ -1402,7 +1365,7 @@ else:
 
                     if st.button("✅ Generate Bill"):
                         ws = open_billing_sheet()
-                        daily_pattern_str = ",".join(map(str, daily_pattern))
+                        missing_str = ",".join(map(str, missing)) if missing else ""
                         ws.append_row(
                             [
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
@@ -1419,7 +1382,7 @@ else:
                                 safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
-                                daily_pattern_str,
+                                missing_str,
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             ],
@@ -1470,11 +1433,11 @@ else:
                 gradient = "linear-gradient(135deg,#facc15,#ca8a04)"
                 status_badge = "🟡 Pending"
 
-            # ---------- daily_pattern  ----------
-            DailyMilkPattern_html = ""
-            if "DailyMilkPattern" in r and pd.notna(r["DailyMilkPattern"]) and r["DailyMilkPattern"]:
-                for d in str(r["DailyMilkPattern"]).split(","):
-                    DailyMilkPattern_html += f"""
+            # ---------- Missing dates ----------
+            missing_html = ""
+            if "MissingDates" in r and pd.notna(r["MissingDates"]) and r["MissingDates"]:
+                for d in str(r["MissingDates"]).split(","):
+                    missing_html += f"""
                     <span style="
                         padding:2px 6px;
                         background:#ffffff33;
@@ -1486,7 +1449,7 @@ else:
                     ">{d.strip()}</span>
                     """
             else:
-                DailyMilkPattern_html = "<span style='font-size:11px;opacity:.9;'>No daily_pattern</span>"
+                missing_html = "<span style='font-size:11px;opacity:.9;'>No missing days</span>"
 
             card_html = f"""
             <div style="
@@ -1537,9 +1500,9 @@ else:
                 </div>
 
 
-                <!--  DailyMilkPattern_html -->
+                <!-- Missing Dates -->
                 <div style="margin-top:6px;">
-                    {DailyMilkPattern_html}
+                    {missing_html}
                 </div>
 
                 <!-- Footer -->
