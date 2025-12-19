@@ -1088,6 +1088,9 @@ else:
 
 
 
+    # ======================================================
+    # PAYMENT PAGE
+    # ======================================================
     elif page == "Payment":
 
         st.title("💳 Payments")
@@ -1106,175 +1109,190 @@ else:
             ws = open_payment_sheet()
             rows = ws.get_all_values()
             if len(rows) <= 1:
-                return pd.DataFrame()
+                return pd.DataFrame(columns=[
+                    "PaymentID","BillID","CustomerID","CustomerName",
+                    "PaidAmount","PaymentMode","ReceivedBy","ReceivedOn","Remarks"
+                ])
             return pd.DataFrame(rows[1:], columns=rows[0])
 
-        @st.cache_data(ttl=30)
-        def load_wallet():
-            ws = open_wallet_sheet()
-            rows = ws.get_all_values()
-            if len(rows) <= 1:
-                return pd.DataFrame()
-            df = pd.DataFrame(rows[1:], columns=rows[0])
-            df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce").fillna(0)
-            return df
-
-        bills_df = load_bills()
         payments_df = load_payments()
-        wallet_df = load_wallet()
+        bills_df = load_bills()
+
+        # ================= CLEAN TYPES =================
+        if not payments_df.empty:
+            payments_df["PaidAmount"] = pd.to_numeric(payments_df["PaidAmount"], errors="coerce").fillna(0)
+            payments_df["ReceivedOn"] = pd.to_datetime(payments_df["ReceivedOn"], errors="coerce")
+
+        bills_df["BillAmount"] = pd.to_numeric(bills_df["BillAmount"])
+        bills_df["PaidAmount"] = pd.to_numeric(bills_df["PaidAmount"])
+        bills_df["BalanceAmount"] = pd.to_numeric(bills_df["BalanceAmount"])
+        bills_df["DueDate"] = pd.to_datetime(bills_df["DueDate"])
 
         # ======================================================
-        # CALCULATIONS
+        # KPI SECTION
         # ======================================================
-        bills_df["BalanceAmount"] = bills_df["BalanceAmount"].astype(float)
+        st.subheader("📊 Payment Summary")
 
-        pending_bills = bills_df[bills_df["BalanceAmount"] > 0]
+        total_received = payments_df["PaidAmount"].sum() if not payments_df.empty else 0
 
-        wallet_balance = (
-            wallet_df[wallet_df["Type"] == "CREDIT"]["Amount"].sum()
-            - wallet_df[wallet_df["Type"] == "DEBIT"]["Amount"].sum()
-            if not wallet_df.empty else 0
-        )
+        this_month = pd.Timestamp.today().strftime("%Y-%m")
+        this_month_received = payments_df[
+            payments_df["ReceivedOn"].dt.strftime("%Y-%m") == this_month
+        ]["PaidAmount"].sum() if not payments_df.empty else 0
 
-        this_month = dt.date.today().strftime("%Y-%m")
-        monthly_payment = (
-            payments_df[payments_df["ReceivedOn"].str.startswith(this_month)]["Amount"].astype(float).sum()
+        monthly_avg = (
+            payments_df.groupby(payments_df["ReceivedOn"].dt.to_period("M"))["PaidAmount"].sum().mean()
             if not payments_df.empty else 0
         )
 
-        total_payment = (
-            payments_df["Amount"].astype(float).sum()
-            if not payments_df.empty else 0
-        )
-
-        # ======================================================
-        # KPI CARDS
-        # ======================================================
-        k1, k2, k3, k4 = st.columns(4)
+        k1, k2, k3 = st.columns(3)
 
         def kpi(title, value):
             st.markdown(
                 f"""
-                <div style="background:#0f172a;color:white;
-                padding:14px;border-radius:12px;">
-                <div style="font-size:13px;opacity:.8">{title}</div>
-                <div style="font-size:22px;font-weight:800">₹ {value:,.0f}</div>
+                <div style="padding:14px;border-radius:12px;
+                background:#0f172a;color:white;margin-bottom:14px;">
+                    <div style="font-size:13px;opacity:.8">{title}</div>
+                    <div style="font-size:22px;font-weight:800">₹ {value:,.0f}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-        with k1: kpi("Wallet Balance", wallet_balance)
-        with k2: kpi("Received This Month", monthly_payment)
-        with k3: kpi("Total Received", total_payment)
-        with k4: kpi("Pending Amount", pending_bills["BalanceAmount"].sum())
+        with k1: kpi("Total Received", total_received)
+        with k2: kpi("Received This Month", this_month_received)
+        with k3: kpi("Avg Monthly Received", monthly_avg)
 
         st.divider()
 
         # ======================================================
-        # PENDING BILL CARDS
+        # PENDING BILLS (QUICK PICK)
         # ======================================================
         st.subheader("🧾 Pending Bills")
 
-        cols = st.columns(4)
-        for i, r in pending_bills.iterrows():
-            with cols[i % 4]:
-                st.markdown(
-                    f"""
-                    <div style="background:#fff7ed;border-radius:12px;
-                    padding:12px;border:1px solid #fed7aa">
-                        <b>{r['CustomerName']}</b><br>
-                        <small>{r['BillID']}</small><br>
-                        <b>₹ {r['BalanceAmount']}</b><br>
-                        Due: {r['DueDate']}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+        pending_bills = bills_df[bills_df["BalanceAmount"] > 0]
+
+        if pending_bills.empty:
+            st.success("🎉 No pending bills")
+        else:
+            for _, r in pending_bills.iterrows():
+                if st.button(
+                    f"{r['CustomerName']} | ₹ {r['BalanceAmount']} | Due {r['DueDate'].date()}",
+                    key=f"pick_{r['BillID']}"
+                ):
+                    st.session_state.selected_bill_id = r["BillID"]
+                    st.session_state.show_payment_window = True
 
         st.divider()
 
         # ======================================================
-        # RECEIVE PAYMENT PANEL
+        # TOGGLE RECEIVE PAYMENT WINDOW
         # ======================================================
-        if "show_payment_panel" not in st.session_state:
-            st.session_state.show_payment_panel = False
+        if "show_payment_window" not in st.session_state:
+            st.session_state.show_payment_window = False
 
         if st.button("➕ Receive Payment"):
-            st.session_state.show_payment_panel = not st.session_state.show_payment_panel
+            st.session_state.show_payment_window = not st.session_state.show_payment_window
 
-        if st.session_state.show_payment_panel:
+        # ======================================================
+        # RECEIVE PAYMENT
+        # ======================================================
+        if st.session_state.show_payment_window:
 
-            bill_id = st.selectbox(
-                "Select Bill",
-                pending_bills["BillID"].tolist()
+            st.subheader("💰 Receive Payment")
+
+            bill_ids = pending_bills["BillID"].tolist()
+            selected_bill = st.selectbox(
+                "Select Bill ID",
+                bill_ids,
+                index=bill_ids.index(st.session_state.selected_bill_id)
+                if "selected_bill_id" in st.session_state else 0
             )
 
-            bill = pending_bills[pending_bills["BillID"] == bill_id].iloc[0]
+            bill = bills_df[bills_df["BillID"] == selected_bill].iloc[0]
 
-            st.info(f"""
-            Customer: {bill['CustomerName']}
-            \nPending Amount: ₹ {bill['BalanceAmount']}
-            """)
+            st.info(
+                f"""
+                Customer: **{bill['CustomerName']}**  
+                Bill Amount: ₹ {bill['BillAmount']}  
+                Already Paid: ₹ {bill['PaidAmount']}  
+                Pending: ₹ {bill['BalanceAmount']}
+                """
+            )
 
-            amount = st.number_input(
-                "Amount Received",
+            received_amt = st.number_input(
+                "Received Amount",
                 min_value=1.0,
-                max_value=float(bill["BalanceAmount"])
+                max_value=float(bill["BalanceAmount"]),
+                step=1.0
             )
 
-            mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Bank"])
-            notes = st.text_input("Notes (optional)")
+            payment_mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Bank Transfer"])
+            remarks = st.text_input("Remarks (optional)")
 
             col1, col2 = st.columns(2)
 
+            # ================= CONFIRM =================
             with col1:
-                if st.button("✅ Receive Payment"):
-                    # Payment entry
+                if st.button("✅ Collect Payment"):
+
+                    now = dt.datetime.now()
+
+                    # ---- INSERT PAYMENT ----
                     open_payment_sheet().append_row(
                         [
-                            bill_id,
+                            f"PAY{now.strftime('%Y%m%d%H%M%S%f')}",
+                            bill["BillID"],
                             bill["CustomerID"],
                             bill["CustomerName"],
-                            amount,
-                            mode,
-                            notes,
+                            received_amt,
+                            payment_mode,
                             st.session_state.user_name,
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            now.strftime("%Y-%m-%d %H:%M:%S"),
+                            remarks
                         ],
                         value_input_option="USER_ENTERED"
                     )
 
-                    # Wallet CREDIT
+                    # ---- UPDATE BILL ----
+                    new_paid = bill["PaidAmount"] + received_amt
+                    new_balance = bill["BillAmount"] - new_paid
+                    status = "Paid" if new_balance == 0 else "Payment Pending"
+
+                    ws = open_billing_sheet()
+                    bill_row = bills_df.index[bills_df["BillID"] == bill["BillID"]][0] + 2
+
+                    ws.update(
+                        f"K{bill_row}:L{bill_row}",
+                        [[new_paid, new_balance]]
+                    )
+                    ws.update(f"M{bill_row}", status)
+
+                    # ---- WALLET TXN ----
                     open_wallet_sheet().append_row(
                         [
+                            f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
                             st.session_state.user_name,
+                            received_amt,
                             "CREDIT",
-                            amount,
-                            bill_id,
-                            "Payment Received",
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            bill["BillID"],
+                            f"Payment received from {bill['CustomerName']}",
+                            now.strftime("%Y-%m-%d %H:%M:%S")
                         ],
                         value_input_option="USER_ENTERED"
                     )
 
-                    # Update Billing
-                    ws = open_billing_sheet()
-                    row_idx = bills_df.index[bills_df["BillID"] == bill_id][0] + 2
-                    ws.update_cell(row_idx, bills_df.columns.get_loc("PaidAmount") + 1,
-                                float(bill["PaidAmount"]) + amount)
-                    ws.update_cell(row_idx, bills_df.columns.get_loc("BalanceAmount") + 1,
-                                float(bill["BalanceAmount"]) - amount)
-
+                    st.success("✅ Payment recorded successfully")
                     st.cache_data.clear()
-                    st.session_state.show_payment_panel = False
-                    st.success("✅ Payment received")
+                    st.session_state.show_payment_window = False
                     st.rerun()
 
             with col2:
                 if st.button("❌ Cancel"):
-                    st.session_state.show_payment_panel = False
+                    st.session_state.show_payment_window = False
                     st.rerun()
+
+        st.divider()
 
         # ======================================================
         # PAYMENT HISTORY
@@ -1282,19 +1300,13 @@ else:
         st.subheader("📜 Payment History")
 
         if payments_df.empty:
-            st.info("No payments received yet.")
+            st.info("No payments recorded yet.")
         else:
-            for _, r in payments_df.sort_values("Date", ascending=False).iterrows():
-                st.markdown(
-                    f"""
-                    <div style="padding:10px;border-radius:10px;
-                    border:1px solid #e5e7eb;margin-bottom:8px">
-                    <b>₹ {r['Amount']}</b> – {r['CustomerName']}<br>
-                    {r['Mode']} | {r['Date']}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            st.dataframe(
+                payments_df.sort_values("ReceivedOn", ascending=False),
+                use_container_width=True
+            )
+
 
     
     #----Billing------
