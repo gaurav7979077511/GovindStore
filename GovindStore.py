@@ -1299,10 +1299,6 @@ else:
                             key=f"bulk_{p['cust']['CustomerID']}"
                         )
 
-                        st.caption(
-                            f"Rate: ₹ {p['cust']['RatePerLitre']} / L"
-                        )
-
 
 
                         selected[p["cust"]["CustomerID"]] = chk
