@@ -2992,7 +2992,8 @@ else:
                         {r['MedicineName']}
                     </div>
                     <div style="font-size:10px;opacity:.9;">
-                        {r['MedicineType']} • {r['ApplicableFor']}
+                        <span>{r['MedicineType']} • {r['ApplicableFor']}</span>
+                        <span>📦 {r['StockAvailable']}</span>
                     </div>
                 </div>
 
