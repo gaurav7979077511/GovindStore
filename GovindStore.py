@@ -1998,9 +1998,9 @@ else:
         # ======================================================
         st.markdown("### 📋 Cow List")
 
-        col1, col2 = st.columns([1, 5])
+        col1, col2 = st.columns([1, 6])
 
-        with col1:
+        with col2:
             if st.session_state.cow_view_mode == "display":
                 if st.button("✏️ Edit View"):
                     st.session_state.cow_view_mode = "edit"
@@ -2298,9 +2298,9 @@ else:
         # ---------- CUSTOMER CARDS ----------
         st.markdown("### 📋 Customers List")
 
-        col1, col2 = st.columns([1, 5])
+        col1, col2 = st.columns([1, 6])
 
-        with col1:
+        with col2:
             if st.session_state.view_mode == "display":
                 if st.button("✏️ Edit View"):
                     st.session_state.view_mode = "edit"
