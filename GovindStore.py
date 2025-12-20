@@ -1253,7 +1253,7 @@ else:
                 """
                 with st.container():
                     clicked = st.button(
-                        label,
+                        buttons_html,
                         key=f"pick_{r['BillID']}",
                         help="Collect payment",
                     )
