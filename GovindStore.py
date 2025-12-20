@@ -2831,12 +2831,16 @@ else:
                 padding:12px;
                 border-radius:14px;
                 height:190px;
+                width:100%;
+                max-width:260px;
+                margin:0 auto;
                 box-shadow:0 6px 14px rgba(0,0,0,0.25);
                 display:flex;
                 flex-direction:column;
                 justify-content:space-between;
                 font-family:Inter,system-ui,sans-serif;
             ">
+
 
                 <!-- Header -->
                 <div>
