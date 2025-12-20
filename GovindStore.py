@@ -1211,37 +1211,35 @@ else:
 
             st.subheader("💰 Receive Payment")
 
-            bill_ids = pending_bills["BillID"].tolist()
-            default_index = 0
+            selected_bill = st.session_state.get("selected_bill_id")
 
-            if "selected_bill_id" in st.session_state:
-                if st.session_state.selected_bill_id in bill_ids:
-                    default_index = bill_ids.index(st.session_state.selected_bill_id)
+            if not selected_bill:
+                st.warning("⚠️ Please select a bill to collect payment.")
+                st.stop()
 
-            selected_bill = st.selectbox(
-                "Select Bill ID",
-                bill_ids,
-                index=default_index
-            )
 
 
             bill = bills_df[bills_df["BillID"] == selected_bill].iloc[0]
+            
 
-            st.info(
+            st.markdown(
                 f"""
-                Customer: **{bill['CustomerName']}**  
-                Bill Amount: ₹ {bill['BillAmount']}  
-                Already Paid: ₹ {bill['PaidAmount']}  
-                Pending: ₹ {bill['BalanceAmount']}
+                **Bill ID:** `{bill['BillID']}`  
+                **Customer:** {bill['CustomerName']}  
+                **Total Bill:** ₹ {float(bill['BillAmount']):,.0f}  
+                **Already Paid:** ₹ {float(bill['PaidAmount']):,.0f}  
+                **Pending Amount:** ₹ {float(bill['BalanceAmount']):,.0f}
                 """
             )
 
+
             received_amt = st.number_input(
-                "Received Amount",
-                min_value=1.0,
-                max_value=float(bill["BalanceAmount"]),
+                "Received Amount *",
+                value=None,
+                placeholder=f"Enter amount (Max ₹ {float(bill['BalanceAmount']):,.0f})",
                 step=1.0
             )
+
 
             payment_mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Bank Transfer"])
             remarks = st.text_input("Remarks (optional)")
@@ -1251,6 +1249,18 @@ else:
             # ================= CONFIRM =================
             with col1:
                 if st.button("✅ Collect Payment"):
+                    if received_amt is None:
+                        st.error("❌ Please enter received amount")
+                        st.stop()
+
+                    if received_amt <= 0:
+                        st.error("❌ Amount must be greater than 0")
+                        st.stop()
+
+                    if received_amt > float(bill["BalanceAmount"]):
+                        st.error("❌ Amount cannot exceed pending balance")
+                        st.stop()
+
 
                     now = dt.datetime.now()
 
