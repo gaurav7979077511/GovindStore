@@ -2816,9 +2816,92 @@ else:
             st.session_state.medicine_view_mode == "edit"
             and st.session_state.editing_med_id is not None
         ):
+            med = medicine_df[
+                medicine_df["MedicineID"] == st.session_state.editing_med_id
+            ].iloc[0]
+
             st.subheader("✏️ Edit Medicine")
 
-            # edit form code here
+            with st.form("edit_medicine_form"):
+
+                st.markdown(f"**Medicine:** {med['MedicineName']}")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    status = st.selectbox(
+                        "Status",
+                        ["Active", "Inactive"],
+                        index=0 if med["Status"] == "Active" else 1
+                    )
+
+                    stock = st.number_input(
+                        "Stock Available",
+                        value=float(med["StockAvailable"]),
+                        step=1.0
+                    )
+
+                with col2:
+                    total_cost = st.number_input(
+                        "Total Cost (₹)",
+                        value=float(med["TotalCost"]),
+                        step=1.0
+                    )
+
+                    total_units = st.number_input(
+                        "Total Units",
+                        value=float(med["TotalUnits"]),
+                        step=1.0
+                    )
+
+                col3, col4 = st.columns(2)
+                with col3:
+                    freq_value = st.number_input(
+                        "Frequency Value",
+                        value=float(med["FrequencyValue"]) if med["FrequencyValue"] else 0
+                    )
+                with col4:
+                    freq_unit = st.selectbox(
+                        "Frequency Unit",
+                        ["Hour", "Days", "Weeks", "Months"],
+                        index=["Hour","Days","Weeks","Months"].index(med["FrequencyUnit"])
+                        if med["FrequencyUnit"] else 1
+                    )
+
+                c1, c2 = st.columns(2)
+                save = c1.form_submit_button("💾 Update")
+                cancel = c2.form_submit_button("❌ Cancel")
+
+            if cancel:
+                st.session_state.editing_med_id = None
+                st.rerun()
+
+            if save:
+                cost_per_dose = round(total_cost / total_units, 2) if total_units else 0
+
+                ws = open_medicine_sheet()
+                row_idx = medicine_df.index[
+                    medicine_df["MedicineID"] == med["MedicineID"]
+                ][0] + 2
+
+                ws.update(
+                    f"L{row_idx}:N{row_idx}",
+                    [[total_cost, total_units, cost_per_dose]]
+                )
+                ws.update(
+                    f"O{row_idx}:P{row_idx}",
+                    [[stock, status]]
+                )
+                ws.update(
+                    f"H{row_idx}:I{row_idx}",
+                    [[freq_value, freq_unit]]
+                )
+
+                st.cache_data.clear()
+                st.success("✅ Medicine updated")
+                st.session_state.editing_med_id = None
+                st.rerun()
+
 
 
         # ======================================================
