@@ -307,7 +307,7 @@ else:
         "FrequencyValue",
         "FrequencyUnit",
         "Notes",
-        "NextDue"
+        "NextDueDate"
     ]
 
 
