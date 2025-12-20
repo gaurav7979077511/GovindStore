@@ -3168,6 +3168,7 @@ else:
             )
 
             med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+            medicine_name=med_row["MedicineName"]
             st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
 
             with st.form("give_med_form"):
