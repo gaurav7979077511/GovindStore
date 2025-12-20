@@ -1266,7 +1266,11 @@ else:
         # ======================================================
         # TOGGLE RECEIVE PAYMENT WINDOW
         # ======================================================
+        if "show_payment_window" not in st.session_state:
+            st.session_state.show_payment_window = False
 
+        if st.button("➕ Receive Payment"):
+            st.session_state.show_payment_window = not st.session_state.show_payment_window
 
         # ======================================================
         # RECEIVE PAYMENT
