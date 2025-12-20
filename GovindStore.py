@@ -31,7 +31,8 @@ EXPENSE_TAB = "Expense"
 INVESTMENT_TAB = "Investment"
 PAYMENT_TAB = "Payment"
 BILLING_TAB = "Billing"
-MEDICATION_TAB="Medication"
+MEDICATION_MASTER_TAB = "Medication_Master"
+MEDICATION_LOG_TAB = "Medication_Log"
 TRANSACTION_TAB="Transaction"
 WALLET_TRANSACTION_TAB="Wallet_Transaction"
 
@@ -274,6 +275,7 @@ else:
             "Payment",
             "Billing",
             "Cow Profile",
+            "Medicine",
             "Medication",
             "Transaction"
 
@@ -814,8 +816,7 @@ else:
         # =========================================================
         # CLOUDINARY UPLOAD
         # =========================================================
-        import cloudinary
-        import cloudinary.uploader
+
     
         cloudinary.config(
             cloud_name=st.secrets["cloudinary"]["cloud_name"],
@@ -2613,6 +2614,234 @@ else:
                         """,
                         unsafe_allow_html=True,
                     )
+
+
+    elif page == "Medicine":
+
+        st.title("🧪 Medicine Master")
+
+        # ======================================================
+        # CONSTANTS
+        # ======================================================
+        MEDECINE_HEADER = [
+            "MedicineID","MedicineName","MedicineType","ApplicableFor",
+            "DefaultDose","DoseUnit",
+            "FrequencyType","FrequencyValue","FrequencyUnit",
+            "TotalCost","TotalUnits","CostPerDose",
+            "StockAvailable","Status",
+            "Notes","CreatedBy","CreatedOn"
+        ]
+
+        # ======================================================
+        # HELPERS
+        # ======================================================
+        def open_medicine_sheet():
+            return open_sheet(MAIN_SHEET_ID, MEDICATION_MASTER_TAB)
+
+        @st.cache_data(ttl=30)
+        def load_medicine_df():
+            ws = open_medicine_sheet()
+            rows = ws.get_all_values()
+
+            if not rows or rows[0] != MEDECINE_HEADER:
+                ws.clear()
+                ws.insert_row(MEDECINE_HEADER, 1)
+                return pd.DataFrame(columns=MEDECINE_HEADER)
+
+            return pd.DataFrame(rows[1:], columns=rows[0])
+
+        medicine_df = load_medicine_df()
+
+        # ======================================================
+        # CLEAN TYPES
+        # ======================================================
+        if not medicine_df.empty:
+            medicine_df["TotalCost"] = pd.to_numeric(medicine_df["TotalCost"], errors="coerce").fillna(0)
+            medicine_df["TotalUnits"] = pd.to_numeric(medicine_df["TotalUnits"], errors="coerce").fillna(0)
+            medicine_df["CostPerDose"] = pd.to_numeric(medicine_df["CostPerDose"], errors="coerce").fillna(0)
+            medicine_df["StockAvailable"] = pd.to_numeric(medicine_df["StockAvailable"], errors="coerce").fillna(0)
+
+        # ======================================================
+        # KPI SECTION
+        # ======================================================
+        st.subheader("📊 Medicine Overview")
+
+        total_meds = len(medicine_df)
+        active_meds = len(medicine_df[medicine_df["Status"] == "Active"]) if not medicine_df.empty else 0
+        low_stock = len(medicine_df[medicine_df["StockAvailable"] <= 5]) if not medicine_df.empty else 0
+
+        k1, k2, k3 = st.columns(3)
+
+        def kpi(title, value):
+            st.markdown(
+                f"""
+                <div style="
+                    padding:14px;
+                    border-radius:14px;
+                    background:#0f172a;
+                    color:white;
+                    margin-bottom:14px;">
+                    <div style="font-size:13px;opacity:.8">{title}</div>
+                    <div style="font-size:22px;font-weight:900">{value}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1: kpi("Total Medicines", total_meds)
+        with k2: kpi("Active Medicines", active_meds)
+        with k3: kpi("Low Stock (≤5)", low_stock)
+
+        st.divider()
+
+        # ======================================================
+        # TOGGLE ADD FORM
+        # ======================================================
+        if "show_add_medicine" not in st.session_state:
+            st.session_state.show_add_medicine = False
+
+        if st.button("➕ Add Medicine"):
+            st.session_state.show_add_medicine = not st.session_state.show_add_medicine
+
+        # ======================================================
+        # ADD MEDICINE FORM
+        # ======================================================
+        if st.session_state.show_add_medicine:
+
+            st.subheader("🧾 Add New Medicine")
+
+            with st.form("medicine_form"):
+                name = st.text_input("Medicine Name")
+                mtype = st.selectbox("Medicine Type", ["Vaccine", "Injection", "Tablet", "Syrup"])
+                applicable = st.selectbox("Applicable For", ["Cow", "Buffalo", "All"])
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    default_dose = st.number_input("Default Dose", min_value=0.0, step=0.1)
+                with col2:
+                    dose_unit = st.selectbox("Dose Unit", ["ml", "tablet", "mg"])
+
+                freq_type = st.selectbox("Frequency Type", ["OneTime", "Recurring"])
+                freq_value = ""
+                if freq_type == "Recurring":
+                    freq_value = st.number_input("Frequency (Days)", min_value=1)
+
+                col3, col4 = st.columns(2)
+                with col3:
+                    total_cost = st.number_input("Total Cost (₹)", min_value=0.0)
+                with col4:
+                    total_units = st.number_input("Total Units", min_value=0.0)
+
+                notes = st.text_area("Notes (optional)")
+
+                c1, c2 = st.columns(2)
+                submit = c1.form_submit_button("✅ Save")
+                cancel = c2.form_submit_button("❌ Cancel")
+
+            if cancel:
+                st.session_state.show_add_medicine = False
+                st.rerun()
+
+            if submit:
+                if not name:
+                    st.error("Medicine name is required")
+                    st.stop()
+
+                cost_per_dose = round(total_cost / total_units, 2) if total_cost and total_units else ""
+
+                now = dt.datetime.now()
+
+                open_medicine_sheet().append_row(
+                    [
+                        f"MED{now.strftime('%Y%m%d%H%M%S%f')}",
+                        name,
+                        mtype,
+                        applicable,
+                        default_dose,
+                        dose_unit,
+                        freq_type,
+                        freq_value if freq_type == "Recurring" else "",
+                        "Days" if freq_type == "Recurring" else "",
+                        total_cost,
+                        total_units,
+                        cost_per_dose,
+                        total_units,
+                        "Active",
+                        notes,
+                        st.session_state.user_name,
+                        now.strftime("%Y-%m-%d %H:%M:%S")
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
+
+                st.cache_data.clear()
+                st.success("✅ Medicine added successfully")
+                st.session_state.show_add_medicine = False
+                st.rerun()
+
+        st.divider()
+
+        # ======================================================
+        # MEDICINE CARDS
+        # ======================================================
+        st.subheader("💊 Medicine List")
+
+        if medicine_df.empty:
+            st.info("No medicines added yet.")
+            st.stop()
+
+        cols = st.columns(3)
+
+        for i, r in medicine_df.iterrows():
+
+            if r["Status"] == "Active":
+                gradient = "linear-gradient(135deg,#22c55e,#15803d)"
+            else:
+                gradient = "linear-gradient(135deg,#64748b,#334155)"
+
+            freq_text = (
+                f"Every {r['FrequencyValue']} Days"
+                if r["FrequencyType"] == "Recurring"
+                else "One Time"
+            )
+
+            card_html = f"""
+            <div style="
+                background:{gradient};
+                color:white;
+                padding:14px;
+                border-radius:16px;
+                height:200px;
+                box-shadow:0 6px 18px rgba(0,0,0,0.25);
+                display:flex;
+                flex-direction:column;
+                justify-content:space-between;
+                font-family:Inter,system-ui,sans-serif;
+            ">
+                <div>
+                    <div style="font-size:15px;font-weight:900;">{r['MedicineName']}</div>
+                    <div style="font-size:12px;opacity:.9;">{r['MedicineType']} • {r['ApplicableFor']}</div>
+                </div>
+
+                <div style="font-size:13px;">
+                    💉 Dose: {r['DefaultDose']} {r['DoseUnit']}<br>
+                    🔁 {freq_text}
+                </div>
+
+                <div style="font-size:13px;">
+                    💰 ₹ {r['CostPerDose']} / dose<br>
+                    📦 Stock: {r['StockAvailable']}
+                </div>
+
+                <div style="font-size:11px;opacity:.85;">
+                    Status: {r['Status']}
+                </div>
+            </div>
+            """
+
+            with cols[i % 3]:
+                components.html(card_html, height=220)
+
 
     elif page=="Transaction":
         st.title("Transaction")
