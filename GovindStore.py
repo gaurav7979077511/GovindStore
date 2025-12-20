@@ -1244,17 +1244,16 @@ else:
 
             for _, r in pending_bills.iterrows():
                 buttons_html += f"""
-                <a class="custom-btn"
-                href="?page=Payment&bill={r['BillID']}">
+                <div class="custom-btn">
                     <div class="cust-name">{r['CustomerName']}</div>
                     <div class="amount">Total ₹ {float(r['BillAmount']):,.0f}</div>
                     <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
-                </a>
+                </div>
                 """
 
             buttons_html += "</div>"
 
-            components.html(buttons_html, height=220)
+            components.html(buttons_html, height=250)
 
 
         # ======================================================
