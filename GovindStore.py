@@ -1754,6 +1754,25 @@ else:
 
 
             # ---------- daily_pattern  ----------
+            date_label = f"Due: {r['DueDate'].date()}"
+
+            if "PaidDate" in r and pd.notna(r["PaidDate"]):
+                date_label = f"Paid on: {pd.to_datetime(r['PaidDate']).date()}"
+
+            balance_html = ""
+            if float(r["BalanceAmount"]) > 0:
+                balance_html = f"""
+                <span style="
+                    font-size:12px;
+                    font-weight:700;
+                    background:#00000033;
+                    padding:4px 8px;
+                    border-radius:8px;
+                ">
+                    Pending ₹ {float(r['BalanceAmount']):,.0f}
+                </span>
+                """
+
             DailyMilkPattern_html = ""
             if "DailyMilkPattern" in r and pd.notna(r["DailyMilkPattern"]) and r["DailyMilkPattern"]:
                 for d in str(r["DailyMilkPattern"]).split(","):
@@ -1814,9 +1833,18 @@ else:
                         <span style="font-size:12px;opacity:0.85;">₹ {float(r['RatePerLitre']):.2f} / L</span>
                     </div>
 
-                    <div style="font-size:18px;font-weight:900;margin-top:2px;">
-                        ₹ {float(r['BillAmount']):,.0f}
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        margin-top:2px;
+                    ">
+                        <div style="font-size:18px;font-weight:900;">
+                            ₹ {float(r['BillAmount']):,.0f}
+                        </div>
+                        {balance_html}
                     </div>
+
                 </div>
 
 
@@ -1834,7 +1862,7 @@ else:
                     font-size:12px;
                 ">
                     <span>{status_badge}</span>
-                    <span>Due: {r['DueDate'].date()}</span>
+                    <span>{date_label}</span>
                 </div>
 
             </div>
