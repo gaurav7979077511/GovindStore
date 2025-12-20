@@ -2702,6 +2702,7 @@ else:
         with k2: kpi("Active Medicines", active_meds)
         with k3: kpi("Low Stock (≤5)", low_stock)
 
+        st.divider()
 
         # ======================================================
         # TOGGLE ADD FORM
