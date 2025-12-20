@@ -1739,12 +1739,19 @@ else:
             if r["BillStatus"] == "Paid":
                 gradient = "linear-gradient(135deg,#22c55e,#15803d)"
                 status_badge = "🟢 Paid"
+
+            elif r["BillStatus"] == "Partially Paid":
+                gradient = "linear-gradient(135deg,#fb923c,#ea580c)"  # orange
+                status_badge = "🟠 Partially Paid"
+
             elif r["DueDate"] < today:
                 gradient = "linear-gradient(135deg,#ef4444,#991b1b)"
                 status_badge = "🔴 Overdue"
+
             else:
                 gradient = "linear-gradient(135deg,#facc15,#ca8a04)"
                 status_badge = "🟡 Pending"
+
 
             # ---------- daily_pattern  ----------
             DailyMilkPattern_html = ""
