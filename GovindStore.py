@@ -1175,7 +1175,7 @@ else:
         if pending_bills.empty:
             st.success("🎉 No pending bills")
         else:
-            PER_ROW = 4  # change to 3 / 5 if you want
+            PER_ROW = 5  # change to 3 / 5 if you want
             rows = [
                 pending_bills.iloc[i:i + PER_ROW]
                 for i in range(0, len(pending_bills), PER_ROW)
