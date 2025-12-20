@@ -2879,8 +2879,12 @@ else:
             </div>
             """
 
-            with cols[i % 4]:
-                components.html(card_html, height=205)
+            cols = st.columns(4)   # 4 cards per row
+
+            for i, r in medicine_df.iterrows():
+                with cols[i % 4]:
+                    components.html(card_html, height=220)
+
 
 
 
