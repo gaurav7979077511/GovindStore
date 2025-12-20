@@ -2830,7 +2830,7 @@ else:
                 color:white;
                 padding:10px 12px;
                 border-radius:12px;
-                height:150px;
+                height:90px;
                 box-shadow:0 4px 10px rgba(0,0,0,.25);
                 display:flex;
                 flex-direction:column;
