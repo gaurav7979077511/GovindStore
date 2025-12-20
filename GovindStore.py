@@ -2885,11 +2885,11 @@ else:
                 ][0] + 2
 
                 ws.update(
-                    f"L{row_idx}:N{row_idx}",
+                    f"L{row_idx}:J{row_idx}",
                     [[total_cost, total_units, cost_per_dose]]
                 )
                 ws.update(
-                    f"O{row_idx}:P{row_idx}",
+                    f"O{row_idx}:M{row_idx}",
                     [[stock, status]]
                 )
                 ws.update(
