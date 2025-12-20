@@ -3172,9 +3172,9 @@ else:
                     format_func=lambda x:
                         meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
                 )
-                medicine_name="TBD"
 
                 med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+                medicine_name = med_row["MedicineName"]
 
                 st.info(f"💊 StockAvailable: **{med_row['StockAvailable']}**")
 
@@ -3286,7 +3286,7 @@ else:
                             🐄 {r['CowID']}
                         </div>
                         <div style="font-size:12px;opacity:.9;">
-                            💊 {r['MedicineID']}
+                            💊 {r['MedicineName']}
                         </div>
                     </div>
 
