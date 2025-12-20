@@ -3012,9 +3012,8 @@ else:
                 </div>
 
                 <!-- Cost & Stock -->
-                <div style="font-size:11px;display:flex;justify-content:space-between;">
-                    <span>💰 ₹{r['CostPerDose']}</span>
-                    <span>📦 {r['StockAvailable']}</span>
+                <div style="font-size:11px;">
+                   💰 ₹{r['CostPerDose']}
                 </div>
 
                 <!-- Footer -->
