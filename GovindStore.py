@@ -1754,9 +1754,11 @@ else:
 
 
             # ---------- daily_pattern  ----------
+            # Default → show Due Date
             date_label = f"Due: {r['DueDate'].date()}"
 
-            if "PaidDate" in r and pd.notna(r["PaidDate"]):
+            # If PaidDate exists and is NOT blank → override
+            if "PaidDate" in r and pd.notna(r["PaidDate"]) and str(r["PaidDate"]).strip() != "":
                 date_label = f"Paid on: {pd.to_datetime(r['PaidDate']).date()}"
 
             balance_html = ""
