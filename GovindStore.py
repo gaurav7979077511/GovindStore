@@ -3322,7 +3322,7 @@ else:
                 """
 
                 with cols[i % 3]:
-                    components.html(card_html, height=120)
+                    components.html(card_html, height=135)
 
 
     
