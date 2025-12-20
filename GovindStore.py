@@ -3291,7 +3291,7 @@ else:
                     color:white;
                     padding:12px;
                     border-radius:14px;
-                    height:140px;
+                    height:95px;
                     box-shadow:0 6px 14px rgba(0,0,0,0.25);
                     display:flex;
                     flex-direction:column;
@@ -3322,7 +3322,7 @@ else:
                 """
 
                 with cols[i % 3]:
-                    components.html(card_html, height=170)
+                    components.html(card_html, height=120)
 
 
     
