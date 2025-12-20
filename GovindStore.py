@@ -3037,6 +3037,39 @@ else:
             if len(rows) <= 1:
                 return pd.DataFrame()
             return pd.DataFrame(rows[1:], columns=rows[0])
+        @st.cache_data(ttl=60)
+        def get_cows_df():
+            """
+            Load Cow Master data safely.
+            Returns empty DataFrame if sheet is missing or empty.
+            """
+
+            try:
+                ws = open_sheet(MAIN_SHEET_ID, COW_MASTER_TAB)
+                rows = ws.get_all_values()
+            except Exception as e:
+                st.error("❌ Unable to load Cow Master sheet")
+                st.stop()
+
+            # No data or only header
+            if not rows or len(rows) <= 1:
+                return pd.DataFrame(columns=["CowID", "Status"])
+
+            df = pd.DataFrame(rows[1:], columns=rows[0])
+
+            # ---- Safety: ensure required columns ----
+            if "CowID" not in df.columns:
+                st.error("❌ CowID column missing in Cow Master")
+                st.stop()
+
+            if "Status" not in df.columns:
+                df["Status"] = "Active"  # default fallback
+
+            # ---- Clean values ----
+            df["CowID"] = df["CowID"].astype(str).str.strip()
+            df["Status"] = df["Status"].astype(str).str.strip()
+
+            return df
 
         # ======================================================
         # LOAD DATA
