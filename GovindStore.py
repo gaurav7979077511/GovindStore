@@ -3281,7 +3281,7 @@ else:
             st.info("No medication records found.")
         else:
 
-            cols = st.columns(3)
+            cols = st.columns(4)
 
             for i, r in logs_df.sort_values("GivenOn", ascending=False).iterrows():
 
@@ -3321,7 +3321,7 @@ else:
                 </div>
                 """
 
-                with cols[i % 3]:
+                with cols[i % 4]:
                     components.html(card_html, height=135)
 
 
