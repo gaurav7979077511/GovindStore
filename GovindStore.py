@@ -3047,10 +3047,10 @@ else:
             rows = ws.get_all_values()
             if len(rows) <= 1:
                 return pd.DataFrame()
-            if not rows or rows[0] != MEDECINE_HEADER:
+            if not rows or rows[0] != MEDICATION_LOG_HEADER:
                 ws.clear()
-                ws.insert_row(MEDECINE_HEADER, 1)
-                return pd.DataFrame(columns=MEDECINE_HEADER)
+                ws.insert_row(MEDICATION_LOG_HEADER, 1)
+                return pd.DataFrame(columns=MEDICATION_LOG_HEADER)
 
             return pd.DataFrame(rows[1:], columns=rows[0])
         @st.cache_data(ttl=60)
