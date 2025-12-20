@@ -2875,7 +2875,7 @@ else:
             """
 
             with cols[i % 4]:
-                components.html(card_html, height=170)
+                components.html(card_html, height=100)
 
 
     elif page=="Transaction":
