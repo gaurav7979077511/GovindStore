@@ -1175,7 +1175,7 @@ else:
         if pending_bills.empty:
             st.success("🎉 No pending bills")
         else:
-            PER_ROW = 8  # change to 3 / 5 if you want
+            PER_ROW = 4  # change to 3 / 5 if you want
             rows = [
                 pending_bills.iloc[i:i + PER_ROW]
                 for i in range(0, len(pending_bills), PER_ROW)
@@ -1187,8 +1187,8 @@ else:
                     with col:
                         if st.button(
                             f"""{r['CustomerName']}
-        Total: ₹ {float(r['BillAmount']):,.0f}
-        Pending: ₹ {float(r['BalanceAmount']):,.0f}""",
+        || ₹ {float(r['BillAmount']):,.0f}
+        || ₹ {float(r['BalanceAmount']):,.0f}""",
                             key=f"pick_{r['BillID']}",
                             use_container_width=True
                         ):
@@ -1202,9 +1202,6 @@ else:
         # ======================================================
         if "show_payment_window" not in st.session_state:
             st.session_state.show_payment_window = False
-
-        if st.button("➕ Receive Payment"):
-            st.session_state.show_payment_window = not st.session_state.show_payment_window
 
         # ======================================================
         # RECEIVE PAYMENT
