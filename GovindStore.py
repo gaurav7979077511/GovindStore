@@ -3045,7 +3045,7 @@ else:
             """
 
             try:
-                ws = open_sheet(MAIN_SHEET_ID, COW_MASTER_TAB)
+                ws = open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
                 rows = ws.get_all_values()
             except Exception as e:
                 st.error("❌ Unable to load Cow Master sheet")
