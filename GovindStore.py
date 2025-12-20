@@ -3159,6 +3159,17 @@ else:
         if st.session_state.show_give_medication:
             st.subheader(" Give Medication")
 
+            med_id = st.selectbox(
+                "Medicine",
+                meds_df["MedicineID"].tolist(),
+                format_func=lambda x:
+                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0],
+                key="med_select"
+            )
+
+            med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+            st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
+
             with st.form("give_med_form"):
 
                 cow_id = st.selectbox(
@@ -3166,29 +3177,29 @@ else:
                     cows_df["CowID"].tolist()
                 )
 
-                med_id = st.selectbox(
-                    "Medicine",
-                    meds_df["MedicineID"].tolist(),
-                    format_func=lambda x:
-                        meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
-                )
-
-                med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
-                medicine_name = med_row["MedicineName"]
-
-                st.info(f"💊 StockAvailable: **{med_row['StockAvailable']}**")
-
-                dose_given = st.number_input(
+                dose_text = st.text_input(
                     "Dose Given",
-                    min_value=0.1,
-                    step=0.1
+                    placeholder=f"Only {med_row['StockAvailable']} stock available"
                 )
+
+                dose_given = None
+                if dose_text:
+                    try:
+                        dose_given = float(dose_text)
+                        if dose_given <= 0:
+                            st.error("❌ Dose must be greater than 0")
+                        elif dose_given > med_row["StockAvailable"]:
+                            st.error("❌ Not enough stock available")
+                    except ValueError:
+                        st.error("❌ Enter a valid number")
+
 
                 notes = st.text_input("Notes (optional)")
 
                 c1, c2 = st.columns(2)
                 save = c1.form_submit_button("✅ Save Medication")
                 cancel = c2.form_submit_button("❌ Cancel")
+
 
             # ---------- CANCEL ----------
             if cancel:
@@ -3202,6 +3213,11 @@ else:
                 if dose_given > med_row["StockAvailable"]:
                     st.error("❌ Not enough stock available")
                     st.stop()
+                if save:
+                    if dose_given is None:
+                        st.error("❌ Please enter dose given")
+                        st.stop()
+
 
                 now = pd.Timestamp.now()
 
