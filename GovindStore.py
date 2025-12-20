@@ -2737,7 +2737,7 @@ else:
                         placeholder="Eg: 90"
                     )
                 with col4:
-                    freq_unit = st.selectbox("Frequency Unit", ["Days", "Weeks", "Months"])
+                    freq_unit = st.selectbox("Frequency Unit", ["Hour","Days", "Weeks", "Months"])
 
                 col5, col6 = st.columns(2)
                 with col5:
