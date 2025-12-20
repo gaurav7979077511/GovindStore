@@ -2805,63 +2805,79 @@ else:
         # ======================================================
         # MEDICINE CARDS
         # ======================================================
+        # ======================================================
         st.subheader("💊 Medicine List")
 
         if medicine_df.empty:
             st.info("No medicines added yet.")
             st.stop()
 
-        cols = st.columns(3)
+        cols = st.columns(4)  # 👈 4 cards per row (neat & compact)
 
         for i, r in medicine_df.iterrows():
 
+            # ---------- Gradient by status ----------
             if r["Status"] == "Active":
-                gradient = "linear-gradient(135deg,#22c55e,#15803d)"
+                gradient = "linear-gradient(135deg,#22c55e,#16a34a)"
+                status_badge = "🟢 Active"
             else:
-                gradient = "linear-gradient(135deg,#64748b,#334155)"
-
-            freq_text = (
-                f"Every {r['FrequencyValue']} Days"
-                if r["FrequencyType"] == "Recurring"
-                else "One Time"
-            )
+                gradient = "linear-gradient(135deg,#94a3b8,#475569)"
+                status_badge = "⚪ Inactive"
 
             card_html = f"""
             <div style="
                 background:{gradient};
                 color:white;
-                padding:14px;
-                border-radius:16px;
-                height:200px;
-                box-shadow:0 6px 18px rgba(0,0,0,0.25);
+                padding:12px;
+                border-radius:14px;
+                height:190px;
+                box-shadow:0 6px 14px rgba(0,0,0,0.25);
                 display:flex;
                 flex-direction:column;
                 justify-content:space-between;
                 font-family:Inter,system-ui,sans-serif;
             ">
+
+                <!-- Header -->
                 <div>
-                    <div style="font-size:15px;font-weight:900;">{r['MedicineName']}</div>
-                    <div style="font-size:12px;opacity:.9;">{r['MedicineType']} • {r['ApplicableFor']}</div>
+                    <div style="font-size:14px;font-weight:900;line-height:1.2;">
+                        {r['MedicineName']}
+                    </div>
+                    <div style="font-size:11px;opacity:.9;margin-top:2px;">
+                        {r['MedicineType']} • {r['ApplicableFor']}
+                    </div>
                 </div>
 
-                <div style="font-size:13px;">
-                    💉 Dose: {r['DefaultDose']} {r['DoseUnit']}<br>
-                    🔁 {freq_text}
+                <!-- Dose & Frequency -->
+                <div style="font-size:12px;line-height:1.4;margin-top:6px;">
+                    💉 <b>{r['DefaultDose']} {r['DoseUnit']}</b><br>
+                    🔁 {r['FrequencyType']} · {r['FrequencyValue']} {r['FrequencyUnit']}
                 </div>
 
-                <div style="font-size:13px;">
+                <!-- Cost & Stock -->
+                <div style="font-size:12px;line-height:1.4;">
                     💰 ₹ {r['CostPerDose']} / dose<br>
-                    📦 Stock: {r['StockAvailable']}
+                    📦 Stock: <b>{r['StockAvailable']}</b>
                 </div>
 
-                <div style="font-size:11px;opacity:.85;">
-                    Status: {r['Status']}
+                <!-- Footer -->
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    font-size:11px;
+                    opacity:.95;
+                    margin-top:4px;
+                ">
+                    <span>{status_badge}</span>
                 </div>
+
             </div>
             """
 
-            with cols[i % 3]:
-                components.html(card_html, height=220)
+            with cols[i % 4]:
+                components.html(card_html, height=205)
+
 
 
     elif page=="Transaction":
