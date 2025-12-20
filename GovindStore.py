@@ -1254,6 +1254,15 @@ else:
             buttons_html += "</div>"
 
             components.html(buttons_html, height=250)
+            for _, r in pending_bills.iterrows():
+                if st.button(
+                    f"Collect payment – {r['CustomerName']}",
+                    key=f"pick_{r['BillID']}"
+                ):
+                    st.session_state.selected_bill_id = r["BillID"]
+                    st.session_state.show_payment_window = True
+                    st.rerun()
+
 
 
         # ======================================================
