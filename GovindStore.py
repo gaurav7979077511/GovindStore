@@ -295,6 +295,17 @@ else:
         "Notes","BirthYear","Timestamp"
     ]
     
+    MEDICATION_LOG_HEADER = [
+        "LogID",
+        "CowID",
+        "MedicineID",
+        "DoseGiven",
+        "DoseUnit",
+        "GivenOn",
+        "GivenBy",
+        "Notes"
+    ]
+
     def open_cow_sheet():
         return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
     
