@@ -3045,14 +3045,17 @@ else:
         def load_med_logs():
             ws = open_med_log()
             rows = ws.get_all_values()
-            if len(rows) <= 1:
-                return pd.DataFrame()
+
             if not rows or rows[0] != MEDICATION_LOG_HEADER:
                 ws.clear()
                 ws.insert_row(MEDICATION_LOG_HEADER, 1)
                 return pd.DataFrame(columns=MEDICATION_LOG_HEADER)
 
+            if len(rows) <= 1:
+                return pd.DataFrame(columns=MEDICATION_LOG_HEADER)
+
             return pd.DataFrame(rows[1:], columns=rows[0])
+
         @st.cache_data(ttl=60)
         def get_cows_df():
             """
@@ -3176,9 +3179,18 @@ else:
 
                 notes = st.text_input("Notes (optional)")
 
-                submit = st.form_submit_button("✅ Save Medication")
+                c1, c2 = st.columns(2)
+                save = c1.form_submit_button("✅ Save Medication")
+                cancel = c2.form_submit_button("❌ Cancel")
 
-            if submit:
+            # ---------- CANCEL ----------
+            if cancel:
+                st.session_state.show_give_medication = False
+                st.rerun()
+
+
+            # ---------- SAVE ----------
+            if save:
 
                 if dose_given > med_row["StockAvailable"]:
                     st.error("❌ Not enough stock available")
@@ -3230,6 +3242,8 @@ else:
 
                 st.cache_data.clear()
                 st.success("✅ Medication recorded & stock updated")
+
+                st.session_state.show_give_medication = False
                 st.rerun()
 
             st.divider()
