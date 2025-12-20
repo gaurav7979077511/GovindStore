@@ -1195,6 +1195,11 @@ else:
         else:
             buttons_html = """
             <style>
+            .pending-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
             .button-container {
                 display: flex;
                 flex-wrap: wrap;
@@ -1243,18 +1248,27 @@ else:
             """
 
             for _, r in pending_bills.iterrows():
-                buttons_html += f"""
-                <a class="custom-btn"
-                href="?page=Payment&bill={r['BillID']}">
-                    <div class="cust-name">{r['CustomerName']}</div>
-                    <div class="amount">Total ₹ {float(r['BillAmount']):,.0f}</div>
-                    <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
-                </a>
+                label = f"""
+                <div>
+                    <div style='font-size:14px;font-weight:800'>{r['CustomerName']}</div>
+                    <div style='font-size:13px'>Total ₹ {float(r['BillAmount']):,.0f}</div>
+                    <div style='font-size:13px'>Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
+                </div>
                 """
 
-            buttons_html += "</div>"
+                with st.container():
+                    clicked = st.button(
+                        label,
+                        key=f"pick_{r['BillID']}",
+                        help="Collect payment",
+                    )
 
-            components.html(buttons_html, height=200)
+                if clicked:
+                    st.session_state.selected_bill_id = r["BillID"]
+                    st.session_state.show_payment_window = True
+                    st.rerun()
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
         # ======================================================
