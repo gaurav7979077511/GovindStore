@@ -2911,7 +2911,7 @@ else:
             
             with cols[i % 4]:
 
-                components.html(card_html, height=230)
+                components.html(card_html, height=130)
 
                 # 👇 ADD ONLY THIS PART
                 if st.session_state.medicine_view_mode == "edit":
