@@ -2711,28 +2711,49 @@ else:
             st.subheader("🧾 Add New Medicine")
 
             with st.form("medicine_form"):
-                name = st.text_input("Medicine Name")
+
+                name = st.text_input("Medicine Name", placeholder="Eg: FMD Vaccine")
                 mtype = st.selectbox("Medicine Type", ["Vaccine", "Injection", "Tablet", "Syrup"])
-                applicable = st.selectbox("Applicable For", ["Cow", "Buffalo", "All"])
+                applicable = st.selectbox("Applicable For", ["Kid", "Adult"])
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    default_dose = st.number_input("Default Dose", min_value=0.0, step=0.1)
+                    default_dose = st.number_input(
+                        "Default Dose",
+                        value=None,
+                        placeholder="Eg: 5",
+                        step=0.1
+                    )
                 with col2:
                     dose_unit = st.selectbox("Dose Unit", ["ml", "tablet", "mg"])
 
                 freq_type = st.selectbox("Frequency Type", ["OneTime", "Recurring"])
-                freq_value = ""
-                if freq_type == "Recurring":
-                    freq_value = st.number_input("Frequency (Days)", min_value=1)
 
                 col3, col4 = st.columns(2)
                 with col3:
-                    total_cost = st.number_input("Total Cost (₹)", min_value=0.0)
+                    freq_value = st.number_input(
+                        "Frequency Value",
+                        value=None,
+                        placeholder="Eg: 90"
+                    )
                 with col4:
-                    total_units = st.number_input("Total Units", min_value=0.0)
+                    freq_unit = st.selectbox("Frequency Unit", ["Days", "Weeks", "Months"])
 
-                notes = st.text_area("Notes (optional)")
+                col5, col6 = st.columns(2)
+                with col5:
+                    total_cost = st.number_input(
+                        "Total Cost (₹)",
+                        value=None,
+                        placeholder="Eg: 1200"
+                    )
+                with col6:
+                    total_units = st.number_input(
+                        "Total Units",
+                        value=None,
+                        placeholder="Eg: 10"
+                    )
+
+                notes = st.text_area("Notes (optional)", placeholder="Any additional details")
 
                 c1, c2 = st.columns(2)
                 submit = c1.form_submit_button("✅ Save")
