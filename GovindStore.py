@@ -131,7 +131,6 @@ def load_bills():
 
 
             if not rows or rows[0] != BILLING_HEADER:
-                ws.clear()
                 ws.insert_row(BILLING_HEADER, 1)
                 return pd.DataFrame(columns=BILLING_HEADER)
 
@@ -299,6 +298,7 @@ else:
         "LogID",
         "CowID",
         "MedicineID",
+        "MedicineName",
         "DoseGiven",
         "DoseUnit",
         "GivenOn",
@@ -346,7 +346,6 @@ else:
             rows = ws.get_all_values()
     
             if not rows or rows[0] != MILKING_HEADER:
-                ws.clear()
                 ws.insert_row(MILKING_HEADER, 1)
                 return pd.DataFrame(columns=MILKING_HEADER)
     
@@ -822,7 +821,6 @@ else:
             rows = ws.get_all_values()
     
             if not rows or rows[0] != INVESTMENT_HEADER:
-                ws.clear()
                 ws.insert_row(INVESTMENT_HEADER, 1)
                 return pd.DataFrame(columns=INVESTMENT_HEADER)
     
@@ -2669,7 +2667,6 @@ else:
             rows = ws.get_all_values()
 
             if not rows or rows[0] != MEDECINE_HEADER:
-                ws.clear()
                 ws.insert_row(MEDECINE_HEADER, 1)
                 return pd.DataFrame(columns=MEDECINE_HEADER)
 
@@ -3177,6 +3174,7 @@ else:
                     format_func=lambda x:
                         meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
                 )
+                medicine_name="TBD"
 
                 med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
 
@@ -3228,6 +3226,7 @@ else:
                         f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
                         cow_id,
                         med_id,
+                        medicine_name,
                         dose_given,
                         med_row["DoseUnit"],
                         now.strftime("%Y-%m-%d"),
