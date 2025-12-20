@@ -306,7 +306,8 @@ else:
         "FrequencyType",
         "FrequencyValue",
         "FrequencyUnit",
-        "Notes"
+        "Notes",
+        "NextDue"
     ]
 
 
@@ -3231,9 +3232,8 @@ else:
                         med_row["FrequencyType"],
                         med_row["FrequencyValue"],
                         med_row["FrequencyUnit"],
-                        next_due.strftime("%Y-%m-%d") if next_due != "" else "",
                         notes,
-                        now.strftime("%Y-%m-%d %H:%M:%S")
+                        next_due.strftime("%Y-%m-%d") if next_due != "" else "",
                     ],
                     value_input_option="USER_ENTERED"
                 )
