@@ -3009,8 +3009,226 @@ else:
     elif page=="Transaction":
         st.title("Transaction")
         
-    elif page=="Medication":
-        st.title("Medication")
+    elif page == "Medication":
+
+        st.title("💉 Medication")
+
+        # ======================================================
+        # HELPERS
+        # ======================================================
+        def open_med_master():
+            return open_sheet(MAIN_SHEET_ID, MEDICATION_MASTER_TAB)
+
+        def open_med_log():
+            return open_sheet(MAIN_SHEET_ID, MEDICATION_LOG_TAB)
+
+        @st.cache_data(ttl=30)
+        def load_med_master():
+            ws = open_med_master()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame()
+            return pd.DataFrame(rows[1:], columns=rows[0])
+
+        @st.cache_data(ttl=30)
+        def load_med_logs():
+            ws = open_med_log()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame()
+            return pd.DataFrame(rows[1:], columns=rows[0])
+
+        # ======================================================
+        # LOAD DATA
+        # ======================================================
+        meds_df = load_med_master()
+        logs_df = load_med_logs()
+        cows_df = get_cows_df()
+
+        # ---- filter cows (ACTIVE / SICK only) ----
+        cows_df = cows_df[cows_df["Status"].isin(["Active", "Sick"])]
+
+        # ---- clean numeric ----
+        if not meds_df.empty:
+            meds_df["StockAvailable"] = pd.to_numeric(
+                meds_df["StockAvailable"], errors="coerce"
+            ).fillna(0)
+
+        if not logs_df.empty:
+            logs_df["GivenDate"] = pd.to_datetime(logs_df["GivenDate"], errors="coerce")
+            logs_df["NextDueDate"] = pd.to_datetime(logs_df["NextDueDate"], errors="coerce")
+
+        # ======================================================
+        # KPI SECTION
+        # ======================================================
+        st.subheader("📊 Overview")
+
+        total_logs = len(logs_df)
+        pending_due = (
+            len(logs_df[logs_df["NextDueDate"] >= pd.Timestamp.today()])
+            if not logs_df.empty else 0
+        )
+
+        k1, k2 = st.columns(2)
+
+        def kpi(title, value):
+            st.markdown(
+                f"""
+                <div style="padding:14px;border-radius:14px;
+                background:#0f172a;color:white;margin-bottom:14px;">
+                    <div style="font-size:13px;opacity:.8">{title}</div>
+                    <div style="font-size:22px;font-weight:800">{value}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1: kpi("Total Medications Given", total_logs)
+        with k2: kpi("Upcoming Doses", pending_due)
+
+        st.divider()
+
+        # ======================================================
+        # ADD MEDICATION FORM
+        # ======================================================
+        st.subheader("➕ Give Medication")
+
+        with st.form("give_med_form"):
+
+            cow_id = st.selectbox(
+                "Cow ID",
+                cows_df["CowID"].tolist()
+            )
+
+            med_id = st.selectbox(
+                "Medicine",
+                meds_df["MedicineID"].tolist(),
+                format_func=lambda x:
+                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
+            )
+
+            med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+
+            st.info(f"💊 Dose Unit: **{med_row['DoseUnit']}**")
+
+            dose_given = st.number_input(
+                "Dose Given",
+                min_value=0.1,
+                step=0.1
+            )
+
+            notes = st.text_input("Notes (optional)")
+
+            submit = st.form_submit_button("✅ Save Medication")
+
+        if submit:
+
+            if dose_given > med_row["StockAvailable"]:
+                st.error("❌ Not enough stock available")
+                st.stop()
+
+            now = pd.Timestamp.now()
+
+            # ---- NEXT DUE DATE ----
+            next_due = ""
+            if med_row["FrequencyType"] == "Recurring":
+                unit = med_row["FrequencyUnit"]
+                value = int(med_row["FrequencyValue"])
+
+                if unit == "Days":
+                    next_due = now + pd.Timedelta(days=value)
+                elif unit == "Weeks":
+                    next_due = now + pd.Timedelta(weeks=value)
+                elif unit == "Months":
+                    next_due = now + pd.DateOffset(months=value)
+
+            # ---- INSERT LOG ----
+            open_med_log().append_row(
+                [
+                    f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
+                    cow_id,
+                    med_id,
+                    dose_given,
+                    med_row["DoseUnit"],
+                    now.strftime("%Y-%m-%d"),
+                    st.session_state.user_name,
+                    med_row["FrequencyType"],
+                    med_row["FrequencyValue"],
+                    med_row["FrequencyUnit"],
+                    next_due.strftime("%Y-%m-%d") if next_due != "" else "",
+                    notes,
+                    now.strftime("%Y-%m-%d %H:%M:%S")
+                ],
+                value_input_option="USER_ENTERED"
+            )
+
+            # ---- UPDATE STOCK ----
+            new_stock = med_row["StockAvailable"] - dose_given
+            row_idx = meds_df.index[meds_df["MedicineID"] == med_id][0] + 2
+
+            open_med_master().update(
+                f"M{row_idx}",
+                [[new_stock]]
+            )
+
+            st.cache_data.clear()
+            st.success("✅ Medication recorded & stock updated")
+            st.rerun()
+
+        st.divider()
+
+        # ======================================================
+        # MEDICATION HISTORY
+        # ======================================================
+        st.subheader("📋 Medication History")
+
+        if logs_df.empty:
+            st.info("No medication records found.")
+        else:
+
+            cols = st.columns(3)
+
+            for i, r in logs_df.sort_values("GivenDate", ascending=False).iterrows():
+
+                card_html = f"""
+                <div style="
+                    background:linear-gradient(135deg,#1e293b,#334155);
+                    color:white;
+                    padding:12px;
+                    border-radius:14px;
+                    height:140px;
+                    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    font-family:Inter,system-ui,sans-serif;
+                ">
+                    <div>
+                        <div style="font-size:13px;font-weight:800;">
+                            🐄 {r['CowID']}
+                        </div>
+                        <div style="font-size:12px;opacity:.9;">
+                            💊 {r['MedicineID']}
+                        </div>
+                    </div>
+
+                    <div style="font-size:12px;">
+                        💉 {r['DoseGiven']} {r['DoseUnit']}
+                    </div>
+
+                    <div style="font-size:11px;opacity:.85;">
+                        📅 Given: {r['GivenDate'].date()}
+                    </div>
+
+                    <div style="font-size:11px;">
+                        ⏭ Next: {r['NextDueDate'].date() if pd.notna(r['NextDueDate']) else "-"}
+                    </div>
+                </div>
+                """
+
+                with cols[i % 3]:
+                    components.html(card_html, height=170)
+
 
     
 
