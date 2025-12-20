@@ -1140,21 +1140,12 @@ else:
             payments_df["ReceivedOn"].dt.strftime("%Y-%m") == this_month
         ]["PaidAmount"].sum() if not payments_df.empty else 0
 
-        # ---------- Pending calculations ----------
-        pending_bills_df = bills_df[
-            pd.to_numeric(bills_df["BalanceAmount"], errors="coerce").fillna(0) > 0
-        ]
-
-        pending_amount = (
-            pd.to_numeric(pending_bills_df["BalanceAmount"], errors="coerce")
-            .fillna(0)
-            .sum()
+        monthly_avg = (
+            payments_df.groupby(payments_df["ReceivedOn"].dt.to_period("M"))["PaidAmount"].sum().mean()
+            if not payments_df.empty else 0
         )
 
-        pending_bills_count = len(pending_bills_df)
-
-
-        k1, k2, k3, k4 = st.columns(4)
+        k1, k2, k3 = st.columns(3)
 
         def kpi(title, value):
             st.markdown(
@@ -1168,18 +1159,9 @@ else:
                 unsafe_allow_html=True
             )
 
-        with k1:
-            kpi("Total Received", total_received)
-
-        with k2:
-            kpi("Received This Month", this_month_received)
-
-        with k3:
-            kpi("Pending Amount", pending_amount)
-
-        with k4:
-            kpi("Pending Bills", pending_bills_count)
-
+        with k1: kpi("Total Received", total_received)
+        with k2: kpi("Received This Month", this_month_received)
+        with k3: kpi("Avg Monthly Received", monthly_avg)
 
         st.divider()
 
@@ -1193,76 +1175,26 @@ else:
         if pending_bills.empty:
             st.success("🎉 No pending bills")
         else:
-            buttons_html = """
-            <style>
-            .button-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 12px;
-                margin-top: 10px;
-            }
-            .custom-btn {
-                background: linear-gradient(135deg, #ff512f, #dd2476);
-                color: white;
-                padding: 12px 18px;
-                font-size: 14px;
-                font-weight: 700;
-                border-radius: 14px;
-                cursor: pointer;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-                transition: all 0.3s ease;
-                min-width: 160px;
-                text-align: center;
-                text-decoration: none;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            .custom-btn:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 16px rgba(0,0,0,0.35);
-                background: linear-gradient(135deg, #dd2476, #ff512f);
-            }
-            .cust-name {
-                font-size: 14px;
-                font-weight: 800;
-                margin-bottom: 4px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 140px;
-            }
-            .amount {
-                font-size: 13px;
-                opacity: 0.95;
-            }
-            </style>
+            PER_ROW = 8  # change to 3 / 5 if you want
+            rows = [
+                pending_bills.iloc[i:i + PER_ROW]
+                for i in range(0, len(pending_bills), PER_ROW)
+            ]
 
-            <div class="button-container">
-            """
-
-            for _, r in pending_bills.iterrows():
-                buttons_html += f"""
-                <div class="custom-btn">
-                    <div class="cust-name">{r['CustomerName']}</div>
-                    <div class="amount">Total ₹ {float(r['BillAmount']):,.0f}</div>
-                    <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
-                </div>
-                """
-
-            buttons_html += "</div>"
-
-            components.html(buttons_html, height=250)
-            for _, r in pending_bills.iterrows():
-                if st.button(
-                    f"Collect payment – {r['CustomerName']}",
-                    key=f"pick_{r['BillID']}"
-                ):
-                    st.session_state.selected_bill_id = r["BillID"]
-                    st.session_state.show_payment_window = True
-                    st.rerun()
-
+            for row in rows:
+                cols = st.columns(len(row))
+                for col, (_, r) in zip(cols, row.iterrows()):
+                    with col:
+                        if st.button(
+                            f"""{r['CustomerName']}
+        Total: ₹ {float(r['BillAmount']):,.0f}
+        Pending: ₹ {float(r['BalanceAmount']):,.0f}""",
+                            key=f"pick_{r['BillID']}",
+                            use_container_width=True
+                        ):
+                            st.session_state.selected_bill_id = r["BillID"]
+                            st.session_state.show_payment_window = True
+                            st.rerun()
 
 
         # ======================================================
@@ -1271,6 +1203,8 @@ else:
         if "show_payment_window" not in st.session_state:
             st.session_state.show_payment_window = False
 
+        if st.button("➕ Receive Payment"):
+            st.session_state.show_payment_window = not st.session_state.show_payment_window
 
         # ======================================================
         # RECEIVE PAYMENT
