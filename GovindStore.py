@@ -142,7 +142,7 @@ BILLING_HEADER = [
             "MorningMilk","EveningMilk","TotalMilk",
             "RatePerLitre","BillAmount",
             "PaidAmount","BalanceAmount",
-            "BillStatus","DueDate",
+            "BillStatus","DueDate","PaidDate",
             "DailyMilkPattern",
             "GeneratedBy","GeneratedOn"
         ]
@@ -1117,6 +1117,13 @@ else:
 
         payments_df = load_payments()
         bills_df = load_bills()
+        # ================= CLEAN TYPES (STEP 4) =================
+        if not bills_df.empty:
+            bills_df["FromDate"] = pd.to_datetime(bills_df["FromDate"], errors="coerce")
+            bills_df["ToDate"] = pd.to_datetime(bills_df["ToDate"], errors="coerce")
+            bills_df["DueDate"] = pd.to_datetime(bills_df["DueDate"], errors="coerce")
+            bills_df["PaidDate"] = pd.to_datetime(bills_df["PaidDate"], errors="coerce")
+
 
         # ================= CLEAN TYPES =================
         if not payments_df.empty:
@@ -1264,6 +1271,7 @@ else:
 
                     now = dt.datetime.now()
 
+
                     # ---- INSERT PAYMENT ----
                     open_payment_sheet().append_row(
                         [
@@ -1283,20 +1291,28 @@ else:
                     # ---- UPDATE BILL ----
                     new_paid = bill["PaidAmount"] + received_amt
                     new_balance = bill["BillAmount"] - new_paid
-                    status = "Paid" if new_balance == 0 else "Payment Pending"
+                    if new_balance == 0:
+                        status = "Paid"
+                        paid_date = now.strftime("%Y-%m-%d")
+                    else:
+                        status = "Partially Paid"
+                        paid_date = ""   # keep blank
+
 
                     ws = open_billing_sheet()
                     bill_row = bills_df.index[bills_df["BillID"] == bill["BillID"]][0] + 2
 
                     ws.update(
-                        f"K{bill_row}:L{bill_row}",
-                        [[new_paid, new_balance]]
+                        f"K{bill_row}:O{bill_row}",
+                        [[
+                            new_paid,
+                            new_balance,
+                            status,
+                            bill["DueDate"].strftime("%Y-%m-%d"),
+                            paid_date
+                        ]]
                     )
 
-                    ws.update(
-                        f"M{bill_row}",
-                        [[status]]
-                    )
 
 
                     # ---- WALLET TXN ----
@@ -1586,6 +1602,7 @@ else:
                                 safe(p["amount"]),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
+                                "",
                                 daily_pattern_str, 
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
