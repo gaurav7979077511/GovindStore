@@ -1140,12 +1140,21 @@ else:
             payments_df["ReceivedOn"].dt.strftime("%Y-%m") == this_month
         ]["PaidAmount"].sum() if not payments_df.empty else 0
 
-        monthly_avg = (
-            payments_df.groupby(payments_df["ReceivedOn"].dt.to_period("M"))["PaidAmount"].sum().mean()
-            if not payments_df.empty else 0
+        # ---------- Pending calculations ----------
+        pending_bills_df = bills_df[
+            pd.to_numeric(bills_df["BalanceAmount"], errors="coerce").fillna(0) > 0
+        ]
+
+        pending_amount = (
+            pd.to_numeric(pending_bills_df["BalanceAmount"], errors="coerce")
+            .fillna(0)
+            .sum()
         )
 
-        k1, k2, k3 = st.columns(3)
+        pending_bills_count = len(pending_bills_df)
+
+
+        k1, k2, k3, k4 = st.columns(4)
 
         def kpi(title, value):
             st.markdown(
@@ -1159,9 +1168,18 @@ else:
                 unsafe_allow_html=True
             )
 
-        with k1: kpi("Total Received", total_received)
-        with k2: kpi("Received This Month", this_month_received)
-        with k3: kpi("Avg Monthly Received", monthly_avg)
+        with k1:
+            kpi("Total Received", total_received)
+
+        with k2:
+            kpi("Received This Month", this_month_received)
+
+        with k3:
+            kpi("Pending Amount", pending_amount)
+
+        with k4:
+            kpi("Pending Bills", pending_bills_count)
+
 
         st.divider()
 
