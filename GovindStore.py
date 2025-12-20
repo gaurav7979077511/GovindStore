@@ -2908,7 +2908,7 @@ else:
             </div>
             """
 
-            cols = st.columns(4)
+            
             with cols[i % 4]:
 
                 components.html(card_html, height=230)
