@@ -1184,9 +1184,10 @@ else:
             for row in rows:
                 cols = st.columns(len(row))
                 for col, (_, r) in zip(cols, row.iterrows()):
+                    first_name = str(r["CustomerName"]).strip().split()[0]
                     with col:
                         if st.button(
-                            f"""{r['CustomerName']}
+                            f"""{first_name}
         || ₹ {float(r['BillAmount']):,.0f}
         || ₹ {float(r['BalanceAmount']):,.0f}""",
                             key=f"pick_{r['BillID']}",
