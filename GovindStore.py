@@ -2702,7 +2702,6 @@ else:
         with k2: kpi("Active Medicines", active_meds)
         with k3: kpi("Low Stock (≤5)", low_stock)
 
-        st.divider()
 
         # ======================================================
         # TOGGLE ADD FORM
@@ -2810,7 +2809,6 @@ else:
                 st.session_state.show_add_medicine = False
                 st.rerun()
 
-        st.divider()
         
         if (
             st.session_state.medicine_view_mode == "edit"
