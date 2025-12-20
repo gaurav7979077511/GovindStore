@@ -3056,10 +3056,7 @@ else:
             if len(rows) == 1:
                 return pd.DataFrame(columns=rows[0])
 
-            # Header mismatch → HARD FAIL (do NOT auto clear)
-            if rows[0] != MEDICATION_LOG_HEADER:
-                st.error("❌ Medication_Log header mismatch. Fix sheet header manually.")
-                st.stop()
+
 
             return pd.DataFrame(rows[1:], columns=rows[0])
 
