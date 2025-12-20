@@ -303,8 +303,12 @@ else:
         "DoseUnit",
         "GivenOn",
         "GivenBy",
+        "FrequencyType",
+        "FrequencyValue",
+        "FrequencyUnit",
         "Notes"
     ]
+
 
     def open_cow_sheet():
         return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
