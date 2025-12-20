@@ -1251,16 +1251,21 @@ else:
                     <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
                 </a>
                 """
+                with st.container():
+                    clicked = st.button(
+                        label,
+                        key=f"pick_{r['BillID']}",
+                        help="Collect payment",
+                    )
+
+                if clicked:
+                    st.session_state.selected_bill_id = r["BillID"]
+                    st.session_state.show_payment_window = True
+                    st.rerun()
 
             buttons_html += "</div>"
 
-            components.html(buttons_html, height=220)
-
-        query_params = st.query_params
-
-        if "bill" in query_params:
-            st.session_state.selected_bill_id = query_params["bill"]
-            st.session_state.show_payment_window = True
+            components.html(buttons_html, height=200)
 
 
         # ======================================================
