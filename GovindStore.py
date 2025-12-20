@@ -1251,17 +1251,6 @@ else:
                     <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
                 </a>
                 """
-                with st.container():
-                    clicked = st.button(
-                        buttons_html,
-                        key=f"pick_{r['BillID']}",
-                        help="Collect payment",
-                    )
-
-                if clicked:
-                    st.session_state.selected_bill_id = r["BillID"]
-                    st.session_state.show_payment_window = True
-                    st.rerun()
 
             buttons_html += "</div>"
 
