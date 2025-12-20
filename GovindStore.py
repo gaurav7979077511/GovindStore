@@ -2991,10 +2991,17 @@ else:
                     <div style="font-size:13px;font-weight:800;line-height:1.1;">
                         {r['MedicineName']}
                     </div>
-                    <div style="font-size:10px;opacity:.9;justify-content:space-between;">
+                    <div style="
+                        font-size:10px;
+                        opacity:.9;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    ">
                         <span>{r['MedicineType']} • {r['ApplicableFor']}</span>
                         <span style="font-size:11px;">📦 {r['StockAvailable']}</span>
                     </div>
+
                 </div>
 
                 <!-- Dose & Frequency -->
