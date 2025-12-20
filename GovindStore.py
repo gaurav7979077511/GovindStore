@@ -3047,6 +3047,11 @@ else:
             rows = ws.get_all_values()
             if len(rows) <= 1:
                 return pd.DataFrame()
+            if not rows or rows[0] != MEDECINE_HEADER:
+                ws.clear()
+                ws.insert_row(MEDECINE_HEADER, 1)
+                return pd.DataFrame(columns=MEDECINE_HEADER)
+
             return pd.DataFrame(rows[1:], columns=rows[0])
         @st.cache_data(ttl=60)
         def get_cows_df():
@@ -3085,9 +3090,11 @@ else:
         # ======================================================
         # LOAD DATA
         # ======================================================
+
         meds_df = load_med_master()
         logs_df = load_med_logs()
         cows_df = get_cows_df()
+        
 
         # ---- filter cows (ACTIVE / SICK only) ----
         cows_df = cows_df[cows_df["Status"].isin(["Active", "Sick"])]
