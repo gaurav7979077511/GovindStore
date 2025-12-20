@@ -3046,15 +3046,22 @@ else:
             ws = open_med_log()
             rows = ws.get_all_values()
 
-            if not rows or rows[0] != MEDICATION_LOG_HEADER:
-                ws.clear()
+            # Sheet empty → initialize header
+            if not rows:
                 ws.insert_row(MEDICATION_LOG_HEADER, 1)
                 return pd.DataFrame(columns=MEDICATION_LOG_HEADER)
 
-            if len(rows) <= 1:
-                return pd.DataFrame(columns=MEDICATION_LOG_HEADER)
+            # Header exists but no data
+            if len(rows) == 1:
+                return pd.DataFrame(columns=rows[0])
+
+            # Header mismatch → HARD FAIL (do NOT auto clear)
+            if rows[0] != MEDICATION_LOG_HEADER:
+                st.error("❌ Medication_Log header mismatch. Fix sheet header manually.")
+                st.stop()
 
             return pd.DataFrame(rows[1:], columns=rows[0])
+
 
         @st.cache_data(ttl=60)
         def get_cows_df():
@@ -3169,7 +3176,7 @@ else:
 
                 med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
 
-                st.info(f"💊 Dose Unit: **{med_row['DoseUnit']}**")
+                st.info(f"💊 StockAvailable: **{med_row['StockAvailable']}**")
 
                 dose_given = st.number_input(
                     "Dose Given",
