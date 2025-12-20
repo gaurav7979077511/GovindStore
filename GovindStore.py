@@ -3158,46 +3158,30 @@ else:
         # ======================================================
         if st.session_state.show_give_medication:
             st.subheader(" Give Medication")
-            medicine_options = ["— Select Medicine —"] + meds_df["MedicineID"].tolist()
+
             med_id = st.selectbox(
                 "Medicine",
-                medicine_options,
-                format_func=lambda x: (
-                    "— Select Medicine —"
-                    if x == "— Select Medicine —"
-                    else meds_df.loc[meds_df["MedicineID"] == x, "MedicineName"].values[0]
-                ),
+                meds_df["MedicineID"].tolist(),
+                format_func=lambda x:
+                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0],
                 key="med_select"
             )
-
 
             med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
             medicine_name=med_row["MedicineName"]
             st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
 
-            if med_id != "— Select Medicine —":
+            with st.form("give_med_form"):
 
-                med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
-                medicine_name = med_row["MedicineName"]
+                cow_id = st.selectbox(
+                    "Cow ID",
+                    cows_df["CowID"].tolist()
+                )
 
-                st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
-
-                with st.form("give_med_form"):
-
-                    cow_options = ["— Select Cow —"] + cows_df["CowID"].tolist()
-
-                    cow_id = st.selectbox(
-                        "Cow ID",
-                        cow_options,
-                        key="cow_select"
-                    )
-
-
-                    dose_text = st.text_input(
-                        "Dose Given",
-                        placeholder=f"Only {med_row['StockAvailable']} stock available"
-                    )
-
+                dose_text = st.text_input(
+                    "Dose Given",
+                    placeholder=f"Only {med_row['StockAvailable']} stock available"
+                )
 
                 dose_given = None
                 if dose_text:
@@ -3230,13 +3214,10 @@ else:
                 if dose_given > med_row["StockAvailable"]:
                     st.error("❌ Not enough stock available")
                     st.stop()
-                if dose_given is None:
-                    st.error("❌ Please enter dose given")
-                    st.stop()
-                if cow_id == "— Select Cow —":
-                    st.error("❌ Please select a Cow")
-                    st.stop()
-
+                if save:
+                    if dose_given is None:
+                        st.error("❌ Please enter dose given")
+                        st.stop()
 
 
                 now = pd.Timestamp.now()
