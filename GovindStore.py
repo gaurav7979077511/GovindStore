@@ -3138,95 +3138,101 @@ else:
         with k2: kpi("Upcoming Doses", pending_due)
 
         st.divider()
+        if "show_give_medication" not in st.session_state:
+            st.session_state.show_give_medication = False
+        if st.button("💉 Give Medication"):
+            st.session_state.show_give_medication = not st.session_state.show_give_medication
+
 
         # ======================================================
         # ADD MEDICATION FORM
         # ======================================================
-        st.subheader("➕ Give Medication")
+        if st.session_state.show_give_medication:
+            st.subheader(" Give Medication")
 
-        with st.form("give_med_form"):
+            with st.form("give_med_form"):
 
-            cow_id = st.selectbox(
-                "Cow ID",
-                cows_df["CowID"].tolist()
-            )
+                cow_id = st.selectbox(
+                    "Cow ID",
+                    cows_df["CowID"].tolist()
+                )
 
-            med_id = st.selectbox(
-                "Medicine",
-                meds_df["MedicineID"].tolist(),
-                format_func=lambda x:
-                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
-            )
+                med_id = st.selectbox(
+                    "Medicine",
+                    meds_df["MedicineID"].tolist(),
+                    format_func=lambda x:
+                        meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0]
+                )
 
-            med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+                med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
 
-            st.info(f"💊 Dose Unit: **{med_row['DoseUnit']}**")
+                st.info(f"💊 Dose Unit: **{med_row['DoseUnit']}**")
 
-            dose_given = st.number_input(
-                "Dose Given",
-                min_value=0.1,
-                step=0.1
-            )
+                dose_given = st.number_input(
+                    "Dose Given",
+                    min_value=0.1,
+                    step=0.1
+                )
 
-            notes = st.text_input("Notes (optional)")
+                notes = st.text_input("Notes (optional)")
 
-            submit = st.form_submit_button("✅ Save Medication")
+                submit = st.form_submit_button("✅ Save Medication")
 
-        if submit:
+            if submit:
 
-            if dose_given > med_row["StockAvailable"]:
-                st.error("❌ Not enough stock available")
-                st.stop()
+                if dose_given > med_row["StockAvailable"]:
+                    st.error("❌ Not enough stock available")
+                    st.stop()
 
-            now = pd.Timestamp.now()
+                now = pd.Timestamp.now()
 
-            # ---- NEXT DUE DATE ----
-            next_due = ""
-            if med_row["FrequencyType"] == "Recurring":
-                unit = med_row["FrequencyUnit"]
-                value = int(med_row["FrequencyValue"])
+                # ---- NEXT DUE DATE ----
+                next_due = ""
+                if med_row["FrequencyType"] == "Recurring":
+                    unit = med_row["FrequencyUnit"]
+                    value = int(med_row["FrequencyValue"])
 
-                if unit == "Days":
-                    next_due = now + pd.Timedelta(days=value)
-                elif unit == "Weeks":
-                    next_due = now + pd.Timedelta(weeks=value)
-                elif unit == "Months":
-                    next_due = now + pd.DateOffset(months=value)
+                    if unit == "Days":
+                        next_due = now + pd.Timedelta(days=value)
+                    elif unit == "Weeks":
+                        next_due = now + pd.Timedelta(weeks=value)
+                    elif unit == "Months":
+                        next_due = now + pd.DateOffset(months=value)
 
-            # ---- INSERT LOG ----
-            open_med_log().append_row(
-                [
-                    f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
-                    cow_id,
-                    med_id,
-                    dose_given,
-                    med_row["DoseUnit"],
-                    now.strftime("%Y-%m-%d"),
-                    st.session_state.user_name,
-                    med_row["FrequencyType"],
-                    med_row["FrequencyValue"],
-                    med_row["FrequencyUnit"],
-                    next_due.strftime("%Y-%m-%d") if next_due != "" else "",
-                    notes,
-                    now.strftime("%Y-%m-%d %H:%M:%S")
-                ],
-                value_input_option="USER_ENTERED"
-            )
+                # ---- INSERT LOG ----
+                open_med_log().append_row(
+                    [
+                        f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
+                        cow_id,
+                        med_id,
+                        dose_given,
+                        med_row["DoseUnit"],
+                        now.strftime("%Y-%m-%d"),
+                        st.session_state.user_name,
+                        med_row["FrequencyType"],
+                        med_row["FrequencyValue"],
+                        med_row["FrequencyUnit"],
+                        next_due.strftime("%Y-%m-%d") if next_due != "" else "",
+                        notes,
+                        now.strftime("%Y-%m-%d %H:%M:%S")
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
 
-            # ---- UPDATE STOCK ----
-            new_stock = med_row["StockAvailable"] - dose_given
-            row_idx = meds_df.index[meds_df["MedicineID"] == med_id][0] + 2
+                # ---- UPDATE STOCK ----
+                new_stock = med_row["StockAvailable"] - dose_given
+                row_idx = meds_df.index[meds_df["MedicineID"] == med_id][0] + 2
 
-            open_med_master().update(
-                f"M{row_idx}",
-                [[new_stock]]
-            )
+                open_med_master().update(
+                    f"M{row_idx}",
+                    [[new_stock]]
+                )
 
-            st.cache_data.clear()
-            st.success("✅ Medication recorded & stock updated")
-            st.rerun()
+                st.cache_data.clear()
+                st.success("✅ Medication recorded & stock updated")
+                st.rerun()
 
-        st.divider()
+            st.divider()
 
         # ======================================================
         # MEDICATION HISTORY
