@@ -2620,6 +2620,16 @@ else:
 
         st.title("🧪 Medicine Master")
 
+        if "medicine_view_mode" not in st.session_state:
+            st.session_state.medicine_view_mode = "view"   # view | edit
+
+        if "editing_med_id" not in st.session_state:
+            st.session_state.editing_med_id = None
+
+        if "show_add_medicine" not in st.session_state:
+            st.session_state.show_add_medicine = False
+
+
         # ======================================================
         # CONSTANTS
         # ======================================================
@@ -2801,12 +2811,36 @@ else:
                 st.rerun()
 
         st.divider()
+        
+        if (
+            st.session_state.medicine_view_mode == "edit"
+            and st.session_state.editing_med_id is not None
+        ):
+            st.subheader("✏️ Edit Medicine")
+
+            # edit form code here
+
 
         # ======================================================
         # MEDICINE CARDS
         # ======================================================
         # ======================================================
         st.subheader("💊 Medicine List")
+
+        col1, col2 = st.columns([6, 1])
+
+        with col2:
+            if st.session_state.medicine_view_mode == "view":
+                if st.button("✏️ Edit Mode"):
+                    st.session_state.medicine_view_mode = "edit"
+                    st.session_state.editing_med_id = None
+                    st.rerun()
+            else:
+                if st.button("👁️ View Mode"):
+                    st.session_state.medicine_view_mode = "view"
+                    st.session_state.editing_med_id = None
+                    st.rerun()
+
 
         if medicine_df.empty:
             st.info("No medicines added yet.")
@@ -2874,8 +2908,20 @@ else:
             </div>
             """
 
+            cols = st.columns(4)
             with cols[i % 4]:
-                components.html(card_html, height=120)
+
+                components.html(card_html, height=230)
+
+                # 👇 ADD ONLY THIS PART
+                if st.session_state.medicine_view_mode == "edit":
+                    if st.button(
+                        "✏️ Edit",
+                        key=f"edit_{r['MedicineID']}",
+                        use_container_width=True
+                    ):
+                        st.session_state.editing_med_id = r["MedicineID"]
+                        st.rerun()
 
 
     elif page=="Transaction":
