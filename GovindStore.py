@@ -3114,7 +3114,7 @@ else:
             ).fillna(0)
 
         if not logs_df.empty:
-            logs_df["GivenDate"] = pd.to_datetime(logs_df["GivenDate"], errors="coerce")
+            logs_df["GivenOn"] = pd.to_datetime(logs_df["GivenOn"], errors="coerce")
             logs_df["NextDueDate"] = pd.to_datetime(logs_df["NextDueDate"], errors="coerce")
 
         # ======================================================
@@ -3266,7 +3266,7 @@ else:
 
             cols = st.columns(3)
 
-            for i, r in logs_df.sort_values("GivenDate", ascending=False).iterrows():
+            for i, r in logs_df.sort_values("GivenOn", ascending=False).iterrows():
 
                 card_html = f"""
                 <div style="
@@ -3295,7 +3295,7 @@ else:
                     </div>
 
                     <div style="font-size:11px;opacity:.85;">
-                        📅 Given: {r['GivenDate'].date()}
+                        📅 Given: {r['GivenOn'].date()}
                     </div>
 
                     <div style="font-size:11px;">
