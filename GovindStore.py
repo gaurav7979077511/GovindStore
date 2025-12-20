@@ -9,6 +9,10 @@ import gspread
 import textwrap
 import numpy as np
 import datetime as dt
+import cloudinary
+import cloudinary.uploader
+    
+
 
 
 # ============================================================
@@ -52,6 +56,12 @@ def init_gsheets():
     )
     return gspread.authorize(creds)
 
+cloudinary.config(
+    cloud_name=st.secrets["cloudinary"]["cloud_name"],
+    api_key=st.secrets["cloudinary"]["api_key"],
+    api_secret=st.secrets["cloudinary"]["api_secret"],
+    secure=True
+    )
 
 def open_sheet(sheet_id: str, tab: str):
     client = init_gsheets()
@@ -508,15 +518,7 @@ else:
         st.title("💸 Expense Management")
     
         # ================= CLOUDINARY =================
-        import cloudinary
-        import cloudinary.uploader
-    
-        cloudinary.config(
-            cloud_name=st.secrets["cloudinary"]["cloud_name"],
-            api_key=st.secrets["cloudinary"]["api_key"],
-            api_secret=st.secrets["cloudinary"]["api_secret"],
-            secure=True
-        )
+        
     
         def upload_to_cloudinary(file):
             result = cloudinary.uploader.upload(
@@ -832,12 +834,6 @@ else:
         # =========================================================
 
     
-        cloudinary.config(
-            cloud_name=st.secrets["cloudinary"]["cloud_name"],
-            api_key=st.secrets["cloudinary"]["api_key"],
-            api_secret=st.secrets["cloudinary"]["api_secret"],
-            secure=True,
-        )
     
         def upload_to_cloudinary(file):
             result = cloudinary.uploader.upload(
@@ -2652,9 +2648,20 @@ else:
             "DefaultDose","DoseUnit",
             "FrequencyType","FrequencyValue","FrequencyUnit",
             "TotalCost","TotalUnits","CostPerDose",
-            "StockAvailable","Status",
+            "StockAvailable","Status","MedicineImageURL",
             "Notes","CreatedBy","CreatedOn"
         ]
+
+        # ======================================================
+        # cloudinary uploader
+        # ======================================================
+        def upload_to_cloudinary(file):
+            result = cloudinary.uploader.upload(
+                file,
+                folder="dairy/medicine",  
+                resource_type="image"
+            )
+            return result["secure_url"]
 
         # ======================================================
         # HELPERS
@@ -2775,6 +2782,11 @@ else:
                         value=None,
                         placeholder="Eg: 10"
                     )
+                image_file = st.file_uploader(
+                    "Medicine Image (optional)",
+                    type=["png", "jpg", "jpeg"]
+                )
+
 
                 notes = st.text_area("Notes (optional)", placeholder="Any additional details")
 
@@ -2794,6 +2806,12 @@ else:
                 cost_per_dose = round(total_cost / total_units, 2) if total_cost and total_units else ""
 
                 now = dt.datetime.now()
+                med_id = f"MED{now.strftime('%Y%m%d%H%M%S%f')}"
+
+                image_url = ""
+                if image_file:
+                    image_url = upload_to_cloudinary(image_file)
+
 
                 open_medicine_sheet().append_row(
                     [
@@ -2811,6 +2829,7 @@ else:
                         cost_per_dose,
                         total_units,
                         "Active",
+                        image_url,
                         notes,
                         st.session_state.user_name,
                         now.strftime("%Y-%m-%d %H:%M:%S")
@@ -2995,10 +3014,16 @@ else:
                     font-size:10px;
                     display:flex;
                     justify-content:space-between;
+                    align-items:center;
                     opacity:.95;
                 ">
                     <span>{status_badge}</span>
+
+                    {"<a href='" + r['MedicineImageURL'] + "' target='_blank' "
+                    "style='color:white;text-decoration:none;font-size:15px;'>📄</a>"
+                    if r.get("MedicineImageURL") else ""}
                 </div>
+
 
             </div>
             """
