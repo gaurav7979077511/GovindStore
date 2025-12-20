@@ -1193,24 +1193,81 @@ else:
         if pending_bills.empty:
             st.success("🎉 No pending bills")
         else:
-            for _, r in pending_bills.iterrows():
-                if st.button(
-                    f"{r['CustomerName']} | ₹ {r['BalanceAmount']} | Due {r['DueDate'].date()}",
-                    key=f"pick_{r['BillID']}"
-                ):
-                    st.session_state.selected_bill_id = r["BillID"]
-                    st.session_state.show_payment_window = True
+            buttons_html = """
+            <style>
+            .button-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-top: 10px;
+            }
+            .custom-btn {
+                background: linear-gradient(135deg, #ff512f, #dd2476);
+                color: white;
+                padding: 12px 18px;
+                font-size: 14px;
+                font-weight: 700;
+                border-radius: 14px;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+                transition: all 0.3s ease;
+                min-width: 160px;
+                text-align: center;
+                text-decoration: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .custom-btn:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+                background: linear-gradient(135deg, #dd2476, #ff512f);
+            }
+            .cust-name {
+                font-size: 14px;
+                font-weight: 800;
+                margin-bottom: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 140px;
+            }
+            .amount {
+                font-size: 13px;
+                opacity: 0.95;
+            }
+            </style>
 
-        st.divider()
+            <div class="button-container">
+            """
+
+            for _, r in pending_bills.iterrows():
+                buttons_html += f"""
+                <a class="custom-btn"
+                href="?page=Payment&bill={r['BillID']}">
+                    <div class="cust-name">{r['CustomerName']}</div>
+                    <div class="amount">Total ₹ {float(r['BillAmount']):,.0f}</div>
+                    <div class="amount">Pending ₹ {float(r['BalanceAmount']):,.0f}</div>
+                </a>
+                """
+
+            buttons_html += "</div>"
+
+            components.html(buttons_html, height=220)
+
+        query_params = st.query_params
+
+        if "bill" in query_params:
+            st.session_state.selected_bill_id = query_params["bill"]
+            st.session_state.show_payment_window = True
+
 
         # ======================================================
         # TOGGLE RECEIVE PAYMENT WINDOW
         # ======================================================
         if "show_payment_window" not in st.session_state:
             st.session_state.show_payment_window = False
-
-        if st.button("➕ Receive Payment"):
-            st.session_state.show_payment_window = not st.session_state.show_payment_window
 
         # ======================================================
         # RECEIVE PAYMENT
