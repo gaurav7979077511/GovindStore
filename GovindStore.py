@@ -1706,6 +1706,7 @@ else:
                                 safe(amount),
                                 "Payment Pending",
                                 due_date.strftime("%Y-%m-%d"),
+                                "",
                                 daily_pattern_str,
                                 safe(st.session_state.user_name),
                                 dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
