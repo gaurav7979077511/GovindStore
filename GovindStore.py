@@ -1597,7 +1597,7 @@ else:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
-                            daily_pattern_str = ",".join(map(str, daily_pattern))
+                            daily_pattern_str = ",".join(map(str, p["daily_pattern"]))
                             rows_to_add.append([
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 safe(c["CustomerID"]),
