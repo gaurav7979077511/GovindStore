@@ -1565,7 +1565,8 @@ else:
                         "evening": evening,
                         "total": total,
                         "amount": amount,
-                        "missing": missing
+                        "missing": missing,
+                        "daily_pattern":daily_pattern
                     })
 
                 if not preview:
