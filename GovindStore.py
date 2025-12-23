@@ -3709,7 +3709,7 @@ else:
         if st.session_state.user_role == "Admin":
             st.divider()
 
-            a1, a2 = st.columns([6, 4])
+            a1, a2 = st.columns([6, 1])
 
             with a2:
                 if st.button(
