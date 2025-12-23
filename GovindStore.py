@@ -209,6 +209,23 @@ Your OTP for password reset is:
 Valid for 5 minutes.
 """)
 
+
+def mask_email(email: str) -> str:
+    """
+    Example:
+    krishna@gmail.com -> kr*****@gmail.com
+    a@xyz.com -> *@xyz.com
+    """
+    try:
+        name, domain = email.split("@")
+        if len(name) <= 2:
+            masked_name = "*" * len(name)
+        else:
+            masked_name = name[:2] + "*" * (len(name) - 2)
+        return f"{masked_name}@{domain}"
+    except Exception:
+        return "*****@*****"
+
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(st.secrets["EMAIL_USER"], st.secrets["EMAIL_PASS"])
         smtp.send_message(msg)
@@ -263,6 +280,8 @@ if not st.session_state.authenticated:
                     st.stop()
 
                 registered_email = user.iloc[0]["email"]
+                masked_email = mask_email(registered_email)
+
 
                 otp = generate_otp()
 
@@ -279,8 +298,10 @@ if not st.session_state.authenticated:
                 send_otp_email(registered_email, otp)
 
                 st.success(
-                    "✅ OTP sent to your registered email. Please check your inbox."
+                    f"✅ OTP sent to your registered email ({masked_email}). "
+                    "Please check your inbox."
                 )
+
                 st.rerun()
 
         # STEP 2 — VERIFY OTP
@@ -344,7 +365,7 @@ if not st.session_state.authenticated:
                     "otp_expiry"
                 ]:
                     st.session_state.pop(k, None)
-                    
+
                 load_auth_data.clear()
                 st.query_params.clear()
                 st.rerun()
