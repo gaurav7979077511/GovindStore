@@ -247,24 +247,36 @@ if not st.session_state.authenticated:
         st.subheader("🔐 Forgot Password")
 
         # STEP 1: SEND OTP
+        # STEP 1: SEND OTP (USERNAME BASED)
         if not st.session_state.otp_sent:
-            email = st.text_input("Registered Email")
+
+            username_input = st.text_input("Username")
 
             if st.button("Send OTP"):
-                user = auth_df[auth_df["email"] == email]
+
+                user = auth_df[auth_df["username"] == username_input]
 
                 if user.empty:
-                    st.error("❌ Email not found")
+                    st.error("❌ Username not found")
                     st.stop()
 
+                # Fetch registered email silently
+                registered_email = user.iloc[0]["email"]
+
                 otp = generate_otp()
+
                 st.session_state.reset_userid = user.iloc[0]["userid"]
                 st.session_state.otp = otp
                 st.session_state.otp_expiry = datetime.now() + timedelta(minutes=5)
                 st.session_state.otp_sent = True
 
-                send_otp_email(email, otp)
-                st.success("✅ OTP sent to your email")
+                send_otp_email(registered_email, otp)
+
+                st.success(
+                    "✅ OTP sent to your registered email. "
+                    "Please check your inbox."
+                )
+
 
         # STEP 2: VERIFY OTP
         elif not st.session_state.otp_verified:
