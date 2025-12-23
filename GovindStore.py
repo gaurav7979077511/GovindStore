@@ -3788,7 +3788,7 @@ else:
             # ---------- USER CARDS ----------
             st.subheader("👥 All Users")
 
-            cols = st.columns(3)
+            cols = st.columns(4)
             for i, r in auth_df.iterrows():
                 with cols[i % 4]:
                     status_color = "#22c55e" if r["status"] == "Active" else "#94a3b8"
