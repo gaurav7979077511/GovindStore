@@ -221,6 +221,8 @@ if not st.session_state.authenticated:
                 st.session_state.user_role = row["role"]
                 st.session_state.username = username
                 st.session_state.user_name = row["name"]
+                st.session_state.user_id = row["userid"]
+                st.session_state.user_accesslevel = row["accesslevel"]
                 st.success(f"✅ Welcome, {row['name']}")
                 st.rerun()
             else:
