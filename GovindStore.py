@@ -209,6 +209,23 @@ Your OTP for password reset is:
 Valid for 5 minutes.
 """)
 
+
+def mask_email(email: str) -> str:
+    """
+    Example:
+    krishna@gmail.com -> kr*****@gmail.com
+    a@xyz.com -> *@xyz.com
+    """
+    try:
+        name, domain = email.split("@")
+        if len(name) <= 2:
+            masked_name = "*" * len(name)
+        else:
+            masked_name = name[:2] + "*" * (len(name) - 2)
+        return f"{masked_name}@{domain}"
+    except Exception:
+        return "*****@*****"
+
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(st.secrets["EMAIL_USER"], st.secrets["EMAIL_PASS"])
         smtp.send_message(msg)
@@ -229,6 +246,10 @@ defaults = {
 if "reset_step" not in st.session_state:
     st.session_state.reset_step = "username"
 
+def get_col_index(df, col_name):
+    return df.columns.tolist().index(col_name.lower()) + 1
+
+
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
 
@@ -242,8 +263,6 @@ forgot_mode = st.query_params.get("forgot", "false") == "true"
 # ============================================================
 if not st.session_state.authenticated:
 
-    def get_col_index(df, col_name):
-        return df.columns.tolist().index(col_name.lower()) + 1
     # =================== FORGOT PASSWORD ===================
     # =================== FORGOT PASSWORD ===================
     if forgot_mode:
@@ -263,6 +282,8 @@ if not st.session_state.authenticated:
                     st.stop()
 
                 registered_email = user.iloc[0]["email"]
+                masked_email = mask_email(registered_email)
+
 
                 otp = generate_otp()
 
@@ -279,8 +300,10 @@ if not st.session_state.authenticated:
                 send_otp_email(registered_email, otp)
 
                 st.success(
-                    "✅ OTP sent to your registered email. Please check your inbox."
+                    f"✅ OTP sent to your registered email ({masked_email}). "
+                    "Please check your inbox."
                 )
+
                 st.rerun()
 
         # STEP 2 — VERIFY OTP
@@ -344,7 +367,7 @@ if not st.session_state.authenticated:
                     "otp_expiry"
                 ]:
                     st.session_state.pop(k, None)
-                    
+
                 load_auth_data.clear()
                 st.query_params.clear()
                 st.rerun()
@@ -449,7 +472,8 @@ else:
             "Cow Profile",
             "Medicine",
             "Medication",
-            "Transaction"
+            "Transaction",
+            "Profile"
 
             
         ],
@@ -3522,7 +3546,125 @@ else:
                     components.html(card_html, height=135)
 
 
-    
+    elif page == "Profile":
+
+        st.title("👤 My Profile")
+
+        user_df = auth_df[auth_df["userid"] == st.session_state.user_id].iloc[0]
+
+        # ---------- BASIC DETAILS ----------
+        st.subheader("📄 Personal Details")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.text_input("User ID", user_df["userid"], disabled=True)
+            st.text_input("Username", user_df["username"], disabled=True)
+            st.text_input("Role", user_df["role"], disabled=True)
+
+        with col2:
+            st.text_input("Name", user_df["name"], disabled=True)
+            st.text_input("Access Level", user_df["accesslevel"], disabled=True)
+
+        # ---------- EDIT CONTACT ----------
+        st.subheader("📞 Contact Information")
+
+        email = st.text_input("Email", user_df["email"])
+        phone = st.text_input("Phone Number", user_df.get("phone", ""))
+
+        if st.button("💾 Update Contact Info"):
+            row_idx = auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
+
+            email_col = get_col_index(auth_df, "email")
+            phone_col = get_col_index(auth_df, "phone")
+
+            AUTH_SHEET.update_cell(row_idx, email_col, email)
+            AUTH_SHEET.update_cell(row_idx, phone_col, phone)
+
+            load_auth_data.clear()
+            st.success("✅ Contact details updated")
+            st.rerun()
+            st.subheader("🔐 Change Password")
+
+        old_pass = st.text_input("Current Password", type="password")
+        new_pass = st.text_input("New Password", type="password")
+        confirm_pass = st.text_input("Confirm New Password", type="password")
+
+        if st.button("Update Password"):
+            if not verify_password(user_df["passwordhash"], old_pass):
+                st.error("❌ Current password incorrect")
+                st.stop()
+
+            if new_pass != confirm_pass:
+                st.error("❌ Passwords do not match")
+                st.stop()
+
+            hashed = hash_password(new_pass)
+
+            row_idx = auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
+            pass_col = get_col_index(auth_df, "passwordhash")
+
+            AUTH_SHEET.update_cell(row_idx, pass_col, hashed)
+            load_auth_data.clear()
+
+            st.success("✅ Password updated successfully")
+            st.rerun()
+        
+        # ==================================================
+        # ADMIN USER MANAGEMENT
+        # ==================================================
+        if st.session_state.user_role == "Admin":
+
+            st.divider()
+            st.subheader("➕ Create New User")
+
+            with st.form("create_user_form"):
+                username = st.text_input("Username")
+                name = st.text_input("Full Name")
+                email = st.text_input("Email")
+                phone = st.text_input("Phone")
+                role = st.selectbox("Role", ["User", "Admin"])
+                access = st.selectbox("Access Level", ["Low", "Medium", "High"])
+
+                if st.form_submit_button("Create User"):
+
+                    temp_password = generate_otp()
+                    hashed = hash_password(temp_password)
+
+                    new_userid = f"U{int(datetime.now().timestamp())}"
+
+                    AUTH_SHEET.append_row([
+                        new_userid,
+                        username,
+                        name,
+                        email,
+                        phone,
+                        hashed,
+                        role,
+                        access,
+                        "Active",
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    ])
+
+                    load_auth_data.clear()
+
+                    send_otp_email(
+                        email,
+                        f"Your temporary password is: {temp_password}"
+                    )
+
+                    st.success("✅ User created and email sent")
+            st.subheader("📋 All Users")
+
+            st.dataframe(
+                auth_df[[
+                    "userid", "username", "name",
+                    "email", "phone", "role",
+                    "accesslevel", "status"
+                ]]
+            )
+
+
 
         
     # ----------------------------
