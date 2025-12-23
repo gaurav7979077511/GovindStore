@@ -240,6 +240,8 @@ forgot_mode = st.query_params.get("forgot", "false") == "true"
 # ============================================================
 if not st.session_state.authenticated:
 
+    def get_col_index(df, col_name):
+        return df.columns.tolist().index(col_name.lower()) + 1
     # =================== FORGOT PASSWORD ===================
     if forgot_mode:
         st.subheader("🔐 Forgot Password")
@@ -281,6 +283,8 @@ if not st.session_state.authenticated:
                 st.success("✅ OTP verified")
 
         # STEP 3: RESET PASSWORD
+
+
         else:
             new_pass = st.text_input("New Password", type="password")
             confirm = st.text_input("Confirm Password", type="password")
@@ -293,11 +297,16 @@ if not st.session_state.authenticated:
                 hashed = hash_password(new_pass)
 
                 row_idx = auth_df[auth_df["userid"] == st.session_state.reset_userid].index[0] + 2
-                AUTH_SHEET.update(f"E{row_idx}", hashed)
-                AUTH_SHEET.update(
-                    f"I{row_idx}",
+                password_col = get_col_index(auth_df, "passwordhash")
+                AUTH_SHEET.update_cell(row_idx, password_col, hashed)
+                date_col = get_col_index(auth_df, "lastpasswordchange")
+                AUTH_SHEET.update_cell(
+                    row_idx,
+                    date_col,
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 )
+
+
 
                 st.success("✅ Password updated")
 
