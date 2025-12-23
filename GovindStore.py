@@ -209,6 +209,35 @@ Your OTP for password reset is:
 Valid for 5 minutes.
 """)
 
+def send_temp_password_email(to_email, username, temp_password):
+    msg = EmailMessage()
+    msg["Subject"] = "Your Account Has Been Created"
+    msg["From"] = st.secrets["EMAIL_USER"]
+    msg["To"] = to_email
+
+    msg.set_content(f"""
+Hello {username},
+
+Your account has been created successfully.
+
+Temporary Login Credentials:
+--------------------------------
+Username: {username}
+Temporary Password: {temp_password}
+--------------------------------
+
+Please log in and change your password immediately.
+
+Regards,
+Dairy Farm Management Team
+""")
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(
+            st.secrets["EMAIL_USER"],
+            st.secrets["EMAIL_PASS"]
+        )
+        smtp.send_message(msg)
 
 def mask_email(email: str) -> str:
     """
@@ -3648,10 +3677,15 @@ else:
 
                     load_auth_data.clear()
 
-                    send_otp_email(
-                        email,
-                        f"Your temporary password is: {temp_password}"
-                    )
+                    try:
+                        send_temp_password_email(email, username, temp_password)
+                        st.success("✅ User created and email sent")
+                    except Exception as e:
+                        st.warning(
+                            "⚠️ User created, but email could not be sent. "
+                            "Please share the temporary password manually."
+                        )
+
 
                     st.success("✅ User created and email sent")
             st.subheader("📋 All Users")
