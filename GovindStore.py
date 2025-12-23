@@ -3798,7 +3798,6 @@ else:
                     <div style="
                         background: linear-gradient(135deg, #1e293b, #0f172a);
                         color: #f8fafc;
-                        max-width: 240px; 
                         margin-bottom:14px;
                         padding: 16px;
                         border-radius: 18px;
