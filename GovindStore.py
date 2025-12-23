@@ -3618,17 +3618,100 @@ else:
         # ==================================================
         st.subheader("📄 Personal Details")
 
-        c1, c2, c3 = st.columns(3)
-        c1.metric("User ID", user_df["userid"])
-        c2.metric("Username", user_df["username"])
-        c3.metric("Role", user_df["role"])
+        profile_html = f"""
+        <div style="
+            background: linear-gradient(135deg, #020617, #0f172a);
+            border-radius: 18px;
+            padding: 20px;
+            color: #e5e7eb;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+            font-family: Inter, system-ui, sans-serif;
+            max-width: 100%;
+        ">
 
-        c4, c5, c6 = st.columns(3)
-        c4.metric("Name", user_df["name"])
-        c5.metric("Access Level", user_df["accesslevel"])
-        c6.metric("Email", user_df["email"])
+            <!-- Header -->
+            <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                margin-bottom:18px;
+            ">
+                <div style="font-size:18px;font-weight:700;">
+                    👤 {user_df["name"]}
+                </div>
 
-        st.metric("Phone", user_df.get("phone", "-"))
+                <span style="
+                    background:#2563eb;
+                    color:white;
+                    padding:6px 14px;
+                    border-radius:999px;
+                    font-size:12px;
+                    font-weight:600;
+                ">
+                    {user_df["role"]}
+                </span>
+            </div>
+
+            <!-- Grid -->
+            <div style="
+                display:grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap:14px;
+            ">
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">User ID</div>
+                    <div style="font-size:14px;font-weight:600;">{user_df["userid"]}</div>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">Username</div>
+                    <div style="font-size:14px;font-weight:600;">@{user_df["username"]}</div>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">Access Level</div>
+                    <div style="font-size:14px;font-weight:600;">
+                        {user_df["accesslevel"] if user_df["accesslevel"] else "-"}
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">Email</div>
+                    <div style="font-size:13px;font-weight:500;word-break:break-all;">
+                        📧 {user_df["email"]}
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">Phone</div>
+                    <div style="font-size:14px;font-weight:600;">
+                        📞 {user_df.get("phone", "-")}
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:11px;color:#94a3b8;">Status</div>
+                    <div style="
+                        display:inline-block;
+                        margin-top:4px;
+                        background:#22c55e;
+                        color:#022c22;
+                        padding:4px 10px;
+                        border-radius:999px;
+                        font-size:12px;
+                        font-weight:600;
+                    ">
+                        Active
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        """
+
+        components.html(profile_html, height=260)
+
 
         # ==================================================
         # EDIT CONTACT INFO (TOGGLE)
