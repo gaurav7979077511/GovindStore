@@ -3594,24 +3594,28 @@ else:
         # ==================================================
         h1, h2 = st.columns([6, 1])
 
-        with h2:
-            if st.button(
-                "✏️ Edit Info" if not st.session_state.show_edit_info else "❌ Cancel Edit"
-            ):
-                st.session_state.show_edit_info = not st.session_state.show_edit_info
-                st.session_state.show_change_password = False
-                st.rerun()
-
+        # LEFT → Change Password
+        with h1:
             if st.button(
                 "🔐 Change Password"
                 if not st.session_state.show_change_password
                 else "❌ Cancel Password"
             ):
-                st.session_state.show_change_password = (
-                    not st.session_state.show_change_password
-                )
+                st.session_state.show_change_password = not st.session_state.show_change_password
                 st.session_state.show_edit_info = False
                 st.rerun()
+
+        # RIGHT → Edit Info
+        with h2:
+            if st.button(
+                "✏️ Edit Info"
+                if not st.session_state.show_edit_info
+                else "❌ Cancel Edit"
+            ):
+                st.session_state.show_edit_info = not st.session_state.show_edit_info
+                st.session_state.show_change_password = False
+                st.rerun()
+
 
         # ==================================================
         # READ-ONLY PROFILE DETAILS
