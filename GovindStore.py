@@ -3751,6 +3751,7 @@ else:
                         default=[]
                     )
                     access = ",".join(access_list)
+                    createdby=st.session_state.user_name
 
 
                     if st.form_submit_button("Create User"):
@@ -3769,6 +3770,7 @@ else:
                                 access,
                                 "Active",
                                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                createdby,
                             ]
                         )
 
