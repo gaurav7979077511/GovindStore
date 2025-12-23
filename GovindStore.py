@@ -3582,6 +3582,12 @@ else:
         # ==================================================
         # SESSION UI STATE (SAFE INIT)
         # ==================================================
+        if "edit_user_id" not in st.session_state:
+            st.session_state.edit_user_id = None
+
+        if "show_edit_user" not in st.session_state:
+            st.session_state.show_edit_user = False
+
         ui_defaults = {
             "show_edit_info": False,
             "show_change_password": False,
@@ -3735,7 +3741,7 @@ else:
                     name = st.text_input("Full Name")
                     email = st.text_input("Email")
                     phone = st.text_input("Phone")
-                    role = st.selectbox("Role", ["User", "Admin"])
+                    role = st.selectbox("Role", ["User", "Manager"])
                     access = st.selectbox("Access Level", ["Low", "Medium", "High"])
 
                     if st.form_submit_button("Create User"):
@@ -3796,7 +3802,74 @@ else:
                     )
 
                     if st.session_state.user_edit_mode:
-                        st.button(f"✏️ Edit {r['username']}")
+                        if st.button(f"✏️ Edit {r['username']}", key=f"edit_{r['userid']}"):
+                            st.session_state.edit_user_id = r["userid"]
+                            st.session_state.show_edit_user = True
+                            st.rerun()
+            # ==================================================
+            # ADMIN EDIT USER PANEL
+            # ==================================================
+            if st.session_state.show_edit_user and st.session_state.edit_user_id:
+
+                st.divider()
+                st.subheader("✏️ Edit User")
+
+                edit_df = auth_df[auth_df["userid"] == st.session_state.edit_user_id].iloc[0]
+
+                with st.form("admin_edit_user_form"):
+
+                    st.text_input("User ID", edit_df["userid"], disabled=True)
+                    st.text_input("Username", edit_df["username"], disabled=True)
+
+                    name = st.text_input("Name", edit_df["name"])
+                    email = st.text_input("Email", edit_df["email"])
+                    phone = st.text_input("Phone", edit_df.get("phone", ""))
+
+                    role = st.selectbox(
+                        "Role",
+                        ["User", "Admin"],
+                        index=["User", "Admin"].index(edit_df["role"]),
+                    )
+
+                    access = st.selectbox(
+                        "Access Level",
+                        ["Low", "Medium", "High"],
+                        index=["Low", "Medium", "High"].index(edit_df["accesslevel"]),
+                    )
+
+                    status = st.selectbox(
+                        "Status",
+                        ["Active", "Inactive"],
+                        index=["Active", "Inactive"].index(edit_df["status"]),
+                    )
+
+                    c1, c2 = st.columns(2)
+                    save = c1.form_submit_button("💾 Save Changes")
+                    cancel = c2.form_submit_button("❌ Cancel")
+
+                if cancel:
+                    st.session_state.show_edit_user = False
+                    st.session_state.edit_user_id = None
+                    st.rerun()
+
+                if save:
+                    row_idx = auth_df[auth_df["userid"] == edit_df["userid"]].index[0] + 2
+
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "name"), name)
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "email"), email)
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "phone"), phone)
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "role"), role)
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "accesslevel"), access)
+                    AUTH_SHEET.update_cell(row_idx, get_col_index(auth_df, "status"), status)
+
+                    load_auth_data.clear()
+
+                    st.success("✅ User updated successfully")
+
+                    st.session_state.show_edit_user = False
+                    st.session_state.edit_user_id = None
+                    st.rerun()
+
 
 
 
