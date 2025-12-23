@@ -229,13 +229,14 @@ def send_temp_password_email(to_email,name, username, temp_password):
 
         Your account has been created successfully.
 
-        Temporary Login Credentials:
-        --------------------------------
-        Username: {username}
-        Temporary Password: {temp_password}
-        --------------------------------
+            Temporary Login Credentials:
+            --------------------------------
+            Username: {username}
+            Temporary Password: {temp_password}
+            --------------------------------
 
-        Please log in and change your password immediately.
+        Please log in and change your password 
+        immediately.
 
         Regards,
         Dairy Farm Management Team
