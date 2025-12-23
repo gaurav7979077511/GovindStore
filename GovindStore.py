@@ -3802,7 +3802,7 @@ else:
                         border-radius: 18px;
                         box-shadow: 0 12px 30px rgba(0,0,0,0.35);
                         border: 1px solid rgba(255,255,255,0.08);
-                        min-height: 170px;
+                        min-height: 120px;
                         font-family: Inter, system-ui, sans-serif;
                         transition: transform .2s ease, box-shadow .2s ease;
                     ">
@@ -3876,7 +3876,7 @@ else:
                     </div>
                     """
 
-                    components.html(card_html, height=190)
+                    components.html(card_html, height=160)
 
 
 
