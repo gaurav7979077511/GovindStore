@@ -3840,7 +3840,7 @@ else:
                     access_list = st.multiselect(
                         "Access Level",
                         ["E-riksha", "Dairy"],
-                        default=edit_df["accesslevel"]
+                        default=[]
                     )
                     access = ",".join(access_list)
 
