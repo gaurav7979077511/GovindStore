@@ -3709,28 +3709,28 @@ else:
         if st.session_state.user_role == "Admin":
             st.divider()
 
-            a1, a2 = st.columns([6, 1])
+            left, right = st.columns([6, 1])
 
-            with a2:
+            # LEFT SIDE → Create User
+            with left:
                 if st.button(
                     "➕ Create User"
                     if not st.session_state.show_create_user
                     else "❌ Cancel Create"
                 ):
-                    st.session_state.show_create_user = (
-                        not st.session_state.show_create_user
-                    )
+                    st.session_state.show_create_user = not st.session_state.show_create_user
                     st.rerun()
 
+            # RIGHT SIDE → Edit / Display toggle
+            with right:
                 if st.button(
                     "✏️ Edit Mode"
                     if not st.session_state.user_edit_mode
                     else "👁 Display Mode"
                 ):
-                    st.session_state.user_edit_mode = (
-                        not st.session_state.user_edit_mode
-                    )
+                    st.session_state.user_edit_mode = not st.session_state.user_edit_mode
                     st.rerun()
+
 
             # ---------- CREATE USER FORM ----------
             if st.session_state.show_create_user:
