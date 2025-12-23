@@ -216,22 +216,15 @@ if not st.session_state.authenticated:
             st.error("❌ User not found")
         else:
             row = user_data.iloc[0]
-            if row["status"] != "Active":
-                st.error("❌ User account inactive")
-                st.stop()
-
-            if verify_password(row["passwordhash"], password):
+            if verify_password(row["password"], password):
                 st.session_state.authenticated = True
-                st.session_state.user_id = row["userid"]
                 st.session_state.user_role = row["role"]
-                st.session_state.username = row["username"]
+                st.session_state.username = username
                 st.session_state.user_name = row["name"]
-                st.session_state.access_level = row["accesslevel"]
                 st.success(f"✅ Welcome, {row['name']}")
                 st.rerun()
             else:
                 st.error("❌ Invalid Credentials")
-
 
 # ============================================================
 # DASHBOARD
