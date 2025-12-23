@@ -300,8 +300,6 @@ if not st.session_state.authenticated:
                     st.stop()
 
                 registered_email = user.iloc[0]["email"]
-                masked_email = mask_email(registered_email)
-
 
                 otp = generate_otp()
 
@@ -318,7 +316,7 @@ if not st.session_state.authenticated:
                 send_otp_email(registered_email, otp)
 
                 st.success(
-                    f"✅ OTP sent to your registered email ({masked_email}). "
+                    f"✅ OTP sent to your registered email ({registered_email}). "
                     "Please check your inbox."
                 )
 
