@@ -13,7 +13,8 @@ import cloudinary
 import cloudinary.uploader
 import random
 import smtplib
-from email.message import EmailMessage   
+from email.message import EmailMessage  
+from datetime import datetime, timedelta 
 
 
 
@@ -159,6 +160,8 @@ BILLING_HEADER = [
             "GeneratedBy","GeneratedOn"
         ]
 
+
+
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
@@ -171,11 +174,11 @@ def get_auth_sheet():
         st.error("❌ AUTH sheet access denied")
         st.stop()
 
-AUTH_sheet = get_auth_sheet()
+AUTH_SHEET = get_auth_sheet()
 
 @st.cache_data(ttl=60)
 def load_auth_data():
-    df = pd.DataFrame(AUTH_sheet.get_all_records())
+    df = pd.DataFrame(AUTH_SHEET.get_all_records())
     df.columns = df.columns.astype(str).str.strip().str.lower()
     return df
 
@@ -184,33 +187,30 @@ auth_df = load_auth_data()
 # ============================================================
 # HELPERS
 # ============================================================
-def verify_password(stored_hash, entered_password):
-    return bcrypt.checkpw(entered_password.encode(), stored_hash.encode())
-
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def verify_password(stored_hash, password):
+    return bcrypt.checkpw(password.encode(), stored_hash.encode())
 
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-def send_otp_email(to_email, otp):
+def send_otp_email(email, otp):
     msg = EmailMessage()
-    msg["Subject"] = "OTP Verification – Dairy Farm App"
+    msg["Subject"] = "Password Reset OTP"
     msg["From"] = st.secrets["EMAIL_USER"]
-    msg["To"] = to_email
+    msg["To"] = email
     msg.set_content(f"""
 Your OTP for password reset is:
 
 {otp}
 
-This OTP is valid for 5 minutes.
+Valid for 5 minutes.
 """)
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(
-            st.secrets["EMAIL_USER"],
-            st.secrets["EMAIL_PASS"]
-        )
+        smtp.login(st.secrets["EMAIL_USER"], st.secrets["EMAIL_PASS"])
         smtp.send_message(msg)
 
 # ============================================================
@@ -219,9 +219,9 @@ This OTP is valid for 5 minutes.
 defaults = {
     "authenticated": False,
     "user_id": None,
-    "user_role": None,
     "username": None,
     "user_name": None,
+    "user_role": None,
     "user_accesslevel": None,
     "otp_sent": False,
     "otp_verified": False
@@ -231,24 +231,24 @@ for k, v in defaults.items():
     st.session_state.setdefault(k, v)
 
 # ============================================================
-# LOGIN + FORGOT PASSWORD
+# QUERY PARAM (SAFE)
 # ============================================================
-query = st.query_params
+forgot_mode = st.query_params.get("forgot", "false") == "true"
 
+# ============================================================
+# AUTH FLOW
+# ============================================================
 if not st.session_state.authenticated:
 
-    # ---------- FORGOT PASSWORD MODE ----------
-    if query.get("forgot") == ["true"]:
-
+    # =================== FORGOT PASSWORD ===================
+    if forgot_mode:
         st.subheader("🔐 Forgot Password")
 
-        # STEP 1: EMAIL INPUT
+        # STEP 1: SEND OTP
         if not st.session_state.otp_sent:
-
             email = st.text_input("Registered Email")
 
             if st.button("Send OTP"):
-
                 user = auth_df[auth_df["email"] == email]
 
                 if user.empty:
@@ -257,26 +257,23 @@ if not st.session_state.authenticated:
 
                 otp = generate_otp()
                 st.session_state.reset_userid = user.iloc[0]["userid"]
-                st.session_state.reset_email = email
                 st.session_state.otp = otp
-                st.session_state.otp_time = pd.Timestamp.now()
+                st.session_state.otp_expiry = datetime.now() + timedelta(minutes=5)
                 st.session_state.otp_sent = True
 
                 send_otp_email(email, otp)
                 st.success("✅ OTP sent to your email")
 
-        # STEP 2: OTP VERIFY
+        # STEP 2: VERIFY OTP
         elif not st.session_state.otp_verified:
-
             entered_otp = st.text_input("Enter OTP")
 
             if st.button("Verify OTP"):
-
                 if entered_otp != st.session_state.otp:
                     st.error("❌ Invalid OTP")
                     st.stop()
 
-                if pd.Timestamp.now() - st.session_state.otp_time > pd.Timedelta(minutes=5):
+                if datetime.now() > st.session_state.otp_expiry:
                     st.error("❌ OTP expired")
                     st.stop()
 
@@ -285,12 +282,10 @@ if not st.session_state.authenticated:
 
         # STEP 3: RESET PASSWORD
         else:
-
             new_pass = st.text_input("New Password", type="password")
             confirm = st.text_input("Confirm Password", type="password")
 
             if st.button("Update Password"):
-
                 if new_pass != confirm:
                     st.error("❌ Passwords do not match")
                     st.stop()
@@ -298,32 +293,31 @@ if not st.session_state.authenticated:
                 hashed = hash_password(new_pass)
 
                 row_idx = auth_df[auth_df["userid"] == st.session_state.reset_userid].index[0] + 2
-                AUTH_sheet.update(f"F{row_idx}", hashed)  # PasswordHash column
-                AUTH_sheet.update(f"L{row_idx}", pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"))
+                AUTH_SHEET.update(f"E{row_idx}", hashed)
+                AUTH_SHEET.update(
+                    f"I{row_idx}",
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                )
 
-                st.success("✅ Password updated successfully")
+                st.success("✅ Password updated")
 
-                # Cleanup
-                for k in [
-                    "otp", "otp_sent", "otp_verified",
-                    "reset_userid", "reset_email", "otp_time"
-                ]:
+                # CLEANUP
+                for k in ["otp", "otp_sent", "otp_verified", "reset_userid", "otp_expiry"]:
                     st.session_state.pop(k, None)
 
-                st.experimental_set_query_params()
+                st.query_params.clear()
                 st.rerun()
 
         st.markdown("⬅️ [Back to Login](?)")
         st.stop()
 
-    # ---------- LOGIN ----------
+    # =================== LOGIN ===================
     st.title("🔒 Secure Login")
 
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
     if st.button("Login"):
-
         user = auth_df[auth_df["username"] == username]
 
         if user.empty:
@@ -340,12 +334,12 @@ if not st.session_state.authenticated:
             st.error("❌ Invalid credentials")
             st.stop()
 
-        # LOGIN SUCCESS
+        # SUCCESS
         st.session_state.authenticated = True
         st.session_state.user_id = row["userid"]
-        st.session_state.user_role = row["role"]
         st.session_state.username = row["username"]
         st.session_state.user_name = row["name"]
+        st.session_state.user_role = row["role"]
         st.session_state.user_accesslevel = row["accesslevel"]
 
         st.success(f"✅ Welcome, {row['name']}")
@@ -362,11 +356,10 @@ if not st.session_state.authenticated:
 # DASHBOARD
 # ============================================================
 else:
-
     if st.sidebar.button("🚪 Logout"):
         for k in list(st.session_state.keys()):
             st.session_state.pop(k)
-        st.experimental_set_query_params()
+        st.query_params.clear()
         st.rerun()
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
