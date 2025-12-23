@@ -3876,16 +3876,21 @@ else:
                     </div>
                     """
 
-                    components.html(card_html, height=160)
+                    with cols[i % 3]:
 
+                        components.html(card_html, height=160)
 
+                        # Full-width Edit button
+                        if st.session_state.user_edit_mode:
+                            if st.button(
+                                "✏️ Edit",
+                                key=f"edit_user_{r['userid']}",
+                                use_container_width=True
+                            ):
+                                st.session_state.edit_user_id = r["userid"]
+                                st.session_state.show_edit_user = True
+                                st.rerun()
 
-                    if st.session_state.user_edit_mode:
-                        if st.button(f"✏️ Edit {r['username']}", key=f"edit_{r['userid']}"):
-                            st.session_state.edit_user_id = r["userid"]
-                            st.session_state.show_edit_user = True
-                            use_container_width=True
-                            st.rerun()
             # ==================================================
             # ADMIN EDIT USER PANEL
             # ==================================================
