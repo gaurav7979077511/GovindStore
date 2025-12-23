@@ -3833,14 +3833,14 @@ else:
 
                     role = st.selectbox(
                         "Role",
-                        ["User", "Admin"],
+                        ["User", "Manager"],
                         index=["User", "Manager"].index(edit_df["role"]),
                     )
 
                     access_list = st.multiselect(
                         "Access Level",
                         ["E-riksha", "Dairy"],
-                        default=[]
+                        default=edit_df["accesslevel"]
                     )
                     access = ",".join(access_list)
 
