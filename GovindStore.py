@@ -3607,7 +3607,7 @@ else:
         # ==================================================
         # HEADER ACTION BUTTONS
         # ==================================================
-        h1, h2 = st.columns([6, 4])
+        h1, h2 = st.columns([6, 1])
 
         with h2:
             if st.button(
@@ -3742,7 +3742,13 @@ else:
                     email = st.text_input("Email")
                     phone = st.text_input("Phone")
                     role = st.selectbox("Role", ["User", "Manager"])
-                    access = st.selectbox("Access Level", ["Low", "Medium", "High"])
+                    access_list = st.multiselect(
+                        "Access Level",
+                        ["E-riksha", "Dairy"],
+                        default=[]
+                    )
+                    access = ",".join(access_list)
+
 
                     if st.form_submit_button("Create User"):
                         temp_password = generate_otp()
@@ -3828,14 +3834,15 @@ else:
                     role = st.selectbox(
                         "Role",
                         ["User", "Admin"],
-                        index=["User", "Admin"].index(edit_df["role"]),
+                        index=["User", "Manager"].index(edit_df["role"]),
                     )
 
-                    access = st.selectbox(
+                    access_list = st.multiselect(
                         "Access Level",
-                        ["Low", "Medium", "High"],
-                        index=["Low", "Medium", "High"].index(edit_df["accesslevel"]),
+                        ["E-riksha", "Dairy"],
+                        default=[]
                     )
+                    access = ",".join(access_list)
 
                     status = st.selectbox(
                         "Status",
