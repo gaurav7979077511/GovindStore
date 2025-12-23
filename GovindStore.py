@@ -3794,90 +3794,90 @@ else:
                     status_color = "#22c55e" if r["status"] == "Active" else "#94a3b8"
                     role_color = "#38bdf8" if r["role"] == "Admin" else "#a78bfa"
 
-                    st.markdown(
-                        f"""
+                    card_html = f"""
+                    <div style="
+                        background: linear-gradient(135deg, #1e293b, #0f172a);
+                        color: #f8fafc;
+                        padding: 16px;
+                        border-radius: 18px;
+                        box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        min-height: 170px;
+                        font-family: Inter, system-ui, sans-serif;
+                        transition: transform .2s ease, box-shadow .2s ease;
+                    ">
+
+                        <!-- Header -->
                         <div style="
-                            background: linear-gradient(135deg, #1e293b, #0f172a);
-                            color: #f8fafc;
-                            padding: 16px;
-                            border-radius: 16px;
-                            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-                            border: 1px solid rgba(255,255,255,0.08);
-                            min-height: 150px;
-                            transition: transform .2s ease, box-shadow .2s ease;
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            margin-bottom:10px;
                         ">
-
-                            <!-- Header -->
-                            <div style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                                margin-bottom:10px;
-                            ">
-                                <div style="font-size:15px;font-weight:700;">
-                                    {r['name']}
-                                </div>
-
-                                <span style="
-                                    background:{status_color};
-                                    color:#022c22;
-                                    padding:2px 8px;
-                                    font-size:11px;
-                                    border-radius:999px;
-                                    font-weight:600;
-                                ">
-                                    {r['status']}
-                                </span>
+                            <div style="font-size:15px;font-weight:700;">
+                                {r['name']}
                             </div>
 
-                            <!-- Username -->
-                            <div style="
-                                font-size:12px;
-                                color:#cbd5f5;
-                                margin-bottom:8px;
+                            <span style="
+                                background:{status_color};
+                                color:#022c22;
+                                padding:3px 10px;
+                                font-size:11px;
+                                border-radius:999px;
+                                font-weight:600;
                             ">
-                                @{r['username']}
-                            </div>
-
-                            <!-- Email -->
-                            <div style="
-                                font-size:12px;
-                                color:#e5e7eb;
-                                word-break:break-all;
-                                margin-bottom:12px;
-                            ">
-                                📧 {r['email']}
-                            </div>
-
-                            <!-- Footer -->
-                            <div style="
-                                display:flex;
-                                justify-content:space-between;
-                                align-items:center;
-                            ">
-                                <span style="
-                                    background:{role_color};
-                                    color:#020617;
-                                    padding:4px 10px;
-                                    font-size:11px;
-                                    border-radius:999px;
-                                    font-weight:600;
-                                ">
-                                    {r['role']}
-                                </span>
-
-                                <span style="
-                                    font-size:11px;
-                                    color:#94a3b8;
-                                ">
-                                    👤 User
-                                </span>
-                            </div>
-
+                                {r['status']}
+                            </span>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+
+                        <!-- Username -->
+                        <div style="
+                            font-size:12px;
+                            color:#cbd5f5;
+                            margin-bottom:8px;
+                        ">
+                            @{r['username']}
+                        </div>
+
+                        <!-- Email -->
+                        <div style="
+                            font-size:12px;
+                            color:#e5e7eb;
+                            word-break:break-all;
+                            margin-bottom:14px;
+                        ">
+                            📧 {r['email']}
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                        ">
+                            <span style="
+                                background:{role_color};
+                                color:#020617;
+                                padding:4px 12px;
+                                font-size:11px;
+                                border-radius:999px;
+                                font-weight:600;
+                            ">
+                                {r['role']}
+                            </span>
+
+                            <span style="
+                                font-size:11px;
+                                color:#94a3b8;
+                            ">
+                                👤 User
+                            </span>
+                        </div>
+                    </div>
+                    """
+
+                    components.html(card_html, height=190)
+
 
 
                     if st.session_state.user_edit_mode:
