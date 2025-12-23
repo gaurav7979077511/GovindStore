@@ -11,7 +11,9 @@ import numpy as np
 import datetime as dt
 import cloudinary
 import cloudinary.uploader
-    
+import random
+import smtplib
+from email.message import EmailMessage   
 
 
 
@@ -156,8 +158,9 @@ BILLING_HEADER = [
             "DailyMilkPattern",
             "GeneratedBy","GeneratedOn"
         ]
+
 # ============================================================
-# AUTH SHEET (FIXED – NO DUPLICATE CLIENT)
+# LOAD AUTH DATA
 # ============================================================
 @st.cache_resource
 def get_auth_sheet():
@@ -165,85 +168,208 @@ def get_auth_sheet():
         client = init_gsheets()
         return client.open_by_key(AUTH_SHEET_ID).worksheet(AUTH_SHEET_NAME)
     except Exception:
-        st.error("❌ AUTH sheet access denied. Share sheet with service account.")
+        st.error("❌ AUTH sheet access denied")
         st.stop()
 
 AUTH_sheet = get_auth_sheet()
 
-@st.cache_resource
+@st.cache_data(ttl=60)
 def load_auth_data():
-    return pd.DataFrame(AUTH_sheet.get_all_records())
+    df = pd.DataFrame(AUTH_sheet.get_all_records())
+    df.columns = df.columns.astype(str).str.strip().str.lower()
+    return df
 
 auth_df = load_auth_data()
-auth_df.columns = (
-    auth_df.columns
-    .astype(str)
-    .str.replace("\u00a0", "", regex=False)
-    .str.strip()
-    .str.lower()
-)
-
-
 
 # ============================================================
-# PASSWORD VERIFY
+# HELPERS
 # ============================================================
 def verify_password(stored_hash, entered_password):
     return bcrypt.checkpw(entered_password.encode(), stored_hash.encode())
 
-# ============================================================
-# SESSION STATE
-# ============================================================
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user_role = None
-    st.session_state.username = None
-    st.session_state.user_name = None
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def send_otp_email(to_email, otp):
+    msg = EmailMessage()
+    msg["Subject"] = "OTP Verification – Dairy Farm App"
+    msg["From"] = st.secrets["EMAIL_USER"]
+    msg["To"] = to_email
+    msg.set_content(f"""
+Your OTP for password reset is:
+
+{otp}
+
+This OTP is valid for 5 minutes.
+""")
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(
+            st.secrets["EMAIL_USER"],
+            st.secrets["EMAIL_PASS"]
+        )
+        smtp.send_message(msg)
 
 # ============================================================
-# LOGIN PAGE
+# SESSION STATE INIT
 # ============================================================
+defaults = {
+    "authenticated": False,
+    "user_id": None,
+    "user_role": None,
+    "username": None,
+    "user_name": None,
+    "user_accesslevel": None,
+    "otp_sent": False,
+    "otp_verified": False
+}
+
+for k, v in defaults.items():
+    st.session_state.setdefault(k, v)
+
+# ============================================================
+# LOGIN + FORGOT PASSWORD
+# ============================================================
+query = st.query_params
+
 if not st.session_state.authenticated:
+
+    # ---------- FORGOT PASSWORD MODE ----------
+    if query.get("forgot") == ["true"]:
+
+        st.subheader("🔐 Forgot Password")
+
+        # STEP 1: EMAIL INPUT
+        if not st.session_state.otp_sent:
+
+            email = st.text_input("Registered Email")
+
+            if st.button("Send OTP"):
+
+                user = auth_df[auth_df["email"] == email]
+
+                if user.empty:
+                    st.error("❌ Email not found")
+                    st.stop()
+
+                otp = generate_otp()
+                st.session_state.reset_userid = user.iloc[0]["userid"]
+                st.session_state.reset_email = email
+                st.session_state.otp = otp
+                st.session_state.otp_time = pd.Timestamp.now()
+                st.session_state.otp_sent = True
+
+                send_otp_email(email, otp)
+                st.success("✅ OTP sent to your email")
+
+        # STEP 2: OTP VERIFY
+        elif not st.session_state.otp_verified:
+
+            entered_otp = st.text_input("Enter OTP")
+
+            if st.button("Verify OTP"):
+
+                if entered_otp != st.session_state.otp:
+                    st.error("❌ Invalid OTP")
+                    st.stop()
+
+                if pd.Timestamp.now() - st.session_state.otp_time > pd.Timedelta(minutes=5):
+                    st.error("❌ OTP expired")
+                    st.stop()
+
+                st.session_state.otp_verified = True
+                st.success("✅ OTP verified")
+
+        # STEP 3: RESET PASSWORD
+        else:
+
+            new_pass = st.text_input("New Password", type="password")
+            confirm = st.text_input("Confirm Password", type="password")
+
+            if st.button("Update Password"):
+
+                if new_pass != confirm:
+                    st.error("❌ Passwords do not match")
+                    st.stop()
+
+                hashed = hash_password(new_pass)
+
+                row_idx = auth_df[auth_df["userid"] == st.session_state.reset_userid].index[0] + 2
+                AUTH_sheet.update(f"F{row_idx}", hashed)  # PasswordHash column
+                AUTH_sheet.update(f"L{row_idx}", pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+                st.success("✅ Password updated successfully")
+
+                # Cleanup
+                for k in [
+                    "otp", "otp_sent", "otp_verified",
+                    "reset_userid", "reset_email", "otp_time"
+                ]:
+                    st.session_state.pop(k, None)
+
+                st.experimental_set_query_params()
+                st.rerun()
+
+        st.markdown("⬅️ [Back to Login](?)")
+        st.stop()
+
+    # ---------- LOGIN ----------
     st.title("🔒 Secure Login")
 
     username = st.text_input("👤 Username")
     password = st.text_input("🔑 Password", type="password")
 
     if st.button("Login"):
-        user_data = auth_df[auth_df["username"] == username]
 
-        if user_data.empty:
+        user = auth_df[auth_df["username"] == username]
+
+        if user.empty:
             st.error("❌ User not found")
-        else:
-            row = user_data.iloc[0]
-            if verify_password(row["passwordhash"], password):
-                st.session_state.authenticated = True
-                st.session_state.user_role = row["role"]
-                st.session_state.username = username
-                st.session_state.user_name = row["name"]
-                st.session_state.user_id = row["userid"]
-                st.session_state.user_accesslevel = row["accesslevel"]
-                st.success(f"✅ Welcome, {row['name']}")
-                st.rerun()
-            else:
-                st.error("❌ Invalid Credentials")
+            st.stop()
+
+        row = user.iloc[0]
+
+        if row["status"] != "Active":
+            st.error("❌ Account inactive")
+            st.stop()
+
+        if not verify_password(row["passwordhash"], password):
+            st.error("❌ Invalid credentials")
+            st.stop()
+
+        # LOGIN SUCCESS
+        st.session_state.authenticated = True
+        st.session_state.user_id = row["userid"]
+        st.session_state.user_role = row["role"]
+        st.session_state.username = row["username"]
+        st.session_state.user_name = row["name"]
+        st.session_state.user_accesslevel = row["accesslevel"]
+
+        st.success(f"✅ Welcome, {row['name']}")
+        st.rerun()
+
+    st.markdown(
+        "<div style='text-align:right;font-size:13px;'>"
+        "<a href='?forgot=true'>Forgot Password?</a>"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 # ============================================================
 # DASHBOARD
 # ============================================================
 else:
-    if st.sidebar.button("🚪 Logout"):
-        st.session_state.authenticated = False
-        st.session_state.user_role = None
-        st.session_state.username = None
-        st.session_state.user_name = None
-        st.experimental_set_query_params(logged_in="false")
-        st.rerun()
-    
 
+    if st.sidebar.button("🚪 Logout"):
+        for k in list(st.session_state.keys()):
+            st.session_state.pop(k)
+        st.experimental_set_query_params()
+        st.rerun()
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
-
     # ============================================================
     # UTILITY FUNCTIONS
     # ============================================================
