@@ -3790,25 +3790,95 @@ else:
 
             cols = st.columns(3)
             for i, r in auth_df.iterrows():
-                with cols[i % 3]:
+                with cols[i % 4]:
+                    status_color = "#22c55e" if r["status"] == "Active" else "#94a3b8"
+                    role_color = "#38bdf8" if r["role"] == "Admin" else "#a78bfa"
+
                     st.markdown(
                         f"""
                         <div style="
-                            background:#0f172a;
-                            color:white;
-                            padding:14px;
-                            border-radius:14px;
-                            box-shadow:0 6px 14px rgba(0,0,0,.25)
+                            background: linear-gradient(135deg, #1e293b, #0f172a);
+                            color: #f8fafc;
+                            padding: 16px;
+                            border-radius: 16px;
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+                            border: 1px solid rgba(255,255,255,0.08);
+                            min-height: 150px;
+                            transition: transform .2s ease, box-shadow .2s ease;
                         ">
-                            <b>{r['name']}</b><br>
-                            @{r['username']}<br>
-                            {r['email']}<br>
-                            Role: {r['role']}<br>
-                            Status: {r['status']}
+
+                            <!-- Header -->
+                            <div style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                                margin-bottom:10px;
+                            ">
+                                <div style="font-size:15px;font-weight:700;">
+                                    {r['name']}
+                                </div>
+
+                                <span style="
+                                    background:{status_color};
+                                    color:#022c22;
+                                    padding:2px 8px;
+                                    font-size:11px;
+                                    border-radius:999px;
+                                    font-weight:600;
+                                ">
+                                    {r['status']}
+                                </span>
+                            </div>
+
+                            <!-- Username -->
+                            <div style="
+                                font-size:12px;
+                                color:#cbd5f5;
+                                margin-bottom:8px;
+                            ">
+                                @{r['username']}
+                            </div>
+
+                            <!-- Email -->
+                            <div style="
+                                font-size:12px;
+                                color:#e5e7eb;
+                                word-break:break-all;
+                                margin-bottom:12px;
+                            ">
+                                📧 {r['email']}
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="
+                                display:flex;
+                                justify-content:space-between;
+                                align-items:center;
+                            ">
+                                <span style="
+                                    background:{role_color};
+                                    color:#020617;
+                                    padding:4px 10px;
+                                    font-size:11px;
+                                    border-radius:999px;
+                                    font-weight:600;
+                                ">
+                                    {r['role']}
+                                </span>
+
+                                <span style="
+                                    font-size:11px;
+                                    color:#94a3b8;
+                                ">
+                                    👤 User
+                                </span>
+                            </div>
+
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
+
 
                     if st.session_state.user_edit_mode:
                         if st.button(f"✏️ Edit {r['username']}", key=f"edit_{r['userid']}"):
