@@ -3727,22 +3727,30 @@ else:
             email = st.text_input("Email", user_df["email"])
             phone = st.text_input("Phone", user_df.get("phone", ""))
 
-            if st.button("💾 Save Changes"):
-                row_idx = (
-                    auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
-                )
+            c1, c2 = st.columns(2)
 
-                AUTH_SHEET.update_cell(
-                    row_idx, get_col_index(auth_df, "email"), email
-                )
-                AUTH_SHEET.update_cell(
-                    row_idx, get_col_index(auth_df, "phone"), phone
-                )
+            with c1:
+                if st.button("💾 Save Changes"):
+                    row_idx = (
+                        auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
+                    )
 
-                load_auth_data.clear()
-                st.success("✅ Contact details updated")
-                st.session_state.show_edit_info = False
-                st.rerun()
+                    AUTH_SHEET.update_cell(
+                        row_idx, get_col_index(auth_df, "email"), email
+                    )
+                    AUTH_SHEET.update_cell(
+                        row_idx, get_col_index(auth_df, "phone"), phone
+                    )
+
+                    load_auth_data.clear()
+                    st.success("✅ Contact details updated")
+                    st.session_state.show_edit_info = False
+                    st.rerun()
+
+            with c2:
+                if st.button("❌ Cancel"):
+                    st.session_state.show_edit_info = False
+                    st.rerun()
 
         # ==================================================
         # CHANGE PASSWORD (TOGGLE)
@@ -3755,25 +3763,33 @@ else:
             new_pass = st.text_input("New Password", type="password")
             confirm = st.text_input("Confirm New Password", type="password")
 
-            if st.button("Update Password"):
-                if not verify_password(user_df["passwordhash"], old_pass):
-                    st.error("❌ Current password incorrect")
-                    st.stop()
+            c1, c2 = st.columns(2)
 
-                if new_pass != confirm:
-                    st.error("❌ Passwords do not match")
-                    st.stop()
+            with c1:
+                if st.button("🔐 Update Password"):
+                    if not verify_password(user_df["passwordhash"], old_pass):
+                        st.error("❌ Current password incorrect")
+                        st.stop()
 
-                AUTH_SHEET.update_cell(
-                    auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2,
-                    get_col_index(auth_df, "passwordhash"),
-                    hash_password(new_pass),
-                )
+                    if new_pass != confirm:
+                        st.error("❌ Passwords do not match")
+                        st.stop()
 
-                load_auth_data.clear()
-                st.success("✅ Password updated successfully")
-                st.session_state.show_change_password = False
-                st.rerun()
+                    AUTH_SHEET.update_cell(
+                        auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2,
+                        get_col_index(auth_df, "passwordhash"),
+                        hash_password(new_pass),
+                    )
+
+                    load_auth_data.clear()
+                    st.success("✅ Password updated successfully")
+                    st.session_state.show_change_password = False
+                    st.rerun()
+
+            with c2:
+                if st.button("❌ Cancel"):
+                    st.session_state.show_change_password = False
+                    st.rerun()
 
         # ==================================================
         # ADMIN SECTION
