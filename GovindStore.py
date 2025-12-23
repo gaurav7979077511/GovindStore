@@ -313,7 +313,8 @@ if not st.session_state.authenticated:
                 # CLEANUP
                 for k in ["otp", "otp_sent", "otp_verified", "reset_userid", "otp_expiry"]:
                     st.session_state.pop(k, None)
-
+                # 🔄 Clear cached auth data
+                load_auth_data.clear()
                 st.query_params.clear()
                 st.rerun()
 
