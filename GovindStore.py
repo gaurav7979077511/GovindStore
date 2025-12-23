@@ -207,7 +207,16 @@ Your OTP for password reset is:
 {otp}
 
 Valid for 5 minutes.
+
+If you did not request this, please ignore this email.
 """)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(
+            st.secrets["EMAIL_USER"],
+            st.secrets["EMAIL_PASS"]
+        )
+        smtp.send_message(msg)
+
 
 def send_temp_password_email(to_email, username, temp_password):
     msg = EmailMessage()
@@ -231,13 +240,7 @@ Please log in and change your password immediately.
 Regards,
 Dairy Farm Management Team
 """)
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(
-            st.secrets["EMAIL_USER"],
-            st.secrets["EMAIL_PASS"]
-        )
-        smtp.send_message(msg)
+                    
 
 def mask_email(email: str) -> str:
     """
