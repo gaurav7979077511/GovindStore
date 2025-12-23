@@ -259,6 +259,8 @@ def mask_email(email: str) -> str:
         smtp.login(st.secrets["EMAIL_USER"], st.secrets["EMAIL_PASS"])
         smtp.send_message(msg)
 
+
+
 # ============================================================
 # SESSION STATE INIT
 # ============================================================
@@ -3577,126 +3579,224 @@ else:
 
     elif page == "Profile":
 
+        # ==================================================
+        # SESSION UI STATE (SAFE INIT)
+        # ==================================================
+        ui_defaults = {
+            "show_edit_info": False,
+            "show_change_password": False,
+            "show_create_user": False,
+            "user_edit_mode": False,
+        }
+        for k, v in ui_defaults.items():
+            st.session_state.setdefault(k, v)
+
+        # ==================================================
+        # LOAD CURRENT USER
+        # ==================================================
         st.title("👤 My Profile")
 
         user_df = auth_df[auth_df["userid"] == st.session_state.user_id].iloc[0]
 
-        # ---------- BASIC DETAILS ----------
+        # ==================================================
+        # HEADER ACTION BUTTONS
+        # ==================================================
+        h1, h2 = st.columns([6, 4])
+
+        with h2:
+            if st.button(
+                "✏️ Edit Info" if not st.session_state.show_edit_info else "❌ Cancel Edit"
+            ):
+                st.session_state.show_edit_info = not st.session_state.show_edit_info
+                st.session_state.show_change_password = False
+                st.rerun()
+
+            if st.button(
+                "🔐 Change Password"
+                if not st.session_state.show_change_password
+                else "❌ Cancel Password"
+            ):
+                st.session_state.show_change_password = (
+                    not st.session_state.show_change_password
+                )
+                st.session_state.show_edit_info = False
+                st.rerun()
+
+        # ==================================================
+        # READ-ONLY PROFILE DETAILS
+        # ==================================================
         st.subheader("📄 Personal Details")
 
-        col1, col2 = st.columns(2)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("User ID", user_df["userid"])
+        c2.metric("Username", user_df["username"])
+        c3.metric("Role", user_df["role"])
 
-        with col1:
-            st.text_input("User ID", user_df["userid"], disabled=True)
-            st.text_input("Username", user_df["username"], disabled=True)
-            st.text_input("Role", user_df["role"], disabled=True)
+        c4, c5, c6 = st.columns(3)
+        c4.metric("Name", user_df["name"])
+        c5.metric("Access Level", user_df["accesslevel"])
+        c6.metric("Email", user_df["email"])
 
-        with col2:
-            st.text_input("Name", user_df["name"], disabled=True)
-            st.text_input("Access Level", user_df["accesslevel"], disabled=True)
+        st.metric("Phone", user_df.get("phone", "-"))
 
-        # ---------- EDIT CONTACT ----------
-        st.subheader("📞 Contact Information")
+        # ==================================================
+        # EDIT CONTACT INFO (TOGGLE)
+        # ==================================================
+        if st.session_state.show_edit_info:
+            st.divider()
+            st.subheader("✏️ Edit Contact Information")
 
-        email = st.text_input("Email", user_df["email"])
-        phone = st.text_input("Phone Number", user_df.get("phone", ""))
+            email = st.text_input("Email", user_df["email"])
+            phone = st.text_input("Phone", user_df.get("phone", ""))
 
-        if st.button("💾 Update Contact Info"):
-            row_idx = auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
+            if st.button("💾 Save Changes"):
+                row_idx = (
+                    auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
+                )
 
-            email_col = get_col_index(auth_df, "email")
-            phone_col = get_col_index(auth_df, "phone")
+                AUTH_SHEET.update_cell(
+                    row_idx, get_col_index(auth_df, "email"), email
+                )
+                AUTH_SHEET.update_cell(
+                    row_idx, get_col_index(auth_df, "phone"), phone
+                )
 
-            AUTH_SHEET.update_cell(row_idx, email_col, email)
-            AUTH_SHEET.update_cell(row_idx, phone_col, phone)
+                load_auth_data.clear()
+                st.success("✅ Contact details updated")
+                st.session_state.show_edit_info = False
+                st.rerun()
 
-            load_auth_data.clear()
-            st.success("✅ Contact details updated")
-            st.rerun()
+        # ==================================================
+        # CHANGE PASSWORD (TOGGLE)
+        # ==================================================
+        if st.session_state.show_change_password:
+            st.divider()
             st.subheader("🔐 Change Password")
 
-        old_pass = st.text_input("Current Password", type="password")
-        new_pass = st.text_input("New Password", type="password")
-        confirm_pass = st.text_input("Confirm New Password", type="password")
+            old_pass = st.text_input("Current Password", type="password")
+            new_pass = st.text_input("New Password", type="password")
+            confirm = st.text_input("Confirm New Password", type="password")
 
-        if st.button("Update Password"):
-            if not verify_password(user_df["passwordhash"], old_pass):
-                st.error("❌ Current password incorrect")
-                st.stop()
+            if st.button("Update Password"):
+                if not verify_password(user_df["passwordhash"], old_pass):
+                    st.error("❌ Current password incorrect")
+                    st.stop()
 
-            if new_pass != confirm_pass:
-                st.error("❌ Passwords do not match")
-                st.stop()
+                if new_pass != confirm:
+                    st.error("❌ Passwords do not match")
+                    st.stop()
 
-            hashed = hash_password(new_pass)
+                AUTH_SHEET.update_cell(
+                    auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2,
+                    get_col_index(auth_df, "passwordhash"),
+                    hash_password(new_pass),
+                )
 
-            row_idx = auth_df[auth_df["userid"] == st.session_state.user_id].index[0] + 2
-            pass_col = get_col_index(auth_df, "passwordhash")
+                load_auth_data.clear()
+                st.success("✅ Password updated successfully")
+                st.session_state.show_change_password = False
+                st.rerun()
 
-            AUTH_SHEET.update_cell(row_idx, pass_col, hashed)
-            load_auth_data.clear()
-
-            st.success("✅ Password updated successfully")
-            st.rerun()
-        
         # ==================================================
-        # ADMIN USER MANAGEMENT
+        # ADMIN SECTION
         # ==================================================
         if st.session_state.user_role == "Admin":
-
             st.divider()
-            st.subheader("➕ Create New User")
 
-            with st.form("create_user_form"):
-                username = st.text_input("Username")
-                name = st.text_input("Full Name")
-                email = st.text_input("Email")
-                phone = st.text_input("Phone")
-                role = st.selectbox("Role", ["User", "Admin"])
-                access = st.selectbox("Access Level", ["Low", "Medium", "High"])
+            a1, a2 = st.columns([6, 4])
 
-                if st.form_submit_button("Create User"):
+            with a2:
+                if st.button(
+                    "➕ Create User"
+                    if not st.session_state.show_create_user
+                    else "❌ Cancel Create"
+                ):
+                    st.session_state.show_create_user = (
+                        not st.session_state.show_create_user
+                    )
+                    st.rerun()
 
-                    temp_password = generate_otp()
-                    hashed = hash_password(temp_password)
+                if st.button(
+                    "✏️ Edit Mode"
+                    if not st.session_state.user_edit_mode
+                    else "👁 Display Mode"
+                ):
+                    st.session_state.user_edit_mode = (
+                        not st.session_state.user_edit_mode
+                    )
+                    st.rerun()
 
-                    new_userid = f"U{int(datetime.now().timestamp())}"
+            # ---------- CREATE USER FORM ----------
+            if st.session_state.show_create_user:
+                st.subheader("➕ Create New User")
 
-                    AUTH_SHEET.append_row([
-                        new_userid,
-                        username,
-                        name,
-                        email,
-                        phone,
-                        hashed,
-                        role,
-                        access,
-                        "Active",
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    ])
+                with st.form("create_user_form"):
+                    username = st.text_input("Username")
+                    name = st.text_input("Full Name")
+                    email = st.text_input("Email")
+                    phone = st.text_input("Phone")
+                    role = st.selectbox("Role", ["User", "Admin"])
+                    access = st.selectbox("Access Level", ["Low", "Medium", "High"])
 
-                    load_auth_data.clear()
+                    if st.form_submit_button("Create User"):
+                        temp_password = generate_otp()
+                        hashed = hash_password(temp_password)
 
-                    try:
-                        send_temp_password_email(email, username, temp_password)
-                        st.success("✅ User created and email sent")
-                    except Exception as e:
-                        st.warning(
-                            "⚠️ User created, but email could not be sent. "
-                            "Please share the temporary password manually."
+                        AUTH_SHEET.append_row(
+                            [
+                                f"U{int(datetime.now().timestamp())}",
+                                username,
+                                name,
+                                email,
+                                phone,
+                                hashed,
+                                role,
+                                access,
+                                "Active",
+                                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            ]
                         )
 
+                        load_auth_data.clear()
 
-                    st.success("✅ User created and email sent")
-            st.subheader("📋 All Users")
+                        try:
+                            send_temp_password_email(email, username, temp_password)
+                            st.success("✅ User created & email sent")
+                        except:
+                            st.warning(
+                                "⚠️ User created, but email failed. Share password manually."
+                            )
 
-            st.dataframe(
-                auth_df[[
-                    "userid", "username", "name",
-                    "email", "phone", "role",
-                    "accesslevel", "status"
-                ]]
-            )
+                        st.session_state.show_create_user = False
+                        st.rerun()
+
+            # ---------- USER CARDS ----------
+            st.subheader("👥 All Users")
+
+            cols = st.columns(3)
+            for i, r in auth_df.iterrows():
+                with cols[i % 3]:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background:#0f172a;
+                            color:white;
+                            padding:14px;
+                            border-radius:14px;
+                            box-shadow:0 6px 14px rgba(0,0,0,.25)
+                        ">
+                            <b>{r['name']}</b><br>
+                            @{r['username']}<br>
+                            {r['email']}<br>
+                            Role: {r['role']}<br>
+                            Status: {r['status']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    if st.session_state.user_edit_mode:
+                        st.button(f"✏️ Edit {r['username']}")
 
 
 
