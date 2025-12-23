@@ -216,7 +216,7 @@ if not st.session_state.authenticated:
             st.error("❌ User not found")
         else:
             row = user_data.iloc[0]
-            if verify_password(row["password"], password):
+            if verify_password(row["passwordhash"], password):
                 st.session_state.authenticated = True
                 st.session_state.user_role = row["role"]
                 st.session_state.username = username
