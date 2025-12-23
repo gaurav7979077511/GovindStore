@@ -17,7 +17,7 @@ from email.message import EmailMessage
 from datetime import datetime, timedelta 
 
 
-Live_Link="https://newdairytest.streamlit.app/~/+/"
+
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
@@ -218,89 +218,22 @@ If you did not request this, please ignore this email.
         smtp.send_message(msg)
 
 
-def send_temp_password_email(to_email, name, username, temp_password):
+def send_temp_password_email(to_email,name, username, temp_password):
     msg = EmailMessage()
-
-    # ✅ Subject must be f-string
-    msg["Subject"] = f"Dear {name}, Your Account Has Been Created"
+    msg["Subject"] = "Dear {name} Your Account Has Been Created"
     msg["From"] = st.secrets["EMAIL_USER"]
     msg["To"] = to_email
 
-    # ---------- HTML EMAIL (ATTRACTIVE) ----------
-    msg.add_alternative(f"""
-    <html>
-    <body style="font-family:Arial,Helvetica,sans-serif;
-                 background:#f8fafc;
-                 padding:20px;">
-
-        <div style="
-            max-width:520px;
-            margin:auto;
-            background:#ffffff;
-            padding:24px;
-            border-radius:12px;
-            box-shadow:0 8px 20px rgba(0,0,0,0.12);
-        ">
-
-            <h2 style="color:#0f172a;">Welcome {name} 👋</h2>
-
-            <p>Your account has been created successfully.</p>
-
-            <div style="
-                background:#f1f5f9;
-                padding:14px;
-                border-radius:8px;
-                margin:16px 0;
-            ">
-                <b>Temporary Login Credentials</b><br><br>
-                👤 <b>Username:</b> {username}<br>
-                🔑 <b>Password:</b> {temp_password}
-            </div>
-
-            <p>
-                👉 Click the button below to login and update your password:
-            </p>
-
-            <a href="{Live_Link}"
-               style="
-                   display:inline-block;
-                   background:#2563eb;
-                   color:white;
-                   text-decoration:none;
-                   padding:12px 20px;
-                   border-radius:8px;
-                   font-weight:bold;
-                   margin:10px 0;
-               ">
-               🔐 Click Here to Login
-            </a>
-
-            <p style="margin-top:20px;color:#475569;">
-                For security reasons, please change your password immediately
-                after logging in.
-            </p>
-
-            <p style="margin-top:30px;">
-                Regards,<br>
-                <b>Dairy Farm Management Team</b>
-            </p>
-
-        </div>
-    </body>
-    </html>
-    """, subtype="html")
-
-    # ---------- PLAIN TEXT FALLBACK ----------
     msg.set_content(f"""
         Hello {name},
 
         Your account has been created successfully.
 
         Temporary Login Credentials:
+        --------------------------------
         Username: {username}
-        Password: {temp_password}
-
-        Login here: {Live_Link}
+        Temporary Password: {temp_password}
+        --------------------------------
 
         Please log in and change your password immediately.
 
