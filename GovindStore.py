@@ -3802,7 +3802,7 @@ else:
                         border-radius: 18px;
                         box-shadow: 0 12px 30px rgba(0,0,0,0.35);
                         border: 1px solid rgba(255,255,255,0.08);
-                        min-height: 120px;
+                        min-height: 110px;
                         font-family: Inter, system-ui, sans-serif;
                         transition: transform .2s ease, box-shadow .2s ease;
                     ">
@@ -3884,6 +3884,7 @@ else:
                         if st.button(f"✏️ Edit {r['username']}", key=f"edit_{r['userid']}"):
                             st.session_state.edit_user_id = r["userid"]
                             st.session_state.show_edit_user = True
+                            use_container_width=True
                             st.rerun()
             # ==================================================
             # ADMIN EDIT USER PANEL
