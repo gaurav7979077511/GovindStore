@@ -226,6 +226,8 @@ defaults = {
     "otp_sent": False,
     "otp_verified": False
 }
+if "reset_step" not in st.session_state:
+    st.session_state.reset_step = "username"
 
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
@@ -243,14 +245,14 @@ if not st.session_state.authenticated:
     def get_col_index(df, col_name):
         return df.columns.tolist().index(col_name.lower()) + 1
     # =================== FORGOT PASSWORD ===================
+    # =================== FORGOT PASSWORD ===================
     if forgot_mode:
         st.subheader("🔐 Forgot Password")
 
-        # STEP 1: SEND OTP
-        # STEP 1: SEND OTP (USERNAME BASED)
-        if not st.session_state.otp_sent:
+        # STEP 1 — ENTER USERNAME
+        if st.session_state.reset_step == "username":
 
-            username_input = st.text_input("Username")
+            username_input = st.text_input("Username", key="reset_username")
 
             if st.button("Send OTP"):
 
@@ -260,7 +262,6 @@ if not st.session_state.authenticated:
                     st.error("❌ Username not found")
                     st.stop()
 
-                # Fetch registered email silently
                 registered_email = user.iloc[0]["email"]
 
                 otp = generate_otp()
@@ -268,21 +269,27 @@ if not st.session_state.authenticated:
                 st.session_state.reset_userid = user.iloc[0]["userid"]
                 st.session_state.otp = otp
                 st.session_state.otp_expiry = datetime.now() + timedelta(minutes=5)
-                st.session_state.otp_sent = True
+
+                # 👉 move to OTP screen
+                st.session_state.reset_step = "otp"
+
+                # 👉 clear username field
+                st.session_state.pop("reset_username", None)
 
                 send_otp_email(registered_email, otp)
 
                 st.success(
-                    "✅ OTP sent to your registered email. "
-                    "Please check your inbox."
+                    "✅ OTP sent to your registered email. Please check your inbox."
                 )
+                st.rerun()
 
+        # STEP 2 — VERIFY OTP
+        elif st.session_state.reset_step == "otp":
 
-        # STEP 2: VERIFY OTP
-        elif not st.session_state.otp_verified:
-            entered_otp = st.text_input("Enter OTP")
+            entered_otp = st.text_input("Enter OTP", key="reset_otp")
 
             if st.button("Verify OTP"):
+
                 if entered_otp != st.session_state.otp:
                     st.error("❌ Invalid OTP")
                     st.stop()
@@ -291,17 +298,23 @@ if not st.session_state.authenticated:
                     st.error("❌ OTP expired")
                     st.stop()
 
-                st.session_state.otp_verified = True
+                # 👉 move to password screen
+                st.session_state.reset_step = "password"
+
+                # 👉 clear OTP field
+                st.session_state.pop("reset_otp", None)
+
                 st.success("✅ OTP verified")
+                st.rerun()
 
-        # STEP 3: RESET PASSWORD
+        # STEP 3 — RESET PASSWORD
+        elif st.session_state.reset_step == "password":
 
-
-        else:
             new_pass = st.text_input("New Password", type="password")
             confirm = st.text_input("Confirm Password", type="password")
 
             if st.button("Update Password"):
+
                 if new_pass != confirm:
                     st.error("❌ Passwords do not match")
                     st.stop()
@@ -310,28 +323,35 @@ if not st.session_state.authenticated:
 
                 row_idx = auth_df[auth_df["userid"] == st.session_state.reset_userid].index[0] + 2
                 password_col = get_col_index(auth_df, "passwordhash")
-                AUTH_SHEET.update_cell(row_idx, password_col, hashed)
                 date_col = get_col_index(auth_df, "lastpasswordchange")
+
+                AUTH_SHEET.update_cell(row_idx, password_col, hashed)
                 AUTH_SHEET.update_cell(
                     row_idx,
                     date_col,
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 )
 
+                load_auth_data.clear()
 
+                st.success("✅ Password updated successfully")
 
-                st.success("✅ Password updated")
-
-                # CLEANUP
-                for k in ["otp", "otp_sent", "otp_verified", "reset_userid", "otp_expiry"]:
+                # 👉 CLEAN ALL RESET STATE
+                for k in [
+                    "reset_step",
+                    "reset_userid",
+                    "otp",
+                    "otp_expiry"
+                ]:
                     st.session_state.pop(k, None)
-                # 🔄 Clear cached auth data
+                    
                 load_auth_data.clear()
                 st.query_params.clear()
                 st.rerun()
 
         st.markdown("⬅️ [Back to Login](?)")
         st.stop()
+
 
     # =================== LOGIN ===================
     st.title("🔒 Secure Login")
