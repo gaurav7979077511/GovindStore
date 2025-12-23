@@ -225,21 +225,21 @@ def send_temp_password_email(to_email, username, temp_password):
     msg["To"] = to_email
 
     msg.set_content(f"""
-Hello {username},
+        Hello {username},
 
-Your account has been created successfully.
+        Your account has been created successfully.
 
-Temporary Login Credentials:
---------------------------------
-Username: {username}
-Temporary Password: {temp_password}
---------------------------------
+        Temporary Login Credentials:
+        --------------------------------
+        Username: {username}
+        Temporary Password: {temp_password}
+        --------------------------------
 
-Please log in and change your password immediately.
+        Please log in and change your password immediately.
 
-Regards,
-Dairy Farm Management Team
-""")
+        Regards,
+        Dairy Farm Management Team
+        """)
                     
 
 def mask_email(email: str) -> str:
