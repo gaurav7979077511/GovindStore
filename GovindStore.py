@@ -1225,7 +1225,7 @@ else:
     
                 wallet_user_name = ""
 
-                if destination == "User Wallet" and wallet_user_id:
+                if destination != "Company Account" and wallet_user_id:
                     wallet_user_name = auth_df.loc[
                         auth_df["userid"] == wallet_user_id, "name"
                     ].iloc[0]
