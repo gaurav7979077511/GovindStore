@@ -3969,27 +3969,42 @@ else:
                         components.html(card_html, height=160)
 
                         # Show Edit button ONLY if user is editable
+                        # Full-width Edit button (always rendered for alignment)
                         if st.session_state.user_edit_mode:
 
-                            allowed_roles = {"User", "Manager",""}
-                            allowed_access = {"E-riksha", "Dairy",""}
+                            allowed_roles = {"User", "Manager"}
+                            allowed_access = {"E-riksha", "Dairy"}
 
                             user_role = r.get("role", "")
                             user_access = r.get("accesslevel", "") or ""
 
-                            # Check conditions
-                            is_role_allowed = user_role in allowed_roles
-                            is_access_allowed = any(a in user_access for a in allowed_access)
+                            role_ok = user_role in allowed_roles
+                            access_ok = any(a in user_access for a in allowed_access)
 
-                            if is_role_allowed and is_access_allowed:
-                                if st.button(
-                                    "✏️ Edit",
-                                    key=f"edit_user_{r['userid']}",
-                                    use_container_width=True
-                                ):
+                            can_edit = role_ok and access_ok
+
+                            # Reason message for disabled state
+                            if not role_ok and not access_ok:
+                                reason = "Role & Access level mismatch"
+                            elif not role_ok:
+                                reason = "Role mismatch"
+                            elif not access_ok:
+                                reason = "Access level mismatch"
+                            else:
+                                reason = "Edit user details"
+
+                            if st.button(
+                                "✏️ Edit",
+                                key=f"edit_user_{r['userid']}",
+                                use_container_width=True,
+                                disabled=not can_edit,
+                                help=reason
+                            ):
+                                if can_edit:
                                     st.session_state.edit_user_id = r["userid"]
                                     st.session_state.show_edit_user = True
                                     st.rerun()
+
 
 
             # ==================================================
