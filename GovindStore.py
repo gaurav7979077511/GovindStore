@@ -898,7 +898,7 @@ else:
                         [
                             f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                             st.session_state.user_id,
-                            st.session_state.username,
+                            st.session_state.user_name,
                             amount,
                             "DEBIT",
                             expense_id,
@@ -1549,7 +1549,7 @@ else:
                         [
                             f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
                             st.session_state.user_id,
-                            st.session_state.username,
+                            st.session_state.user_name,
                             received_amt,
                             "CREDIT",
                             bill["BillID"],
