@@ -2195,7 +2195,9 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    tagnumber = st.text_input("Tag Number")
+                    tag_input = st.text_input("Tag Number", placeholder="e.g. 123")
+                    tagnumber = f"TAG-{tag_input.strip()}" if tag_input.strip() else ""
+
                     gender = st.selectbox("Gender", ["Female", "Male"])
                     breed = st.text_input("Breed")
     
