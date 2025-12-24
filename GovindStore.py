@@ -3402,20 +3402,20 @@ else:
 
             # No data or only header
             if not rows or len(rows) <= 1:
-                return pd.DataFrame(columns=["CowID", "Status"])
+                return pd.DataFrame(columns=["TagNumber", "Status"])
 
             df = pd.DataFrame(rows[1:], columns=rows[0])
 
             # ---- Safety: ensure required columns ----
-            if "CowID" not in df.columns:
-                st.error("❌ CowID column missing in Cow Master")
+            if "TagNumber" not in df.columns:
+                st.error("❌ TagNumber column missing in Cow Master")
                 st.stop()
 
             if "Status" not in df.columns:
                 df["Status"] = "Active"  # default fallback
 
             # ---- Clean values ----
-            df["CowID"] = df["CowID"].astype(str).str.strip()
+            df["TagNumber"] = df["TagNumber"].astype(str).str.strip()
             df["Status"] = df["Status"].astype(str).str.strip()
 
             return df
@@ -3497,9 +3497,9 @@ else:
 
             with st.form("give_med_form"):
 
-                cow_id = st.selectbox(
-                    "Cow ID",
-                    cows_df["CowID"].tolist()
+                TagNumber = st.selectbox(
+                    "TagNumber",
+                    cows_df["TagNumber"].tolist()
                 )
 
                 dose_text = st.text_input(
@@ -3563,7 +3563,7 @@ else:
                 open_med_log().append_row(
                     [
                         f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
-                        cow_id,
+                        TagNumber,
                         med_id,
                         medicine_name,
                         dose_given,
