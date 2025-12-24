@@ -3535,13 +3535,22 @@ else:
             # ---------- SAVE ----------
             if save:
 
-                if dose_given > med_row["StockAvailable"]:
+                # 1️⃣ Validate input exists
+                if not dose_given:
+                    st.error("❌ Please enter dose given")
+                    st.stop()
+
+                # 2️⃣ Convert to float safely
+                try:
+                    dose_given = float(dose_given)
+                except ValueError:
+                    st.error("❌ Dose must be a number")
+                    st.stop()
+
+                # 3️⃣ Compare with stock
+                if dose_given > float(med_row["StockAvailable"]):
                     st.error("❌ Not enough stock available")
                     st.stop()
-                if save:
-                    if dose_given is None:
-                        st.error("❌ Please enter dose given")
-                        st.stop()
 
 
                 now = pd.Timestamp.now()
