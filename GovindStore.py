@@ -1079,11 +1079,11 @@ else:
             auth_df["accesslevel"]
             .fillna("")
             .str.contains(r"\bdairy\b", case=False)
-        ][["userid", "name", "email"]]
+        ][["userid", "name"]]
 
         # userid -> display label
         user_label_map = {
-            row["userid"]: f"{row['name']} ({row['email']})"
+            row["userid"]: f"{row['name']}"
             for _, row in dairy_users_df.iterrows()
         }
 
@@ -1183,8 +1183,14 @@ else:
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        options=["Company Account"] + list(user_label_map.keys())
+                        options=["Company Account"] + list(user_label_map.keys()),
+                        format_func=lambda x: (
+                            "Company Account"
+                            if x == "Company Account"
+                            else user_label_map[x]
+                        ),
                     )
+
 
 
                 # Single source of truth
