@@ -611,7 +611,7 @@ else:
     
                     for _, cow in cows_df.iterrows():
                         qty = st.text_input(
-                            f"{cow['TagNumber']} ({cow['CowID']})",
+                            f"COW: {cow['TagNumber']}",
                             placeholder="Milk in litres",
                             key=f"{shift}_{cow['CowID']}"
                         )
