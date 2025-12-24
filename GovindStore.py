@@ -2160,7 +2160,7 @@ else:
     
         CURRENT_YEAR = dt.datetime.now().year
     
-    
+        df = load_cows()
         # ======================================================
         # STATE
         # ======================================================
@@ -2183,7 +2183,24 @@ else:
                         ws.update_cell(i, header.index(k) + 1, v)
                     return True
             return False
-    
+        def generate_next_tag(df, prefix="TAG-", pad=4):
+            if "TagNumber" not in df.columns or df["TagNumber"].dropna().empty:
+                return f"{prefix}{str(1).zfill(pad)}"
+
+            # Extract numeric part safely
+            numbers = (
+                df["TagNumber"]
+                .dropna()
+                .astype(str)
+                .str.replace(prefix, "", regex=False)
+                .str.extract(r"(\d+)")
+                .dropna()
+                .astype(int)
+            )
+
+            next_number = numbers.max().iloc[0] + 1
+            return f"{prefix}{str(next_number).zfill(pad)}"
+
         # ======================================================
         # ADD COW
         # ======================================================
@@ -2195,8 +2212,14 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    tag_input = st.text_input("Tag Number", placeholder="e.g. 123")
-                    tagnumber = f"TAG-{tag_input.strip()}" if tag_input.strip() else ""
+                    next_tag_number = generate_next_tag(df)
+
+                    st.text_input(
+                        "Tag Number",
+                        value=next_tag_number,
+                        disabled=True
+                    )
+
 
                     gender = st.selectbox("Gender", ["Female", "Male"])
                     breed = st.text_input("Breed")
@@ -2264,7 +2287,7 @@ else:
                     [
                         cow_id,
                         parent,
-                        tagnumber,
+                        next_tag_number,
                         gender,
                         breed,
                         age,
@@ -2303,7 +2326,7 @@ else:
                     st.session_state.edit_cow_id = None
                     st.rerun()
 
-        df = load_cows()
+        
     
         if df.empty:
             st.info("No cow records found.")
