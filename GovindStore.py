@@ -1533,7 +1533,7 @@ else:
                     open_wallet_sheet().append_row(
                         [
                             f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
-                            st.session_state.user_name,
+                            st.session_state.user_id,
                             received_amt,
                             "CREDIT",
                             bill["BillID"],
