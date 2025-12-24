@@ -2379,12 +2379,13 @@ else:
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
                 match = df.loc[
-                    df["CowId"].astype(str).str.strip()
+                    df["CowID"].astype(str).str.strip()
                     == str(row.get("ParentCowID", "")).strip(),
                     "TagNumber"
                 ]
 
                 parent_tag_number = match.iloc[0] if not match.empty else None
+
 
 
 
