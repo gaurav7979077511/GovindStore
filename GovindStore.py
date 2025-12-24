@@ -1232,7 +1232,7 @@ else:
 
                 final_destination = (
                     f"User Wallet: {wallet_user_name}"
-                    if destination == "User Wallet"
+                    if destination != "Company Account"
                     else "Company Account"
                 )
 
