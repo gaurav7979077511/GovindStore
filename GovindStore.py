@@ -4004,11 +4004,21 @@ else:
                         index=["User", "Manager"].index(edit_df["role"]),
                     )
 
+                    # Fetch existing access level safely
+                    existing_access = edit_df.get("accesslevel", "")
+
+                    # Convert stored string → list
+                    default_access = (
+                        [x.strip() for x in existing_access.split(",")]
+                        if existing_access else []
+                    )
+
                     access_list = st.multiselect(
                         "Access Level",
                         ["E-riksha", "Dairy"],
-                        default=[]
+                        default=default_access
                     )
+
                     access = ",".join(access_list)
 
                     status = st.selectbox(
