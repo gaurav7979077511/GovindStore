@@ -2202,8 +2202,21 @@ else:
                 with c2:
                     age = st.number_input("Age (Years)", value=None, step=1)
                     df = load_cows()
-                    parents = df[df["Status"] == "Active"]["TagNumber"].tolist()
-                    parent = st.selectbox("Parent Cow (Optional)", [""] + parents)
+                    active_parents_df = df[df["Status"] == "Active"][["CowID", "TagNumber"]]
+
+                    cowid_to_tag = dict(
+                        zip(
+                            active_parents_df["CowID"],
+                            active_parents_df["TagNumber"]
+                        )
+                    )
+                    parent = st.selectbox(
+                        "Parent Cow (Optional)",
+                        options=[""] + list(cowid_to_tag.keys()),
+                        format_func=lambda x: "" if x == "" else cowid_to_tag.get(x, x)
+                    )
+
+
     
                     if parent:
                         dob = st.date_input("Date of Birth")
