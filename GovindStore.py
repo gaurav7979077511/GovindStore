@@ -3972,8 +3972,8 @@ else:
                         # Full-width Edit button (always rendered for alignment)
                         if st.session_state.user_edit_mode:
 
-                            allowed_roles = {"User", "Manager"}
-                            allowed_access = {"E-riksha", "Dairy"}
+                            allowed_roles = {"User", "Manager",""}
+                            allowed_access = {"E-riksha", "Dairy",""}
 
                             user_role = r.get("role", "")
                             user_access = r.get("accesslevel", "") or ""
