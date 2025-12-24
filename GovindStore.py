@@ -2200,7 +2200,7 @@ else:
                     breed = st.text_input("Breed")
     
                 with c2:
-                    age = st.number_input("Age (Years)", min_value=0, step=1)
+                    age = st.number_input("Age (Years)", value=None, step=1)
                     df = load_cows()
                     parents = df[df["Status"] == "Active"]["TagNumber"].tolist()
                     parent = st.selectbox("Parent Cow (Optional)", [""] + parents)
