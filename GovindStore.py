@@ -502,7 +502,7 @@ else:
     # ============================================================
     
     COW_HEADER = [
-        "CowID","ParentCowID","AnimalType","Gender","Breed",
+        "CowID","ParentCowID","TagNumber","Gender","Breed",
         "AgeYears","PurchaseDate","PurchasePrice",
         "SoldPrice","SoldDate",
         "Status","MilkingStatus",
@@ -550,7 +550,7 @@ else:
         st.title("🥛 Milking")
     
         MILKING_HEADER = [
-            "Date", "Shift", "CowID", "AnimalType", "MilkQuantity", "Timestamp"
+            "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
         ]
     
         # ================== SHEET HELPERS ==================
@@ -611,7 +611,7 @@ else:
     
                     for _, cow in cows_df.iterrows():
                         qty = st.text_input(
-                            f"{cow['CowID']} ({cow['AnimalType']})",
+                            f"{cow['TagNumber']} ({cow['CowID']})",
                             placeholder="Milk in litres",
                             key=f"{shift}_{cow['CowID']}"
                         )
@@ -635,7 +635,7 @@ else:
     
                     for cow, qty in entries:
                         if not qty.strip():
-                            st.error(f"Milk quantity required for {cow['CowID']}")
+                            st.error(f"Milk quantity required for {cow['TagNumber']}")
                             has_error = True
                             break
     
@@ -645,7 +645,7 @@ else:
                             (df_existing["Shift"] == shift) &
                             (df_existing["CowID"] == cow["CowID"])
                         ).any():
-                            st.error(f"Duplicate entry found for {cow['CowID']}")
+                            st.error(f"Duplicate entry found for {cow['TagNumber']}")
                             has_error = True
                             break
     
@@ -653,7 +653,7 @@ else:
                             date_str,
                             shift,
                             cow["CowID"],
-                            cow["AnimalType"],
+                            cow["TagNumber"],
                             float(qty),
                             ts
                         ])
@@ -2195,7 +2195,7 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    animal = st.selectbox("Animal Type", ["Cow", "Buffalo"])
+                    tagnumber = st.text_input("Tag Number")
                     gender = st.selectbox("Gender", ["Female", "Male"])
                     breed = st.text_input("Breed")
     
@@ -2241,7 +2241,7 @@ else:
                     st.error("❌ Sold Price and Sold Date are required")
                     st.stop()
     
-                prefix = "COW" if animal == "Cow" else "BUF"
+                prefix = "COW" 
                 cow_id = f"{prefix}{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
                 birth_year = CURRENT_YEAR - int(age)
     
@@ -2249,7 +2249,7 @@ else:
                     [
                         cow_id,
                         parent,
-                        animal,
+                        tagnumber,
                         gender,
                         breed,
                         age,
@@ -2305,7 +2305,7 @@ else:
                     c1, c2, c3 = st.columns(3)
 
                     with c1:
-                        e_breed = st.text_input("Breed", row["Breed"])
+                        e_tagnumber = st.text_input("TagNumber",value=tagnumber)
                         e_age = st.number_input("Age (Years)", min_value=0, value=age, step=1)
 
                     with c2:
@@ -2351,7 +2351,7 @@ else:
                     update_cow_by_id(
                         row["CowID"],
                         {
-                            "Breed": e_breed,
+                            "TagNumber": e_tagnumber,
                             "AgeYears": e_age,
                             "Status": e_status,
                             "MilkingStatus": e_milking,
@@ -2419,8 +2419,8 @@ else:
                         align-items:center;
                         gap:6px;
                     ">
-                        {'🐄' if row['AnimalType'] == 'Cow' else '🐃'}
-                        <span>{row['CowID']}</span>
+                        '🐄' 
+                        <span>{row['tagnumber']}</span>
                     </div>
 
                     <!-- Info -->
