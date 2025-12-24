@@ -3968,16 +3968,29 @@ else:
 
                         components.html(card_html, height=160)
 
-                        # Full-width Edit button
+                        # Show Edit button ONLY if user is editable
                         if st.session_state.user_edit_mode:
-                            if st.button(
-                                "✏️ Edit",
-                                key=f"edit_user_{r['userid']}",
-                                use_container_width=True
-                            ):
-                                st.session_state.edit_user_id = r["userid"]
-                                st.session_state.show_edit_user = True
-                                st.rerun()
+
+                            allowed_roles = {"User", "Manager"}
+                            allowed_access = {"E-riksha", "Dairy"}
+
+                            user_role = r.get("role", "")
+                            user_access = r.get("accesslevel", "") or ""
+
+                            # Check conditions
+                            is_role_allowed = user_role in allowed_roles
+                            is_access_allowed = any(a in user_access for a in allowed_access)
+
+                            if is_role_allowed and is_access_allowed:
+                                if st.button(
+                                    "✏️ Edit",
+                                    key=f"edit_user_{r['userid']}",
+                                    use_container_width=True
+                                ):
+                                    st.session_state.edit_user_id = r["userid"]
+                                    st.session_state.show_edit_user = True
+                                    st.rerun()
+
 
             # ==================================================
             # ADMIN EDIT USER PANEL
