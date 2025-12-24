@@ -1054,12 +1054,6 @@ else:
         # =========================================================
 
     
-        cloudinary.config(
-            cloud_name=st.secrets["cloudinary"]["cloud_name"],
-            api_key=st.secrets["cloudinary"]["api_key"],
-            api_secret=st.secrets["cloudinary"]["api_secret"],
-            secure=True,
-        )
     
         def upload_to_cloudinary(file):
             result = cloudinary.uploader.upload(
@@ -1081,16 +1075,18 @@ else:
         # =========================================================
         # DAIRY USERS (SAFE)
         # =========================================================
-        dairy_users = (
-            auth_df[
-                auth_df["accesslevel"]
-                .fillna("")
-                .str.contains(r"\bdairy\b", case=False)
-            ]["name"]
-            .unique()
-            .tolist()
-        )
-    
+        dairy_users_df = auth_df[
+            auth_df["accesslevel"]
+            .fillna("")
+            .str.contains(r"\bdairy\b", case=False)
+        ][["userid", "name", "email"]]
+
+        # userid -> display label
+        user_label_map = {
+            row["userid"]: f"{row['name']} ({row['email']})"
+            for _, row in dairy_users_df.iterrows()
+        }
+
         # =========================================================
         # KPI SECTION
         # =========================================================
@@ -1136,7 +1132,7 @@ else:
 
         # --- Overall + Per User Cards (hide zero users) ---
         visible_users = []
-        for u in dairy_users:
+        for u in dairy_users_df:
             if investment_df[investment_df["InvestedBy"] == u]["Amount"].sum() > 0:
                 visible_users.append(u)
     
@@ -1165,7 +1161,7 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    invested_by = st.selectbox("Invested By", dairy_users)
+                    invested_by = st.session_state.user_name
                     amount = st.number_input(
                         "Amount",
                         min_value=0.0,
@@ -1187,12 +1183,27 @@ else:
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        ["Company Account"] + dairy_users,
+                        options=["Company Account"] + list(user_label_map.keys()),
+                        format_func=lambda x: (
+                            "Company Account"
+                            if x == "Company Account"
+                            else f"User Wallet: {user_label_map.get(x)}"
+                        ),
                     )
+
     
-                    wallet_user = ""
-                    if destination == "User Wallet":
-                        wallet_user = st.selectbox("Select User Wallet", dairy_users)
+                    wallet_user_id = None
+
+                    if destination != "Company Account":
+                        wallet_user_id = st.selectbox(
+                            "Select User Wallet",
+                            options=dairy_users_df["userid"].tolist(),
+                            format_func=lambda uid: (
+                                f"{dairy_users_df.loc[dairy_users_df['userid'] == uid, 'name'].values[0]}"
+                                f" ({dairy_users_df.loc[dairy_users_df['userid'] == uid, 'email'].values[0]})"
+                            )
+                        )
+
     
                 with c3:
                     proof = st.file_uploader(
@@ -1212,17 +1223,26 @@ else:
                     st.error("❌ Amount must be greater than 0")
                     st.stop()
     
+                wallet_user_name = ""
+
+                if destination == "User Wallet" and wallet_user_id:
+                    wallet_user_name = auth_df.loc[
+                        auth_df["userid"] == wallet_user_id, "name"
+                    ].iloc[0]
+
                 final_destination = (
-                    f"User Wallet: {wallet_user}"
+                    f"User Wallet: {wallet_user_name}"
                     if destination == "User Wallet"
                     else "Company Account"
                 )
+
     
                 file_url = upload_to_cloudinary(proof) if proof else ""
+                InvestmentID=f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     
                 open_investment_sheet().append_row(
                     [
-                        f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        InvestmentID,
                         dt.date.today().strftime("%Y-%m-%d"),
                         invested_by,
                         amount,
@@ -1234,13 +1254,27 @@ else:
                     ],
                     value_input_option="USER_ENTERED",
                 )
+
+                # ---- WALLET TXN ----
+                open_wallet_sheet().append_row(
+                        [
+                            f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+                            wallet_user_id,
+                            wallet_user_name,
+                            amount,
+                            "CREDIT",
+                            InvestmentID,
+                            f"Investment Amount From {st.session_state.user_name}",
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
     
                 st.success("Investment added successfully ✅")
                 st.session_state.show_add_investment = False
                 st.rerun()
     
         st.divider()
-    
     
         # =========================================================
         # INVESTMENT LIST
