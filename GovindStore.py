@@ -1081,6 +1081,7 @@ else:
             .str.contains(r"\bdairy\b", case=False)
         ][["userid", "name", "email"]]
 
+        # userid -> display label
         user_label_map = {
             row["userid"]: f"{row['name']} ({row['email']})"
             for _, row in dairy_users_df.iterrows()
@@ -1160,7 +1161,7 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    invested_by = st.selectbox("Invested By", dairy_users)
+                    invested_by = st.session_state.user_name
                     amount = st.number_input(
                         "Amount",
                         min_value=0.0,
