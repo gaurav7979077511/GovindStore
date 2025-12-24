@@ -2419,7 +2419,7 @@ else:
                         align-items:center;
                         gap:6px;
                     ">
-                        '🐄' 
+                        🐄 
                         <span>{row['TagNumber']}</span>
                     </div>
 
