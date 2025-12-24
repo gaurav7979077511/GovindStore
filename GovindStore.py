@@ -1161,7 +1161,12 @@ else:
                 c1, c2, c3 = st.columns(3)
     
                 with c1:
-                    invested_by = st.session_state.user_name
+                    st.text_input(
+                        "invested_by",
+                        value=st.session_state.user_name,
+                        disabled=True
+                    )
+
                     amount = st.number_input(
                         "Amount",
                         min_value=0.0,
@@ -1244,7 +1249,7 @@ else:
                     [
                         InvestmentID,
                         dt.date.today().strftime("%Y-%m-%d"),
-                        invested_by,
+                        st.session_state.user_name,
                         amount,
                         inv_type,
                         final_destination,
