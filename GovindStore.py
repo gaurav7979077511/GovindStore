@@ -1183,26 +1183,20 @@ else:
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        options=["Company Account"] + list(user_label_map.keys()),
-                        format_func=lambda x: (
-                            "Company Account"
-                            if x == "Company Account"
-                            else f"User Wallet: {user_label_map.get(x)}"
-                        ),
+                        options=["Company Account"] + list(user_label_map.keys())
                     )
 
-    
-                    wallet_user_id = None
 
-                    if destination != "Company Account":
-                        wallet_user_id = st.selectbox(
-                            "Select User Wallet",
-                            options=dairy_users_df["userid"].tolist(),
-                            format_func=lambda uid: (
-                                f"{dairy_users_df.loc[dairy_users_df['userid'] == uid, 'name'].values[0]}"
-                                f" ({dairy_users_df.loc[dairy_users_df['userid'] == uid, 'email'].values[0]})"
-                            )
-                        )
+                # Single source of truth
+                wallet_user_id = None
+                wallet_user_name = None
+
+                if destination != "Company Account":
+                    wallet_user_id = destination
+                    wallet_user_name = auth_df.loc[
+                        auth_df["userid"] == destination, "name"
+                    ].iloc[0]
+
 
     
                 with c3:
