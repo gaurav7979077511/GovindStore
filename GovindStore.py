@@ -2413,7 +2413,7 @@ else:
 
                     <!-- Header -->
                     <div style="
-                        font-size:14.5px;
+                        font-size:18.5px;
                         font-weight:600;
                         display:flex;
                         align-items:center;
