@@ -184,6 +184,8 @@ def load_auth_data():
 
 auth_df = load_auth_data()
 
+def open_wallet_sheet():
+            return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
 # ============================================================
 # HELPERS
 # ============================================================
@@ -890,6 +892,20 @@ else:
                     ],
                     value_input_option="USER_ENTERED"
                 )
+
+                # ---- WALLET TXN ----
+                open_wallet_sheet().append_row(
+                        [
+                            f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+                            st.session_state.user_id,
+                            amount,
+                            "DEBIT",
+                            expense_id,
+                            f"Amount used for  {category}",
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
     
                 st.success("✅ Expense saved successfully")
                 st.session_state.show_expense_form = False
@@ -1315,8 +1331,6 @@ else:
         def open_payment_sheet():
             return open_sheet(MAIN_SHEET_ID, PAYMENT_TAB)
 
-        def open_wallet_sheet():
-            return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
 
         @st.cache_data(ttl=30)
         def load_payments():
