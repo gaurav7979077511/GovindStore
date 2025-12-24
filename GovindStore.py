@@ -2343,7 +2343,7 @@ else:
                     c1, c2, c3 = st.columns(3)
 
                     with c1:
-                        e_tagnumber = st.text_input("TagNumber",value=row["TagNumber"])
+                        e_tagnumber = st.text_input("TagNumber",value=row["TagNumber"],disabled=True)
                         e_age = st.number_input("Age (Years)", min_value=0, value=age, step=1)
 
                     with c2:
