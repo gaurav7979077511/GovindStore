@@ -2378,16 +2378,14 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                parent_tag_number = (
-                    df.loc[
-                        df["CowId"].astype(str).str.strip()
-                        == str(row.get("ParentCowID", "")).strip(),
-                        "TagNumber"
-                    ]
-                    .iloc[0]
-                    if str(row.get("ParentCowID", "")).strip() in df["CowId"].astype(str).values
-                    else None
-                )
+                match = df.loc[
+                    df["CowId"].astype(str).str.strip()
+                    == str(row.get("ParentCowID", "")).strip(),
+                    "TagNumber"
+                ]
+
+                parent_tag_number = match.iloc[0] if not match.empty else None
+
 
 
                 purchase_price = row.get("PurchasePrice", "")
