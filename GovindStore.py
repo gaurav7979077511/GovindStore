@@ -2187,7 +2187,7 @@ else:
         # ======================================================
         # ADD COW
         # ======================================================
-        if st.button("➕ Add Cow / Buffalo"):
+        if st.button("Create Cow Profile"):
             st.session_state.show_add_cow = True
     
         if st.session_state.show_add_cow:
