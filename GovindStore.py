@@ -2378,13 +2378,24 @@ else:
                     "Dead": "linear-gradient(135deg,#cb2d3e,#ef473a)",
                 }.get(row["Status"], "linear-gradient(135deg,#757f9a,#d7dde8)")
 
-                parent_id = row.get("ParentCowID", "").strip()
+                parent_tag_number = (
+                    df.loc[
+                        df["CowId"].astype(str).str.strip()
+                        == str(row.get("ParentCowID", "")).strip(),
+                        "TagNumber"
+                    ]
+                    .iloc[0]
+                    if str(row.get("ParentCowID", "")).strip() in df["CowId"].astype(str).values
+                    else None
+                )
+
+
                 purchase_price = row.get("PurchasePrice", "")
                 sold_price = row.get("SoldPrice", "")
 
                 # Line 1: Parent OR Purchase
-                if parent_id:
-                    source_line = f"👪 <span style='opacity:0.85;'>Parent:</span> {parent_id}"
+                if parent_tag_number:
+                    source_line = f"👪 <span style='opacity:0.85;'>Parent:</span> {parent_tag_number}"
                 elif purchase_price:
                     source_line = f"💰 <span style='opacity:0.85;'>Bought:</span> ₹{purchase_price}"
                 else:
