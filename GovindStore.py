@@ -4386,6 +4386,10 @@ else:
             if category in ["USER_WALLET_CREDIT","USER_WALLET_DEBIT","CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
                 ReferenceID=f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
                 RelatedEntityType="USER Wallet"
+                if txn_type=="DEBIT":
+                    Wallet_txn_type="CREDIT"
+                if txn_type=="CREDIT":
+                    Wallet_txn_type="DEBIT"
                 # ---- WALLET TXN ----
                 open_wallet_sheet().append_row(
                         [
@@ -4393,7 +4397,7 @@ else:
                             st.session_state.user_id,
                             st.session_state.user_name,
                             amount,
-                            txn_type,
+                            Wallet_txn_type,
                             bankTransactionId,
                             f"Amount from {from_account} to {to_account}",
                             dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
