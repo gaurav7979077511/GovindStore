@@ -1225,7 +1225,7 @@ else:
                     destination = st.selectbox(
                         "Fund Destination",
                         options=list(user_label_map.keys()),
-                        
+                        format_func=lambda x: ( user_label_map[x]),
                     )
 
 
