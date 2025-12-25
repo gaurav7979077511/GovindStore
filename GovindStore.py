@@ -4379,18 +4379,41 @@ else:
                 )
 
             now = pd.Timestamp.now()
+            bankTransactionId=f"BANKTXN{now.strftime('%Y%m%d%H%M%S%f')}"
+            ReferenceID=""
+            RelatedEntityType=""
+
+            if category in ["USER_WALLET_CREDIT","USER_WALLET_DEBIT","CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
+                ReferenceID=f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+                RelatedEntityType="USER Wallet"
+                # ---- WALLET TXN ----
+                open_wallet_sheet().append_row(
+                        [
+                            ReferenceID,
+                            st.session_state.user_id,
+                            st.session_state.user_name,
+                            amount,
+                            txn_type,
+                            bankTransactionId,
+                            f"Amount from {from_account} to {to_account}",
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        ],
+                        value_input_option="USER_ENTERED"
+                    )
+                
+            
 
             open_bank_sheet().append_row(
                 [
-                    f"BANKTXN{now.strftime('%Y%m%d%H%M%S%f')}",
+                    bankTransactionId,
                     txn_date.strftime("%Y-%m-%d"),
                     txn_type,
                     category,
                     amount,
                     from_account,
                     to_account,
-                    "",                 # RelatedEntityType (reserved)
-                    "",                 # ReferenceID
+                    RelatedEntityType,                 # RelatedEntityType (reserved)
+                    ReferenceID,                 # ReferenceID
                     notes,
                     opening,
                     closing,
@@ -4400,6 +4423,7 @@ else:
                 ],
                 value_input_option="USER_ENTERED"
             )
+            
 
             st.cache_data.clear()
             st.success("✅ Bank transaction recorded")
