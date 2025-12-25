@@ -879,8 +879,8 @@ else:
     
                 with c2:
                     cows_df = load_cows()
-                    cow_ids = ["All"] + cows_df[cows_df["Status"] == "Active"]["CowID"].tolist()
-                    cow_id = st.selectbox("Cow ID", cow_ids)
+                    cow_ids = ["All COW"] + cows_df[cows_df["Status"] == "Active"]["TagNumber"].tolist()
+                    cow_id = st.selectbox("Cow TAG", cow_ids)
                     amount = st.number_input(
                         "Amount",
                         min_value=0.0,
