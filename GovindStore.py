@@ -716,6 +716,7 @@ else:
                         append_milking_rows(rows_to_insert)
                         st.success("Milking data saved successfully ✅")
                         st.session_state.show_milking_form = None
+                        st.query_params.clear()
                         st.rerun()
     
         # ================== SUMMARY CARDS ==================
@@ -955,6 +956,7 @@ else:
     
                 st.success("✅ Expense saved successfully")
                 st.session_state.show_expense_form = False
+                st.query_params.clear()
                 st.rerun()
     
         # ================= EXPENSE LIST =================
@@ -1307,6 +1309,7 @@ else:
     
                 st.success("Investment added successfully ✅")
                 st.session_state.show_add_investment = False
+                st.query_params.clear()
                 st.rerun()
     
         st.divider()
@@ -1920,6 +1923,7 @@ else:
                         st.cache_data.clear()
                         st.success(f"✅ {count} bill(s) generated")
                         st.session_state.show_bill_window = False
+                        st.query_params.clear()
                         st.rerun()
 
             # ================= INDIVIDUAL =================
@@ -2013,6 +2017,7 @@ else:
                         st.success("Bill generated")
                         st.cache_data.clear()
                         st.session_state.show_bill_window = False
+                        st.query_params.clear()
                         st.rerun()
         # ======================================================
         # BILL LIST (ALWAYS VISIBLE)
@@ -2336,6 +2341,7 @@ else:
     
                 st.success("Cow profile added successfully ✅")
                 st.session_state.show_add_cow = False
+                st.query_params.clear()
                 st.rerun()
     
         # ======================================================
@@ -2431,6 +2437,7 @@ else:
                     )
                     st.success("Cow profile updated ✅")
                     st.session_state.edit_cow_id = None
+                    st.query_params.clear()
                     st.rerun()
             for i, row in df.iterrows():
 
@@ -2648,6 +2655,7 @@ else:
                 ])
                 st.success("Customer added")
                 st.session_state.show_add_form = False
+                st.query_params.clear()
                 st.rerun()
 
         # ---------- CUSTOMER CARDS ----------
@@ -2725,6 +2733,7 @@ else:
                 )
                 st.success("✅ Customer updated successfully")
                 st.session_state.edit_customer_id = None
+                st.query_params.clear()
                 st.rerun()
 
 
@@ -2912,6 +2921,7 @@ else:
                     append_bitran_rows(rows)
                     st.success("Milk Bitran saved successfully ✅")
                     st.session_state.show_form = None
+                    st.query_params.clear()
                     st.rerun()
 
         # ===================== SUMMARY CARDS =====================
@@ -3178,6 +3188,7 @@ else:
                 st.cache_data.clear()
                 st.success("✅ Medicine added successfully")
                 st.session_state.show_add_medicine = False
+                st.query_params.clear()
                 st.rerun()
 
         
@@ -3269,6 +3280,7 @@ else:
                 st.cache_data.clear()
                 st.success("✅ Medicine updated")
                 st.session_state.editing_med_id = None
+                st.query_params.clear()
                 st.rerun()
 
 
@@ -3644,6 +3656,7 @@ else:
                 st.success("✅ Medication recorded & stock updated")
 
                 st.session_state.show_give_medication = False
+                st.query_params.clear()
                 st.rerun()
 
             st.divider()
@@ -3923,6 +3936,7 @@ else:
                     load_auth_data.clear()
                     st.success("✅ Password updated successfully")
                     st.session_state.show_change_password = False
+                    st.query_params.clear()
                     st.rerun()
 
             with c2:
@@ -4360,6 +4374,7 @@ else:
                 cancel = c2.form_submit_button("❌ Cancel")
 
             if cancel:
+                st.session_state.show_Bank_Transaction_form = False
                 st.rerun()
 
             if save:
@@ -4471,6 +4486,8 @@ else:
 
                 st.cache_data.clear()
                 st.success("✅ Bank transaction recorded")
+                st.session_state.show_Bank_Transaction_form = False
+                st.query_params.clear()
                 st.rerun()
 
         st.subheader("📜 Bank Transaction History")
