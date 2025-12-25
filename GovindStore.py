@@ -46,6 +46,24 @@ WALLET_TRANSACTION_TAB="Wallet_Transaction"
 # ============================================================
 # GOOGLE SHEETS AUTH (SINGLE SOURCE OF TRUTH)
 # ============================================================
+
+def reset_Session_value():
+    st.session_state.show_form = None
+    st.session_state.show_milking_form = None
+    st.session_state.show_expense_form = False
+    st.session_state.show_add_investment = False
+    st.session_state.show_payment_window = False
+    st.session_state.show_bill_window = False
+    st.session_state.show_add_cow = False
+    st.session_state.show_add_form = False
+    st.session_state.show_give_medication = False
+    st.session_state.show_add_medicine = False
+    st.session_state.show_edit_user = False
+    st.session_state.show_edit_info = False
+    st.session_state.show_create_user = False
+    st.session_state.show_change_password = False
+    st.session_state.show_Bank_Transaction_form = False
+
 def init_gsheets():
     creds_dict = dict(st.secrets["gcp_service_account"])
     creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
@@ -598,10 +616,12 @@ else:
     # ----------------------------
     if page =="Dashboard":
         st.title("Dashboard")
+        reset_Session_value()
     
     elif page == "Milking":
 
         st.title("🥛 Milking")
+        reset_Session_value()
     
         MILKING_HEADER = [
             "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
@@ -776,6 +796,7 @@ else:
     elif page == "Expense":
 
         st.title("💸 Expense Management")
+        reset_Session_value()
     
         # ================= CLOUDINARY =================
         folder="dairy/expenses",
@@ -1058,6 +1079,7 @@ else:
     elif page == "Investment":
 
         st.title("💼 Investment")
+        reset_Session_value()
     
         # =========================================================
         # STATE
@@ -1404,6 +1426,7 @@ else:
     elif page == "Payment":
 
         st.title("💳 Payments")
+        reset_Session_value()
 
         # ======================================================
         # HELPERS
@@ -1670,6 +1693,7 @@ else:
     elif page == "Billing":
 
         st.title("🧾 Billing")
+        reset_Session_value()
 
         # ======================================================
         # CONSTANTS
@@ -2192,6 +2216,7 @@ else:
     elif page == "Cow Profile":
 
         st.title("🐄🐃 Cow Profile")
+        reset_Session_value()
     
         CURRENT_YEAR = dt.datetime.now().year
     
@@ -2580,6 +2605,7 @@ else:
     elif page == "Customers":   
 
         st.title("👥 Manage Customers")
+        reset_Session_value()
 
         # ---------- STATE ----------
         if "show_add_form" not in st.session_state:
@@ -2815,6 +2841,7 @@ else:
     elif page == "Milk Bitran":
 
         st.title("🥛 Milk Bitran")
+        reset_Session_value()
 
 
         BITRAN_HEADER = [
@@ -2984,6 +3011,7 @@ else:
     elif page == "Medicine":
 
         st.title("🧪 Medicine Master")
+        reset_Session_value()
 
         if "medicine_view_mode" not in st.session_state:
             st.session_state.medicine_view_mode = "view"   # view | edit
@@ -3404,6 +3432,7 @@ else:
     elif page == "Medication":
 
         st.title("💉 Medication")
+        reset_Session_value()
 
         # ======================================================
         # HELPERS
@@ -3715,6 +3744,7 @@ else:
 
 
     elif page == "Profile":
+        reset_Session_value()
 
         # ==================================================
         # SESSION UI STATE (SAFE INIT)
@@ -4238,6 +4268,7 @@ else:
     elif page == "Bank Account":
 
         st.title("🏦 Bank Account")
+        reset_Session_value()
 
         bank_df = load_bank_transactions()
 
@@ -4584,19 +4615,5 @@ else:
     # REFRESH BUTTON
     # ----------------------------
     if st.sidebar.button("🔁 Refresh"):
-        st.session_state.show_form = None
-        st.session_state.show_milking_form = None
-        st.session_state.show_expense_form = False
-        st.session_state.show_add_investment = False
-        st.session_state.show_payment_window = False
-        st.session_state.show_bill_window = False
-        st.session_state.show_add_cow = False
-        st.session_state.show_add_form = False
-        st.session_state.show_give_medication = False
-        st.session_state.show_add_medicine = False
-        st.session_state.show_edit_user = False
-        st.session_state.show_edit_info = False
-        st.session_state.show_create_user = False
-        st.session_state.show_change_password = False
-        st.session_state.show_Bank_Transaction_form = False
+        reset_Session_value()
         st.rerun()
