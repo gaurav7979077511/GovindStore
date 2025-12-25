@@ -4490,16 +4490,81 @@ else:
                 st.query_params.clear()
                 st.rerun()
 
-        st.subheader("📜 Bank Transaction History")
+        st.subheader("🏦 Bank Transactions")
 
         if bank_df.empty:
             st.info("No bank transactions recorded.")
         else:
-            st.dataframe(
-                bank_df.sort_values("TransactionDate", ascending=False),
-                use_container_width=True,
-                hide_index=True
-            )
+
+            cols = st.columns(3)  # 3 cards per row
+
+            for i, r in bank_df.iterrows():
+
+                # ---------- COLOR BY TYPE ----------
+                if r["TransactionType"] == "CREDIT":
+                    gradient = "linear-gradient(135deg,#16a34a,#15803d)"
+                    type_badge = "🟢 CREDIT"
+                else:
+                    gradient = "linear-gradient(135deg,#dc2626,#991b1b)"
+                    type_badge = "🔴 DEBIT"
+
+                card_html = f"""
+                <div style="
+                    background:{gradient};
+                    color:white;
+                    padding:14px;
+                    border-radius:16px;
+                    height:220px;
+                    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                    font-family:Inter,system-ui,sans-serif;
+                ">
+
+                    <!-- HEADER -->
+                    <div>
+                        <div style="font-size:13px;opacity:.9;">
+                            📅 {pd.to_datetime(r['TransactionDate']).date()}
+                        </div>
+                        <div style="font-size:14px;font-weight:800;">
+                            {r['Category']}
+                        </div>
+                    </div>
+
+                    <!-- AMOUNT -->
+                    <div style="font-size:20px;font-weight:900;">
+                        ₹ {float(r['Amount']):,.2f}
+                    </div>
+
+                    <!-- FLOW -->
+                    <div style="font-size:12px;opacity:.95;">
+                        {r['FromAccount']} → {r['ToAccount']}
+                    </div>
+
+                    <!-- BALANCE -->
+                    <div style="font-size:12px;">
+                        Opening: ₹ {float(r['OpeningBalance']):,.2f}<br>
+                        Closing: <b>₹ {float(r['ClosingBalance']):,.2f}</b>
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        font-size:11px;
+                        opacity:.9;
+                    ">
+                        <span>{type_badge}</span>
+                        <span>By: {r['CreatedBy']}</span>
+                    </div>
+
+                </div>
+                """
+
+                with cols[i % 3]:
+                    st.markdown(card_html, unsafe_allow_html=True)
+
 
             
     # ----------------------------
