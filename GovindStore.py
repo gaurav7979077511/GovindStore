@@ -4525,10 +4525,10 @@ else:
                     ">
                         <div>
                             <div style="font-size:13px;font-weight:700;">
-                                {r['Category']}
+                                {r['TransactionDate']}
                             </div>
-                            <div style="font-size:11px;color:#475569;">
-                                {pd.to_datetime(r['TransactionDate']).date()}
+                            <div style="font-size:12px;color:#475569;">
+                                {pd.to_datetime(r['Category']).date()}
                             </div>
                         </div>
 
