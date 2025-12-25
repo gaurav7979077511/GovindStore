@@ -4584,4 +4584,18 @@ else:
     # REFRESH BUTTON
     # ----------------------------
     if st.sidebar.button("🔁 Refresh"):
+        st.session_state.show_milking_form = None
+        st.session_state.show_expense_form = False
+        st.session_state.show_add_investment = False
+        st.session_state.show_payment_window = False
+        st.session_state.show_bill_window = False
+        st.session_state.show_add_cow = False
+        st.session_state.show_add_form = False
+        st.session_state.show_give_medication = False
+        st.session_state.show_add_medicine = False
+        st.session_state.show_edit_user = False
+        st.session_state.show_edit_info = False
+        st.session_state.show_create_user = False
+        st.session_state.show_change_password = False
+        st.session_state.show_Bank_Transaction_form = False
         st.rerun()
