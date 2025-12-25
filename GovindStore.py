@@ -4490,41 +4490,41 @@ else:
                 st.query_params.clear()
                 st.rerun()
 
+
         st.subheader("🏦 Bank Transactions")
 
         if bank_df.empty:
             st.info("No bank transactions recorded.")
         else:
-
             cols = st.columns(3)  # 3 cards per row
 
             for i, r in bank_df.iterrows():
 
                 # ---------- COLOR BY TYPE ----------
                 if r["TransactionType"] == "CREDIT":
-                    gradient = "linear-gradient(135deg,#16a34a,#15803d)"
-                    type_badge = "🟢 CREDIT"
+                    gradient = "linear-gradient(135deg,#10b981,#047857)"
+                    badge = "🟢 CREDIT"
                 else:
-                    gradient = "linear-gradient(135deg,#dc2626,#991b1b)"
-                    type_badge = "🔴 DEBIT"
+                    gradient = "linear-gradient(135deg,#f43f5e,#9f1239)"
+                    badge = "🔴 DEBIT"
 
                 card_html = f"""
                 <div style="
                     background:{gradient};
-                    color:white;
+                    color:#f8fafc;
                     padding:14px;
                     border-radius:16px;
                     height:220px;
-                    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+                    box-shadow:0 8px 20px rgba(0,0,0,0.25);
                     display:flex;
                     flex-direction:column;
                     justify-content:space-between;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
-                    <!-- HEADER -->
+                    <!-- Header -->
                     <div>
-                        <div style="font-size:13px;opacity:.9;">
+                        <div style="font-size:12px;opacity:.9;">
                             📅 {pd.to_datetime(r['TransactionDate']).date()}
                         </div>
                         <div style="font-size:14px;font-weight:800;">
@@ -4532,39 +4532,53 @@ else:
                         </div>
                     </div>
 
-                    <!-- AMOUNT -->
-                    <div style="font-size:20px;font-weight:900;">
+                    <!-- Amount -->
+                    <div style="
+                        font-size:22px;
+                        font-weight:900;
+                        letter-spacing:.3px;
+                    ">
                         ₹ {float(r['Amount']):,.2f}
                     </div>
 
-                    <!-- FLOW -->
-                    <div style="font-size:12px;opacity:.95;">
-                        {r['FromAccount']} → {r['ToAccount']}
+                    <!-- Flow -->
+                    <div style="
+                        font-size:12px;
+                        opacity:.95;
+                        line-height:1.4;
+                    ">
+                        <b>From:</b> {r['FromAccount']}<br>
+                        <b>To:</b> {r['ToAccount']}
                     </div>
 
-                    <!-- BALANCE -->
-                    <div style="font-size:12px;">
+                    <!-- Balance -->
+                    <div style="
+                        font-size:12px;
+                        background:rgba(255,255,255,0.12);
+                        padding:6px 8px;
+                        border-radius:10px;
+                    ">
                         Opening: ₹ {float(r['OpeningBalance']):,.2f}<br>
                         Closing: <b>₹ {float(r['ClosingBalance']):,.2f}</b>
                     </div>
 
-                    <!-- FOOTER -->
+                    <!-- Footer -->
                     <div style="
                         display:flex;
                         justify-content:space-between;
+                        align-items:center;
                         font-size:11px;
-                        opacity:.9;
+                        opacity:.95;
                     ">
-                        <span>{type_badge}</span>
-                        <span>By: {r['CreatedBy']}</span>
+                        <span>{badge}</span>
+                        <span>👤 {r['CreatedBy']}</span>
                     </div>
 
                 </div>
                 """
 
                 with cols[i % 3]:
-                    st.markdown(card_html, unsafe_allow_html=True)
-
+                    components.html(card_html, height=240)
 
             
     # ----------------------------
