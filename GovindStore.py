@@ -3579,57 +3579,33 @@ else:
             medicine_name=med_row["MedicineName"]
             st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
 
-            # ---------- Form ----------
             with st.form("give_med_form"):
 
-                # Row 1 — Cow
                 TagNumber = st.selectbox(
-                    "🐄 Cow Tag Number",
+                    "TagNumber",
                     cows_df["TagNumber"].tolist()
                 )
 
-                # Row 2 — Dose + Date
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    dose_text = st.text_input(
-                        "💉 Dose Given",
-                        placeholder=f"Max {med_row['StockAvailable']}"
-                    )
-
-                with col2:
-                    givendate = st.date_input(
-                        "📅 Given Date",
-                        value=pd.Timestamp.today().date()
-                    )
-
-                # ---------- Dose validation ----------
+                dose_text = st.text_input(
+                    "Dose Given",
+                    placeholder=f"Only {med_row['StockAvailable']} stock available"
+                )
+                givendate=st.date_input("Gi Date")
                 dose_given = None
-                dose_error = False
-
                 if dose_text:
                     try:
                         dose_given = float(dose_text)
                         if dose_given <= 0:
                             st.error("❌ Dose must be greater than 0")
-                            dose_error = True
                         elif dose_given > med_row["StockAvailable"]:
                             st.error("❌ Not enough stock available")
-                            dose_error = True
                     except ValueError:
-                        st.error("❌ Enter a valid numeric dose")
-                        dose_error = True
+                        st.error("❌ Enter a valid number")
 
-                # Row 3 — Notes
-                notes = st.text_area(
-                    "📝 Notes (optional)",
-                    placeholder="Any observations or remarks",
-                    height=80
-                )
 
-                # Row 4 — Actions
+                notes = st.text_input("Notes (optional)")
+
                 c1, c2 = st.columns(2)
-
                 save = c1.form_submit_button("✅ Save Medication")
                 cancel = c2.form_submit_button("❌ Cancel")
 
