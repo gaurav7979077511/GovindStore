@@ -4247,7 +4247,6 @@ else:
         CATEGORY_MAP = {
             # CREDIT
             "USER_WALLET_CREDIT": "CREDIT",
-            "INVESTMENT_CREDIT": "CREDIT",
             "BANK_INTEREST": "CREDIT",
             "REFUND": "CREDIT",
             "OTHER_CREDIT": "CREDIT",
@@ -4318,24 +4317,36 @@ else:
             )
 
             txn_type = CATEGORY_MAP[category]
+
             st.info(f"🔒 Transaction Type: **{txn_type}** (auto-determined)")
 
             amount = st.number_input(
                 "Amount",
                 min_value=0.01,
                 step=1.0,
+                value=None,
                 placeholder="Enter amount"
             )
 
-            from_account = st.selectbox(
-                "From Account",
-                ["BANK"] + users_list
-            )
+            # -------------------------------
+            # ACCOUNT SELECTION (CONDITIONAL)
+            # -------------------------------
+            if txn_type == "CREDIT":
+                counterparty = st.selectbox(
+                    "From Account",
+                    users_list
+                )
+                from_account = counterparty
+                to_account = "BANK"
 
-            to_account = st.selectbox(
-                "To Account",
-                ["BANK"] + users_list
-            )
+            else:  # DEBIT
+                counterparty = st.selectbox(
+                    "To Account",
+                    users_list
+                )
+                from_account = "BANK"
+                to_account = counterparty
+
 
             notes = st.text_area("Notes")
 
