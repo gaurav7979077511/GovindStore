@@ -4249,7 +4249,6 @@ else:
             "USER_WALLET_CREDIT": "CREDIT",
             "BANK_INTEREST": "CREDIT",
             "REFUND": "CREDIT",
-            "OTHER_CREDIT": "CREDIT",
 
             # DEBIT
             "USER_WALLET_DEBIT": "DEBIT",
@@ -4257,7 +4256,6 @@ else:
             "PROFIT_WITHDRAWAL": "DEBIT",
             "EXPENSE": "DEBIT",
             "BANK_CHARGE": "DEBIT",
-            "OTHER_DEBIT": "DEBIT",
         }
 
 
@@ -4339,6 +4337,8 @@ else:
             else:  # DEBIT
                 if category =="BANK_CHARGE":
                     to_account = "BANK ACCOUNT"
+                elif category =="EXPENSE":
+                    to_account = "VENDOR ACCOUNT"
                 else:
                     to_account = st.session_state.user_name
                 from_account = "BANK ACCOUNT"
