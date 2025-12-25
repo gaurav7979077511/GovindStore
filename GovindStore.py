@@ -40,7 +40,7 @@ PAYMENT_TAB = "Payment"
 BILLING_TAB = "Billing"
 MEDICATION_MASTER_TAB = "Medication_Master"
 MEDICATION_LOG_TAB = "Medication_Log"
-TRANSACTION_TAB="Transaction"
+BANK_TRANSACTION_TAB="Bank_Transaction"
 WALLET_TRANSACTION_TAB="Wallet_Transaction"
 
 # ============================================================
@@ -65,6 +65,15 @@ cloudinary.config(
     api_secret=st.secrets["cloudinary"]["api_secret"],
     secure=True
     )
+def upload_to_cloudinary(file, folder):
+    if file is None:
+        return ""
+    res = cloudinary.uploader.upload(
+        file,
+        folder=folder,
+        resource_type="auto"
+    )
+    return res.get("secure_url", "")
 
 def open_sheet(sheet_id: str, tab: str):
     client = init_gsheets()
@@ -490,7 +499,7 @@ else:
             "Cow Profile",
             "Medicine",
             "Medication",
-            "Transaction",
+            "Bank Account",
             "Profile"
 
             
@@ -723,15 +732,8 @@ else:
         st.title("💸 Expense Management")
     
         # ================= CLOUDINARY =================
+        folder="dairy/expenses",
         
-    
-        def upload_to_cloudinary(file):
-            result = cloudinary.uploader.upload(
-                file,
-                folder="dairy/expenses",
-                resource_type="auto"
-            )
-            return result["secure_url"]
     
         # ================= GSHEET =================
         def open_expense_sheet():
@@ -873,7 +875,7 @@ else:
                 file_url = ""
                 if file:
                     with st.spinner("Uploading bill..."):
-                        file_url = upload_to_cloudinary(file)
+                        file_url = upload_to_cloudinary(file,folder)
     
                 expense_id = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     
@@ -1052,17 +1054,8 @@ else:
         # =========================================================
         # CLOUDINARY UPLOAD
         # =========================================================
+        folder="dairy/investments"
 
-    
-    
-        def upload_to_cloudinary(file):
-            result = cloudinary.uploader.upload(
-                file,
-                folder="dairy/investments",
-                resource_type="auto",
-            )
-            return result["secure_url"]
-    
         # =========================================================
         # LOAD DATA
         # =========================================================
@@ -1242,7 +1235,7 @@ else:
                 )
 
     
-                file_url = upload_to_cloudinary(proof) if proof else ""
+                file_url = upload_to_cloudinary(proof,folder) if proof else ""
                 InvestmentID=f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     
                 open_investment_sheet().append_row(
@@ -2970,14 +2963,7 @@ else:
         # ======================================================
         # cloudinary uploader
         # ======================================================
-        def upload_to_cloudinary(file):
-            result = cloudinary.uploader.upload(
-                file,
-                folder="dairy/medicine",  
-                resource_type="image"
-            )
-            return result["secure_url"]
-
+        folder="dairy/medicine"
         # ======================================================
         # HELPERS
         # ======================================================
@@ -3125,7 +3111,7 @@ else:
 
                 image_url = ""
                 if image_file:
-                    image_url = upload_to_cloudinary(image_file)
+                    image_url = upload_to_cloudinary(image_file,folder)
 
 
                 open_medicine_sheet().append_row(
@@ -3366,8 +3352,185 @@ else:
                         st.rerun()
 
 
-    elif page=="Transaction":
-        st.title("Transaction")
+    elif page == "Bank Account":
+
+        st.title("🏦 Bank Account")
+
+        # ===============================
+        # LOAD BANK DATA
+        # ===============================
+        def load_bank_transaction_data():
+            return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
+    
+        bank_df = load_bank_transaction_data()  # cached loader
+        bank_df = bank_df.sort_values("Timestamp") if not bank_df.empty else bank_df
+
+        # ===============================
+        # CURRENT BALANCE
+        # ===============================
+        current_balance = float(bank_df.iloc[-1]["ClosingBalance"]) if not bank_df.empty else 0.0
+
+        # ===============================
+        # SUMMARY
+        # ===============================
+        st.subheader("📊 Bank Summary")
+        c1, c2, c3 = st.columns(3)
+
+        total_credit = bank_df.loc[bank_df["TransactionType"] == "CREDIT", "Amount"].sum() if not bank_df.empty else 0
+        total_debit  = bank_df.loc[bank_df["TransactionType"] == "DEBIT",  "Amount"].sum() if not bank_df.empty else 0
+
+        c1.metric("💰 Current Balance", f"₹ {current_balance:,.2f}")
+        c2.metric("🟢 Total Credit",   f"₹ {total_credit:,.2f}")
+        c3.metric("🔴 Total Debit",    f"₹ {total_debit:,.2f}")
+
+        st.divider()
+
+        # ===============================
+        # ADD BANK TRANSACTION
+        # ===============================
+        st.subheader("➕ Add Bank Transaction")
+
+        with st.form("add_bank_txn"):
+            txn_date = st.date_input("Transaction Date", value=dt.date.today())
+
+            category = st.selectbox(
+                "Transaction Category",
+                [
+                    "USER_WALLET_CREDIT",
+                    "USER_WALLET_DEBIT",
+                    "INVESTMENT_CREDIT",
+                    "CAPITAL_WITHDRAWAL",
+                    "PROFIT_WITHDRAWAL",
+                    "EXPENSE",
+                    "BANK_INTEREST",
+                    "BANK_CHARGE",
+                    "REFUND",
+                    "OTHER_CREDIT",
+                    "OTHER_DEBIT",
+                ],
+            )
+
+            amount = st.number_input("Amount", min_value=0.01, step=0.01)
+            narration = st.text_input("Narration")
+
+            proof_file = st.file_uploader(
+                "Upload Proof (Receipt / Statement)",
+                type=["jpg", "jpeg", "png", "pdf"]
+            )
+
+            submitted = st.form_submit_button("💾 Save Transaction")
+
+        # ===============================
+        # PROCESS SUBMIT
+        # ===============================
+        if submitted:
+
+            # ---- Validate date
+            if txn_date > dt.date.today():
+                st.error("❌ Transaction date cannot be in the future")
+                st.stop()
+
+            # ---- Determine CREDIT / DEBIT
+            credit_cats = {
+                "USER_WALLET_CREDIT",
+                "INVESTMENT_CREDIT",
+                "BANK_INTEREST",
+                "REFUND",
+                "OTHER_CREDIT",
+            }
+            txn_type = "CREDIT" if category in credit_cats else "DEBIT"
+
+            # ---- Balance check
+            opening_balance = current_balance
+            if txn_type == "DEBIT" and amount > opening_balance:
+                st.error("❌ Insufficient bank balance")
+                st.stop()
+
+            closing_balance = (
+                opening_balance + amount
+                if txn_type == "CREDIT"
+                else opening_balance - amount
+            )
+
+            # ---- Account mapping
+            from_account, to_account = "BANK", "BANK"
+            if category == "USER_WALLET_CREDIT":
+                from_account, to_account = "USER", "BANK"
+            elif category == "USER_WALLET_DEBIT":
+                from_account, to_account = "BANK", "USER"
+            elif category == "INVESTMENT_CREDIT":
+                from_account, to_account = "INVESTOR", "BANK"
+            elif category in ("CAPITAL_WITHDRAWAL", "PROFIT_WITHDRAWAL"):
+                from_account, to_account = "BANK", "INVESTOR"
+            elif category == "EXPENSE":
+                from_account, to_account = "BANK", "EXPENSE"
+
+            # ---- Upload proof (optional)
+            proof_url = upload_to_cloudinary(
+                proof_file,
+                folder="dairy/bank_transactions"
+            )
+
+            # ---- Insert bank transaction
+            bank_txn_id = f"BTX{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+
+            load_bank_transaction_data().append_row(
+                [
+                    bank_txn_id,
+                    txn_date.strftime("%Y-%m-%d"),
+                    txn_type,
+                    category,
+                    amount,
+                    from_account,
+                    to_account,
+                    "",              # RelatedEntityType
+                    "",              # RelatedEntityID
+                    "",              # ReferenceID
+                    narration,
+                    opening_balance,
+                    closing_balance,
+                    proof_url,       # ProofURL
+                    st.session_state.user_id,
+                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                ],
+                value_input_option="USER_ENTERED",
+            )
+
+            load_bank_transaction_data.clear()
+            st.success("✅ Bank transaction added successfully")
+            st.rerun()
+
+        st.divider()
+
+        # ===============================
+        # LEDGER
+        # ===============================
+        st.subheader("📋 Bank Ledger")
+
+        if bank_df.empty:
+            st.info("No bank transactions yet.")
+        else:
+            view_df = bank_df.copy()
+            view_df["Proof"] = view_df["ProofURL"].apply(
+                lambda x: f"[View]({x})" if x else ""
+            )
+
+            st.markdown(
+                view_df[
+                    [
+                        "TransactionDate",
+                        "TransactionType",
+                        "Category",
+                        "Amount",
+                        "OpeningBalance",
+                        "ClosingBalance",
+                        "Narration",
+                        "Proof",
+                    ]
+                ].to_markdown(index=False),
+                unsafe_allow_html=True
+            )
+
         
     elif page == "Medication":
 
