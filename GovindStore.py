@@ -4229,6 +4229,39 @@ else:
 
         bank_df = load_bank_transactions()
 
+        @st.cache_data(ttl=60)
+        def load_active_users():
+            ws = open_sheet(MAIN_SHEET_ID, AUTH_TAB)
+            rows = ws.get_all_values()
+
+            if len(rows) <= 1:
+                return []
+
+            df = pd.DataFrame(rows[1:], columns=rows[0])
+            df = df[df["Status"] == "Active"]
+
+            return [
+                f"USER:{r['UserID']} | {r['Name']}"
+                for _, r in df.iterrows()
+            ]
+        CATEGORY_MAP = {
+            # CREDIT
+            "USER_WALLET_CREDIT": "CREDIT",
+            "INVESTMENT_CREDIT": "CREDIT",
+            "BANK_INTEREST": "CREDIT",
+            "REFUND": "CREDIT",
+            "OTHER_CREDIT": "CREDIT",
+
+            # DEBIT
+            "USER_WALLET_DEBIT": "DEBIT",
+            "CAPITAL_WITHDRAWAL": "DEBIT",
+            "PROFIT_WITHDRAWAL": "DEBIT",
+            "EXPENSE": "DEBIT",
+            "BANK_CHARGE": "DEBIT",
+            "OTHER_DEBIT": "DEBIT",
+        }
+
+
         # ==============================
         # CLEAN TYPES
         # ==============================
@@ -4273,27 +4306,19 @@ else:
         # ==============================
         st.subheader("➕ Add Bank Transaction")
 
+        users_list = load_active_users()
+
         with st.form("bank_txn_form"):
 
             txn_date = st.date_input("Transaction Date")
-            txn_type = st.selectbox("Transaction Type", ["CREDIT", "DEBIT"])
 
             category = st.selectbox(
-                "Category",
-                [
-                    "USER_WALLET_CREDIT",
-                    "USER_WALLET_DEBIT",
-                    "INVESTMENT_CREDIT",
-                    "CAPITAL_WITHDRAWAL",
-                    "PROFIT_WITHDRAWAL",
-                    "EXPENSE",
-                    "BANK_INTEREST",
-                    "BANK_CHARGE",
-                    "REFUND",
-                    "OTHER_CREDIT",
-                    "OTHER_DEBIT"
-                ]
+                "Transaction Category",
+                list(CATEGORY_MAP.keys())
             )
+
+            txn_type = CATEGORY_MAP[category]
+            st.info(f"🔒 Transaction Type: **{txn_type}** (auto-determined)")
 
             amount = st.number_input(
                 "Amount",
@@ -4302,17 +4327,22 @@ else:
                 placeholder="Enter amount"
             )
 
-            from_account = st.text_input("From Account", placeholder="BANK / USER:<id> / INVESTOR:<id>")
-            to_account = st.text_input("To Account", placeholder="BANK / USER:<id> / INVESTOR:<id>")
-
-            related_type = st.selectbox(
-                "Related Entity Type",
-                ["USER", "INVESTOR", "EXPENSE", "SYSTEM", "NONE"]
+            from_account = st.selectbox(
+                "From Account",
+                ["BANK"] + users_list
             )
 
-            related_id = st.text_input("Related Entity ID (optional)")
-            reference_id = st.text_input("Reference ID (optional)")
-            narration = st.text_area("Narration")
+            to_account = st.selectbox(
+                "To Account",
+                ["BANK"] + users_list
+            )
+
+            notes = st.text_area("Notes")
+
+            attachment = st.file_uploader(
+                "Upload Document (optional)",
+                type=["jpg", "png", "pdf"]
+            )
 
             c1, c2 = st.columns(2)
             save = c1.form_submit_button("✅ Save Transaction")
@@ -4323,26 +4353,28 @@ else:
 
         if save:
 
-            # ---------------- VALIDATIONS ----------------
             if amount <= 0:
                 st.error("Amount must be greater than zero")
                 st.stop()
 
-            if txn_type == "DEBIT" and amount > current_balance:
-                st.error("❌ Debit amount exceeds bank balance")
-                st.stop()
-
-            if not ("BANK" in from_account or "BANK" in to_account):
+            if "BANK" not in (from_account, to_account):
                 st.error("❌ One side must be BANK")
                 st.stop()
 
-            # ---------------- BALANCE CALC ----------------
-            opening = current_balance
+            opening = get_current_bank_balance(bank_df)
 
-            if txn_type == "CREDIT":
-                closing = opening + amount
-            else:
-                closing = opening - amount
+            if txn_type == "DEBIT" and amount > opening:
+                st.error("❌ Debit exceeds bank balance")
+                st.stop()
+
+            closing = opening + amount if txn_type == "CREDIT" else opening - amount
+
+            doc_url = ""
+            if attachment:
+                doc_url = upload_to_cloudinary(
+                    attachment,
+                    folder="dairy/BankTransaction"
+                )
 
             now = pd.Timestamp.now()
 
@@ -4355,14 +4387,15 @@ else:
                     amount,
                     from_account,
                     to_account,
-                    related_type,
-                    related_id,
-                    reference_id,
-                    narration,
+                    "",                 # RelatedEntityType (reserved)
+                    "",                 # RelatedEntityID
+                    "",                 # ReferenceID
+                    notes,
                     opening,
                     closing,
                     st.session_state.user_name,
-                    now.strftime("%Y-%m-%d %H:%M:%S")
+                    now.strftime("%Y-%m-%d %H:%M:%S"),
+                    doc_url
                 ],
                 value_input_option="USER_ENTERED"
             )
@@ -4370,7 +4403,7 @@ else:
             st.cache_data.clear()
             st.success("✅ Bank transaction recorded")
             st.rerun()
-            st.divider()
+
         st.subheader("📜 Bank Transaction History")
 
         if bank_df.empty:
