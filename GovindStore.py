@@ -4434,7 +4434,7 @@ else:
                         "FROM BANK",
                         amount,
                         category,
-                        st.session_state.user_name,
+                        f"Personal Account : {st.session_state.user_name}",
                         doc_url,
                         notes,
                         dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
