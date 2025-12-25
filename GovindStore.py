@@ -169,6 +169,23 @@ BILLING_HEADER = [
             "GeneratedBy","GeneratedOn"
         ]
 
+BANK_TRANSACTION_HEADER = [
+    "TransactionID",
+    "TransactionDate",
+    "TransactionType",        # CREDIT / DEBIT
+    "Category",
+    "Amount",
+    "FromAccount",
+    "ToAccount",
+    "RelatedEntityType",
+    "RelatedEntityID",
+    "ReferenceID",
+    "Narration",
+    "OpeningBalance",
+    "ClosingBalance",
+    "CreatedBy",
+    "Timestamp"
+]
 
 
 # ============================================================
@@ -281,6 +298,32 @@ def get_col_index(df, col_name):
 
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
+
+
+def open_bank_sheet():
+    return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
+
+
+@st.cache_data(ttl=30)
+def load_bank_transactions():
+    ws = open_bank_sheet()
+    rows = ws.get_all_values()
+
+    if not rows or rows[0] != BANK_TRANSACTION_HEADER:
+        ws.clear()
+        ws.insert_row(BANK_TRANSACTION_HEADER, 1)
+        return pd.DataFrame(columns=BANK_TRANSACTION_HEADER)
+
+    if len(rows) <= 1:
+        return pd.DataFrame(columns=BANK_TRANSACTION_HEADER)
+
+    return pd.DataFrame(rows[1:], columns=rows[0])
+
+
+def get_current_bank_balance(bank_df: pd.DataFrame) -> float:
+    if bank_df.empty:
+        return 0.0
+    return float(bank_df.iloc[-1]["ClosingBalance"])
 
 # ============================================================
 # QUERY PARAM (SAFE)
@@ -3351,186 +3394,6 @@ else:
                         st.session_state.editing_med_id = r["MedicineID"]
                         st.rerun()
 
-
-    elif page == "Bank Account":
-
-        st.title("🏦 Bank Account")
-
-        # ===============================
-        # LOAD BANK DATA
-        # ===============================
-        def load_bank_transaction_data():
-            return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
-    
-        bank_df = load_bank_transaction_data()  # cached loader
-        bank_df = bank_df.sort_values("Timestamp") if not bank_df.empty else bank_df
-
-        # ===============================
-        # CURRENT BALANCE
-        # ===============================
-        current_balance = float(bank_df.iloc[-1]["ClosingBalance"]) if not bank_df.empty else 0.0
-
-        # ===============================
-        # SUMMARY
-        # ===============================
-        st.subheader("📊 Bank Summary")
-        c1, c2, c3 = st.columns(3)
-
-        total_credit = bank_df.loc[bank_df["TransactionType"] == "CREDIT", "Amount"].sum() if not bank_df.empty else 0
-        total_debit  = bank_df.loc[bank_df["TransactionType"] == "DEBIT",  "Amount"].sum() if not bank_df.empty else 0
-
-        c1.metric("💰 Current Balance", f"₹ {current_balance:,.2f}")
-        c2.metric("🟢 Total Credit",   f"₹ {total_credit:,.2f}")
-        c3.metric("🔴 Total Debit",    f"₹ {total_debit:,.2f}")
-
-        st.divider()
-
-        # ===============================
-        # ADD BANK TRANSACTION
-        # ===============================
-        st.subheader("➕ Add Bank Transaction")
-
-        with st.form("add_bank_txn"):
-            txn_date = st.date_input("Transaction Date", value=dt.date.today())
-
-            category = st.selectbox(
-                "Transaction Category",
-                [
-                    "USER_WALLET_CREDIT",
-                    "USER_WALLET_DEBIT",
-                    "INVESTMENT_CREDIT",
-                    "CAPITAL_WITHDRAWAL",
-                    "PROFIT_WITHDRAWAL",
-                    "EXPENSE",
-                    "BANK_INTEREST",
-                    "BANK_CHARGE",
-                    "REFUND",
-                    "OTHER_CREDIT",
-                    "OTHER_DEBIT",
-                ],
-            )
-
-            amount = st.number_input("Amount", min_value=0.01, step=0.01)
-            narration = st.text_input("Narration")
-
-            proof_file = st.file_uploader(
-                "Upload Proof (Receipt / Statement)",
-                type=["jpg", "jpeg", "png", "pdf"]
-            )
-
-            submitted = st.form_submit_button("💾 Save Transaction")
-
-        # ===============================
-        # PROCESS SUBMIT
-        # ===============================
-        if submitted:
-
-            # ---- Validate date
-            if txn_date > dt.date.today():
-                st.error("❌ Transaction date cannot be in the future")
-                st.stop()
-
-            # ---- Determine CREDIT / DEBIT
-            credit_cats = {
-                "USER_WALLET_CREDIT",
-                "INVESTMENT_CREDIT",
-                "BANK_INTEREST",
-                "REFUND",
-                "OTHER_CREDIT",
-            }
-            txn_type = "CREDIT" if category in credit_cats else "DEBIT"
-
-            # ---- Balance check
-            opening_balance = current_balance
-            if txn_type == "DEBIT" and amount > opening_balance:
-                st.error("❌ Insufficient bank balance")
-                st.stop()
-
-            closing_balance = (
-                opening_balance + amount
-                if txn_type == "CREDIT"
-                else opening_balance - amount
-            )
-
-            # ---- Account mapping
-            from_account, to_account = "BANK", "BANK"
-            if category == "USER_WALLET_CREDIT":
-                from_account, to_account = "USER", "BANK"
-            elif category == "USER_WALLET_DEBIT":
-                from_account, to_account = "BANK", "USER"
-            elif category == "INVESTMENT_CREDIT":
-                from_account, to_account = "INVESTOR", "BANK"
-            elif category in ("CAPITAL_WITHDRAWAL", "PROFIT_WITHDRAWAL"):
-                from_account, to_account = "BANK", "INVESTOR"
-            elif category == "EXPENSE":
-                from_account, to_account = "BANK", "EXPENSE"
-
-            # ---- Upload proof (optional)
-            proof_url = upload_to_cloudinary(
-                proof_file,
-                folder="dairy/bank_transactions"
-            )
-
-            # ---- Insert bank transaction
-            bank_txn_id = f"BTX{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
-
-            load_bank_transaction_data().append_row(
-                [
-                    bank_txn_id,
-                    txn_date.strftime("%Y-%m-%d"),
-                    txn_type,
-                    category,
-                    amount,
-                    from_account,
-                    to_account,
-                    "",              # RelatedEntityType
-                    "",              # RelatedEntityID
-                    "",              # ReferenceID
-                    narration,
-                    opening_balance,
-                    closing_balance,
-                    proof_url,       # ProofURL
-                    st.session_state.user_id,
-                    dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                ],
-                value_input_option="USER_ENTERED",
-            )
-
-            load_bank_transaction_data.clear()
-            st.success("✅ Bank transaction added successfully")
-            st.rerun()
-
-        st.divider()
-
-        # ===============================
-        # LEDGER
-        # ===============================
-        st.subheader("📋 Bank Ledger")
-
-        if bank_df.empty:
-            st.info("No bank transactions yet.")
-        else:
-            view_df = bank_df.copy()
-            view_df["Proof"] = view_df["ProofURL"].apply(
-                lambda x: f"[View]({x})" if x else ""
-            )
-
-            st.markdown(
-                view_df[
-                    [
-                        "TransactionDate",
-                        "TransactionType",
-                        "Category",
-                        "Amount",
-                        "OpeningBalance",
-                        "ClosingBalance",
-                        "Narration",
-                        "Proof",
-                    ]
-                ].to_markdown(index=False),
-                unsafe_allow_html=True
-            )
-
         
     elif page == "Medication":
 
@@ -4364,10 +4227,166 @@ else:
                     st.session_state.edit_user_id = None
                     st.rerun()
 
+    elif page == "Bank Account":
 
+        st.title("🏦 Bank Account")
 
+        bank_df = load_bank_transactions()
 
-        
+        # ==============================
+        # CLEAN TYPES
+        # ==============================
+        if not bank_df.empty:
+            bank_df["Amount"] = pd.to_numeric(bank_df["Amount"], errors="coerce").fillna(0)
+            bank_df["OpeningBalance"] = pd.to_numeric(bank_df["OpeningBalance"], errors="coerce").fillna(0)
+            bank_df["ClosingBalance"] = pd.to_numeric(bank_df["ClosingBalance"], errors="coerce").fillna(0)
+            bank_df["TransactionDate"] = pd.to_datetime(bank_df["TransactionDate"], errors="coerce")
+
+        current_balance = get_current_bank_balance(bank_df)
+
+        # ==============================
+        # KPI SECTION
+        # ==============================
+        st.subheader("📊 Bank Overview")
+
+        credit_total = bank_df[bank_df["TransactionType"] == "CREDIT"]["Amount"].sum() if not bank_df.empty else 0
+        debit_total = bank_df[bank_df["TransactionType"] == "DEBIT"]["Amount"].sum() if not bank_df.empty else 0
+
+        k1, k2, k3 = st.columns(3)
+
+        def kpi(title, value):
+            st.markdown(
+                f"""
+                <div style="padding:14px;border-radius:14px;
+                background:#0f172a;color:white;">
+                    <div style="font-size:13px;opacity:.8">{title}</div>
+                    <div style="font-size:24px;font-weight:900">₹ {value:,.2f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1: kpi("Current Balance", current_balance)
+        with k2: kpi("Total Credit", credit_total)
+        with k3: kpi("Total Debit", debit_total)
+
+        st.divider()
+
+        # ==============================
+        # ADD BANK TRANSACTION
+        # ==============================
+        st.subheader("➕ Add Bank Transaction")
+
+        with st.form("bank_txn_form"):
+
+            txn_date = st.date_input("Transaction Date")
+            txn_type = st.selectbox("Transaction Type", ["CREDIT", "DEBIT"])
+
+            category = st.selectbox(
+                "Category",
+                [
+                    "USER_WALLET_CREDIT",
+                    "USER_WALLET_DEBIT",
+                    "INVESTMENT_CREDIT",
+                    "CAPITAL_WITHDRAWAL",
+                    "PROFIT_WITHDRAWAL",
+                    "EXPENSE",
+                    "BANK_INTEREST",
+                    "BANK_CHARGE",
+                    "REFUND",
+                    "OTHER_CREDIT",
+                    "OTHER_DEBIT"
+                ]
+            )
+
+            amount = st.number_input(
+                "Amount",
+                min_value=0.01,
+                step=1.0,
+                placeholder="Enter amount"
+            )
+
+            from_account = st.text_input("From Account", placeholder="BANK / USER:<id> / INVESTOR:<id>")
+            to_account = st.text_input("To Account", placeholder="BANK / USER:<id> / INVESTOR:<id>")
+
+            related_type = st.selectbox(
+                "Related Entity Type",
+                ["USER", "INVESTOR", "EXPENSE", "SYSTEM", "NONE"]
+            )
+
+            related_id = st.text_input("Related Entity ID (optional)")
+            reference_id = st.text_input("Reference ID (optional)")
+            narration = st.text_area("Narration")
+
+            c1, c2 = st.columns(2)
+            save = c1.form_submit_button("✅ Save Transaction")
+            cancel = c2.form_submit_button("❌ Cancel")
+
+        if cancel:
+            st.rerun()
+
+        if save:
+
+            # ---------------- VALIDATIONS ----------------
+            if amount <= 0:
+                st.error("Amount must be greater than zero")
+                st.stop()
+
+            if txn_type == "DEBIT" and amount > current_balance:
+                st.error("❌ Debit amount exceeds bank balance")
+                st.stop()
+
+            if not ("BANK" in from_account or "BANK" in to_account):
+                st.error("❌ One side must be BANK")
+                st.stop()
+
+            # ---------------- BALANCE CALC ----------------
+            opening = current_balance
+
+            if txn_type == "CREDIT":
+                closing = opening + amount
+            else:
+                closing = opening - amount
+
+            now = pd.Timestamp.now()
+
+            open_bank_sheet().append_row(
+                [
+                    f"BANKTXN{now.strftime('%Y%m%d%H%M%S%f')}",
+                    txn_date.strftime("%Y-%m-%d"),
+                    txn_type,
+                    category,
+                    amount,
+                    from_account,
+                    to_account,
+                    related_type,
+                    related_id,
+                    reference_id,
+                    narration,
+                    opening,
+                    closing,
+                    st.session_state.user_name,
+                    now.strftime("%Y-%m-%d %H:%M:%S")
+                ],
+                value_input_option="USER_ENTERED"
+            )
+
+            st.cache_data.clear()
+            st.success("✅ Bank transaction recorded")
+            st.rerun()
+            st.divider()
+        st.subheader("📜 Bank Transaction History")
+
+        if bank_df.empty:
+            st.info("No bank transactions recorded.")
+        else:
+            st.dataframe(
+                bank_df.sort_values("TransactionDate", ascending=False),
+                use_container_width=True,
+                hide_index=True
+            )
+
+            
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
