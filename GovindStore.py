@@ -4332,20 +4332,19 @@ else:
             # ACCOUNT SELECTION (CONDITIONAL)
             # -------------------------------
             if txn_type == "CREDIT":
-                counterparty = st.selectbox(
-                    "From Account",
-                    users_list
-                )
-                from_account = counterparty
-                to_account = "BANK"
+                if category in ["BANK_INTEREST","REFUND"]:
+                    from_account ="BANK ACCOUNT"
+                else:
+                    from_account = st.session_state.user_name
+                to_account = "BANK ACCOUNT"
 
             else:  # DEBIT
-                counterparty = st.selectbox(
-                    "To Account",
-                    users_list
-                )
-                from_account = "BANK"
-                to_account = counterparty
+                if category =="BANK_CHARGE":
+                    to_account = "BANK AaCCOUNT"
+                else:
+                    to_account = st.session_state.user_name
+                from_account = "BANK AaCCOUNT"
+                
 
 
             notes = st.text_area("Notes")
