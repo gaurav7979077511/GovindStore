@@ -213,6 +213,8 @@ def open_wallet_sheet():
             return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
 def open_expense_sheet():
             return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
+def open_investment_sheet():
+            return open_sheet(MAIN_SHEET_ID, INVESTMENT_TAB)
 # ============================================================
 # HELPERS
 # ============================================================
@@ -1079,8 +1081,6 @@ else:
         # =========================================================
         # SHEET FUNCTIONS
         # =========================================================
-        def open_investment_sheet():
-            return open_sheet(MAIN_SHEET_ID, INVESTMENT_TAB)
     
         def load_investments():
             ws = open_investment_sheet()
@@ -4424,6 +4424,23 @@ else:
                     value_input_option="USER_ENTERED"
                 )
                 
+            if category in ["CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
+                ReferenceID=f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                RelatedEntityType="INVESTMENT"
+                open_investment_sheet().append_row(
+                    [
+                        ReferenceID,
+                        dt.date.today().strftime("%Y-%m-%d"),
+                        "FROM BANK",
+                        amount,
+                        category,
+                        st.session_state.user_name,
+                        doc_url,
+                        notes,
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
+                    value_input_option="USER_ENTERED",
+                )
 
             open_bank_sheet().append_row(
                 [
