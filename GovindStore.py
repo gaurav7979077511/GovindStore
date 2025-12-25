@@ -179,7 +179,7 @@ BANK_TRANSACTION_HEADER = [
     "ToAccount",
     "RelatedEntityType",
     "ReferenceID",
-    "Narration",
+    "Notes",
     "OpeningBalance",
     "ClosingBalance",
     "CreatedBy",
