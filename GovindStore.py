@@ -4584,6 +4584,7 @@ else:
     # REFRESH BUTTON
     # ----------------------------
     if st.sidebar.button("🔁 Refresh"):
+        st.session_state.show_form = None
         st.session_state.show_milking_form = None
         st.session_state.show_expense_form = False
         st.session_state.show_add_investment = False
