@@ -4295,178 +4295,183 @@ else:
         with k3: kpi("Total Debit", debit_total)
 
         st.divider()
-
+        if "show_Bank_Transaction_form" not in st.session_state:
+            st.session_state.show_Bank_Transaction_form = False
+        if st.button("Add Transaction"):
+            st.session_state.show_Bank_Transaction_form = not st.session_state.show_Bank_Transaction_form
+        
         # ==============================
         # ADD BANK TRANSACTION
         # ==============================
-        st.subheader("➕ Add Bank Transaction")
+        if st.session_state.show_Bank_Transaction_form:
+            st.subheader("➕ Add Bank Transaction")
 
-        users_list = load_active_users()
+            users_list = load_active_users()
 
-        with st.form("bank_txn_form"):
+            with st.form("bank_txn_form"):
 
-            txn_date = st.date_input("Transaction Date")
+                txn_date = st.date_input("Transaction Date")
 
-            category = st.selectbox(
-                "Transaction Category",
-                list(CATEGORY_MAP.keys())
-            )
-
-            txn_type = CATEGORY_MAP[category]
-
-            amount = st.number_input(
-                "Amount",
-                min_value=0.01,
-                step=1.0,
-                value=None,
-                placeholder="Enter amount"
-            )
-
-            # -------------------------------
-            # ACCOUNT SELECTION (CONDITIONAL)
-            # -------------------------------
-            if txn_type == "CREDIT":
-                if category in ["BANK_INTEREST","REFUND"]:
-                    from_account ="BANK ACCOUNT"
-                else:
-                    from_account = st.session_state.user_name
-                to_account = "BANK ACCOUNT"
-
-            else:  # DEBIT
-                if category =="BANK_CHARGE":
-                    to_account = "BANK ACCOUNT"
-                elif category =="EXPENSE":
-                    to_account = "VENDOR ACCOUNT"
-                else:
-                    to_account = st.session_state.user_name
-                from_account = "BANK ACCOUNT"
-                
-
-
-            notes = st.text_area("Notes")
-
-            attachment = st.file_uploader(
-                "Upload Document (optional)",
-                type=["jpg", "png", "pdf"]
-            )
-
-            c1, c2 = st.columns(2)
-            save = c1.form_submit_button("✅ Save Transaction")
-            cancel = c2.form_submit_button("❌ Cancel")
-
-        if cancel:
-            st.rerun()
-
-        if save:
-
-            if amount <= 0:
-                st.error("Amount must be greater than zero")
-                st.stop()
-
-            opening = get_current_bank_balance(bank_df)
-
-            if txn_type == "DEBIT" and amount > opening:
-                st.error("❌ Debit exceeds bank balance")
-                st.stop()
-
-            closing = opening + amount if txn_type == "CREDIT" else opening - amount
-
-            doc_url = ""
-            if attachment:
-                doc_url = upload_to_cloudinary(
-                    attachment,
-                    folder="dairy/BankTransaction"
+                category = st.selectbox(
+                    "Transaction Category",
+                    list(CATEGORY_MAP.keys())
                 )
 
-            now = pd.Timestamp.now()
-            bankTransactionId=f"BANKTXN{now.strftime('%Y%m%d%H%M%S%f')}"
-            ReferenceID=""
-            RelatedEntityType=""
+                txn_type = CATEGORY_MAP[category]
 
-            if category in ["USER_WALLET_CREDIT","USER_WALLET_DEBIT","CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
-                ReferenceID=f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
-                RelatedEntityType="USER Wallet"
-                if txn_type=="DEBIT":
-                    Wallet_txn_type="CREDIT"
-                elif txn_type=="CREDIT":
-                    Wallet_txn_type="DEBIT"
-                # ---- WALLET TXN ----
-                open_wallet_sheet().append_row(
+                amount = st.number_input(
+                    "Amount",
+                    min_value=0.01,
+                    step=1.0,
+                    value=None,
+                    placeholder="Enter amount"
+                )
+
+                # -------------------------------
+                # ACCOUNT SELECTION (CONDITIONAL)
+                # -------------------------------
+                if txn_type == "CREDIT":
+                    if category in ["BANK_INTEREST","REFUND"]:
+                        from_account ="BANK ACCOUNT"
+                    else:
+                        from_account = st.session_state.user_name
+                    to_account = "BANK ACCOUNT"
+
+                else:  # DEBIT
+                    if category =="BANK_CHARGE":
+                        to_account = "BANK ACCOUNT"
+                    elif category =="EXPENSE":
+                        to_account = "VENDOR ACCOUNT"
+                    else:
+                        to_account = st.session_state.user_name
+                    from_account = "BANK ACCOUNT"
+                    
+
+
+                notes = st.text_area("Notes")
+
+                attachment = st.file_uploader(
+                    "Upload Document (optional)",
+                    type=["jpg", "png", "pdf"]
+                )
+
+                c1, c2 = st.columns(2)
+                save = c1.form_submit_button("✅ Save Transaction")
+                cancel = c2.form_submit_button("❌ Cancel")
+
+            if cancel:
+                st.rerun()
+
+            if save:
+
+                if amount <= 0:
+                    st.error("Amount must be greater than zero")
+                    st.stop()
+
+                opening = get_current_bank_balance(bank_df)
+
+                if txn_type == "DEBIT" and amount > opening:
+                    st.error("❌ Debit exceeds bank balance")
+                    st.stop()
+
+                closing = opening + amount if txn_type == "CREDIT" else opening - amount
+
+                doc_url = ""
+                if attachment:
+                    doc_url = upload_to_cloudinary(
+                        attachment,
+                        folder="dairy/BankTransaction"
+                    )
+
+                now = pd.Timestamp.now()
+                bankTransactionId=f"BANKTXN{now.strftime('%Y%m%d%H%M%S%f')}"
+                ReferenceID=""
+                RelatedEntityType=""
+
+                if category in ["USER_WALLET_CREDIT","USER_WALLET_DEBIT","CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
+                    ReferenceID=f"WTXN{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+                    RelatedEntityType="USER Wallet"
+                    if txn_type=="DEBIT":
+                        Wallet_txn_type="CREDIT"
+                    elif txn_type=="CREDIT":
+                        Wallet_txn_type="DEBIT"
+                    # ---- WALLET TXN ----
+                    open_wallet_sheet().append_row(
+                            [
+                                ReferenceID,
+                                st.session_state.user_id,
+                                st.session_state.user_name,
+                                amount,
+                                Wallet_txn_type,
+                                bankTransactionId,
+                                f"Amount from {from_account} to {to_account}",
+                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            ],
+                            value_input_option="USER_ENTERED"
+                        )
+                    
+                if category=="EXPENSE":
+                    ReferenceID = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    RelatedEntityType="EXPENSE"
+                    open_expense_sheet().append_row(
                         [
                             ReferenceID,
-                            st.session_state.user_id,
-                            st.session_state.user_name,
+                            dt.datetime.now().strftime("%Y-%m-%d"),
+                            "Other",
+                            "All_COW",
                             amount,
-                            Wallet_txn_type,
-                            bankTransactionId,
-                            f"Amount from {from_account} to {to_account}",
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            "BANK ONLINE",
+                            "BANK ACCOUNT",
+                            doc_url,
+                            notes,
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         ],
                         value_input_option="USER_ENTERED"
                     )
-                
-            if category=="EXPENSE":
-                ReferenceID = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                RelatedEntityType="EXPENSE"
-                open_expense_sheet().append_row(
+                    
+                if category in ["CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
+                    ReferenceID=f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    RelatedEntityType="INVESTMENT"
+                    open_investment_sheet().append_row(
+                        [
+                            ReferenceID,
+                            dt.date.today().strftime("%Y-%m-%d"),
+                            "FROM BANK",
+                            amount,
+                            category,
+                            f"Personal Account : {st.session_state.user_name}",
+                            doc_url,
+                            notes,
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        ],
+                        value_input_option="USER_ENTERED",
+                    )
+
+                open_bank_sheet().append_row(
                     [
-                        ReferenceID,
-                        dt.datetime.now().strftime("%Y-%m-%d"),
-                        "Other",
-                        "All_COW",
+                        bankTransactionId,
+                        txn_date.strftime("%Y-%m-%d"),
+                        txn_type,
+                        category,
                         amount,
-                        "BANK ONLINE",
-                        "BANK ACCOUNT",
-                        doc_url,
+                        from_account,
+                        to_account,
+                        RelatedEntityType,                 # RelatedEntityType (reserved)
+                        ReferenceID,                 # ReferenceID
                         notes,
-                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        opening,
+                        closing,
+                        st.session_state.user_name,
+                        now.strftime("%Y-%m-%d %H:%M:%S"),
+                        doc_url
                     ],
                     value_input_option="USER_ENTERED"
                 )
                 
-            if category in ["CAPITAL_WITHDRAWAL","PROFIT_WITHDRAWAL"]:
-                ReferenceID=f"INV{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                RelatedEntityType="INVESTMENT"
-                open_investment_sheet().append_row(
-                    [
-                        ReferenceID,
-                        dt.date.today().strftime("%Y-%m-%d"),
-                        "FROM BANK",
-                        amount,
-                        category,
-                        f"Personal Account : {st.session_state.user_name}",
-                        doc_url,
-                        notes,
-                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    ],
-                    value_input_option="USER_ENTERED",
-                )
 
-            open_bank_sheet().append_row(
-                [
-                    bankTransactionId,
-                    txn_date.strftime("%Y-%m-%d"),
-                    txn_type,
-                    category,
-                    amount,
-                    from_account,
-                    to_account,
-                    RelatedEntityType,                 # RelatedEntityType (reserved)
-                    ReferenceID,                 # ReferenceID
-                    notes,
-                    opening,
-                    closing,
-                    st.session_state.user_name,
-                    now.strftime("%Y-%m-%d %H:%M:%S"),
-                    doc_url
-                ],
-                value_input_option="USER_ENTERED"
-            )
-            
-
-            st.cache_data.clear()
-            st.success("✅ Bank transaction recorded")
-            st.rerun()
+                st.cache_data.clear()
+                st.success("✅ Bank transaction recorded")
+                st.rerun()
 
         st.subheader("📜 Bank Transaction History")
 
