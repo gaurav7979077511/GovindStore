@@ -621,7 +621,7 @@ else:
     elif page == "Milking":
 
         st.title("🥛 Milking")
-        reset_Session_value()
+    
     
         MILKING_HEADER = [
             "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
@@ -796,7 +796,7 @@ else:
     elif page == "Expense":
 
         st.title("💸 Expense Management")
-        reset_Session_value()
+        
     
         # ================= CLOUDINARY =================
         folder="dairy/expenses",
@@ -1079,7 +1079,7 @@ else:
     elif page == "Investment":
 
         st.title("💼 Investment")
-        reset_Session_value()
+        
     
         # =========================================================
         # STATE
@@ -1426,7 +1426,7 @@ else:
     elif page == "Payment":
 
         st.title("💳 Payments")
-        reset_Session_value()
+        
 
         # ======================================================
         # HELPERS
@@ -1693,7 +1693,7 @@ else:
     elif page == "Billing":
 
         st.title("🧾 Billing")
-        reset_Session_value()
+        
 
         # ======================================================
         # CONSTANTS
@@ -2216,7 +2216,7 @@ else:
     elif page == "Cow Profile":
 
         st.title("🐄🐃 Cow Profile")
-        reset_Session_value()
+        
     
         CURRENT_YEAR = dt.datetime.now().year
     
@@ -2605,7 +2605,7 @@ else:
     elif page == "Customers":   
 
         st.title("👥 Manage Customers")
-        reset_Session_value()
+        
 
         # ---------- STATE ----------
         if "show_add_form" not in st.session_state:
@@ -2841,7 +2841,7 @@ else:
     elif page == "Milk Bitran":
 
         st.title("🥛 Milk Bitran")
-        reset_Session_value()
+        
 
 
         BITRAN_HEADER = [
@@ -3011,7 +3011,7 @@ else:
     elif page == "Medicine":
 
         st.title("🧪 Medicine Master")
-        reset_Session_value()
+        
 
         if "medicine_view_mode" not in st.session_state:
             st.session_state.medicine_view_mode = "view"   # view | edit
@@ -3432,7 +3432,7 @@ else:
     elif page == "Medication":
 
         st.title("💉 Medication")
-        reset_Session_value()
+        
 
         # ======================================================
         # HELPERS
@@ -3565,49 +3565,90 @@ else:
         # ADD MEDICATION FORM
         # ======================================================
         if st.session_state.show_give_medication:
-            st.subheader(" Give Medication")
+            st.subheader("💉 Give Medication")
 
+            # ---------- Medicine selection (outside form) ----------
             med_id = st.selectbox(
-                "Medicine",
+                "Select Medicine",
                 meds_df["MedicineID"].tolist(),
                 format_func=lambda x:
-                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0],
+                    meds_df.loc[meds_df["MedicineID"] == x, "MedicineName"].values[0],
                 key="med_select"
             )
 
             med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
-            medicine_name=med_row["MedicineName"]
-            st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
 
+            # Medicine info strip
+            st.markdown(
+                f"""
+                <div style="
+                    background:#f1f5f9;
+                    padding:10px 14px;
+                    border-radius:10px;
+                    margin-bottom:14px;
+                    font-size:13px;
+                ">
+                    💊 <b>{med_row['MedicineName']}</b>  
+                    <br>📦 Stock Available: <b>{med_row['StockAvailable']}</b>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # ---------- Form ----------
             with st.form("give_med_form"):
 
+                # Row 1 — Cow
                 TagNumber = st.selectbox(
-                    "TagNumber",
+                    "🐄 Cow Tag Number",
                     cows_df["TagNumber"].tolist()
                 )
 
-                dose_text = st.text_input(
-                    "Dose Given",
-                    placeholder=f"Only {med_row['StockAvailable']} stock available"
-                )
-                givendate=st.date_input("Gi Date")
+                # Row 2 — Dose + Date
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    dose_text = st.text_input(
+                        "💉 Dose Given",
+                        placeholder=f"Max {med_row['StockAvailable']}"
+                    )
+
+                with col2:
+                    givendate = st.date_input(
+                        "📅 Given Date",
+                        value=pd.Timestamp.today().date()
+                    )
+
+                # ---------- Dose validation ----------
                 dose_given = None
+                dose_error = False
+
                 if dose_text:
                     try:
                         dose_given = float(dose_text)
                         if dose_given <= 0:
                             st.error("❌ Dose must be greater than 0")
+                            dose_error = True
                         elif dose_given > med_row["StockAvailable"]:
                             st.error("❌ Not enough stock available")
+                            dose_error = True
                     except ValueError:
-                        st.error("❌ Enter a valid number")
+                        st.error("❌ Enter a valid numeric dose")
+                        dose_error = True
 
+                # Row 3 — Notes
+                notes = st.text_area(
+                    "📝 Notes (optional)",
+                    placeholder="Any observations or remarks",
+                    height=80
+                )
 
-                notes = st.text_input("Notes (optional)")
-
+                # Row 4 — Actions
                 c1, c2 = st.columns(2)
+
                 save = c1.form_submit_button("✅ Save Medication")
                 cancel = c2.form_submit_button("❌ Cancel")
+
 
 
             # ---------- CANCEL ----------
@@ -3744,7 +3785,7 @@ else:
 
 
     elif page == "Profile":
-        reset_Session_value()
+        
 
         # ==================================================
         # SESSION UI STATE (SAFE INIT)
@@ -4268,7 +4309,7 @@ else:
     elif page == "Bank Account":
 
         st.title("🏦 Bank Account")
-        reset_Session_value()
+        
 
         bank_df = load_bank_transactions()
 
