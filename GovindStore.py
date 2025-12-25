@@ -3590,7 +3590,7 @@ else:
                     "Dose Given",
                     placeholder=f"Only {med_row['StockAvailable']} stock available"
                 )
-
+                givendate=st.date_input("Given Date")
                 dose_given = None
                 if dose_text:
                     try:
@@ -3661,7 +3661,7 @@ else:
                         medicine_name,
                         dose_given,
                         med_row["DoseUnit"],
-                        now.strftime("%Y-%m-%d"),
+                        givendate,
                         st.session_state.user_name,
                         med_row["FrequencyType"],
                         med_row["FrequencyValue"],
