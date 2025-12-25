@@ -4412,7 +4412,7 @@ else:
                     [
                         ReferenceID,
                         dt.datetime.now().strftime("%Y-%m-%d"),
-                        category,
+                        "Other",
                         "All_COW",
                         amount,
                         "BANK ONLINE",
