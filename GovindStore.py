@@ -29,7 +29,7 @@ st.set_page_config(page_title="Dairy Farm Management", layout="wide")
 AUTH_SHEET_ID = st.secrets["sheets"]["AUTH_SHEET_ID"]
 AUTH_SHEET_NAME = "Sheet1"
 
-
+MAIN_SHEET_ID = st.secrets["sheets"]["MAIN_SHEET_ID"]
 CUSTOMER_TAB = "Manage_Customer"
 BITRAN_TAB = "Milk_Distrubution"
 COW_PROFILE_TAB = "Cow_Profile"
@@ -4231,7 +4231,7 @@ else:
 
         @st.cache_data(ttl=60)
         def load_active_users():
-            ws = open_sheet(MAIN_SHEET_ID, AUTH_SHEET_NAME)
+            ws = open_sheet(AUTH_SHEET_ID, AUTH_SHEET_NAME)
             rows = ws.get_all_values()
 
             if len(rows) <= 1:
