@@ -1224,12 +1224,8 @@ else:
                     )
                     destination = st.selectbox(
                         "Fund Destination",
-                        options=["Company Account"] + list(user_label_map.keys()),
-                        format_func=lambda x: (
-                            "Company Account"
-                            if x == "Company Account"
-                            else user_label_map[x]
-                        ),
+                        options=list(user_label_map.keys()),
+                        
                     )
 
 
