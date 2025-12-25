@@ -178,7 +178,6 @@ BANK_TRANSACTION_HEADER = [
     "FromAccount",
     "ToAccount",
     "RelatedEntityType",
-    "RelatedEntityID",
     "ReferenceID",
     "Narration",
     "OpeningBalance",
@@ -4392,7 +4391,6 @@ else:
                     from_account,
                     to_account,
                     "",                 # RelatedEntityType (reserved)
-                    "",                 # RelatedEntityID
                     "",                 # ReferenceID
                     notes,
                     opening,
