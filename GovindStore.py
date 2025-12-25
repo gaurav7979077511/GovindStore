@@ -309,7 +309,6 @@ def load_bank_transactions():
     rows = ws.get_all_values()
 
     if not rows or rows[0] != BANK_TRANSACTION_HEADER:
-        ws.clear()
         ws.insert_row(BANK_TRANSACTION_HEADER, 1)
         return pd.DataFrame(columns=BANK_TRANSACTION_HEADER)
 
