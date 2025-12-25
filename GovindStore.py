@@ -4318,8 +4318,6 @@ else:
 
             txn_type = CATEGORY_MAP[category]
 
-            st.info(f"🔒 Transaction Type: **{txn_type}** (auto-determined)")
-
             amount = st.number_input(
                 "Amount",
                 min_value=0.01,
@@ -4340,10 +4338,10 @@ else:
 
             else:  # DEBIT
                 if category =="BANK_CHARGE":
-                    to_account = "BANK AaCCOUNT"
+                    to_account = "BANK ACCOUNT"
                 else:
                     to_account = st.session_state.user_name
-                from_account = "BANK AaCCOUNT"
+                from_account = "BANK ACCOUNT"
                 
 
 
@@ -4365,10 +4363,6 @@ else:
 
             if amount <= 0:
                 st.error("Amount must be greater than zero")
-                st.stop()
-
-            if "BANK" not in (from_account, to_account):
-                st.error("❌ One side must be BANK")
                 st.stop()
 
             opening = get_current_bank_balance(bank_df)
