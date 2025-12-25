@@ -4491,74 +4491,73 @@ else:
                 st.rerun()
 
 
-        st.subheader("🏦 Bank Transactions")
+
+        st.subheader("🏦 Bank Statement")
 
         if bank_df.empty:
             st.info("No bank transactions recorded.")
         else:
-            cols = st.columns(3)  # 3 cards per row
+            # Sort by timestamp descending
+            bank_df = bank_df.sort_values("Timestamp", ascending=False)
 
-            for i, r in bank_df.iterrows():
+            for _, r in bank_df.iterrows():
 
-                # ---------- COLOR BY TYPE ----------
-                if r["TransactionType"] == "CREDIT":
-                    gradient = "linear-gradient(135deg,#10b981,#047857)"
-                    badge = "🟢 CREDIT"
-                else:
-                    gradient = "linear-gradient(135deg,#f43f5e,#9f1239)"
-                    badge = "🔴 DEBIT"
+                is_credit = r["TransactionType"] == "CREDIT"
 
-                card_html = f"""
+                amount_color = "#065f46" if is_credit else "#7f1d1d"
+                sign = "+" if is_credit else "−"
+
+                row_html = f"""
                 <div style="
-                    background:{gradient};
-                    color:#f8fafc;
-                    padding:14px;
-                    border-radius:16px;
-                    height:220px;
-                    box-shadow:0 8px 20px rgba(0,0,0,0.25);
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:space-between;
+                    background:#f8fafc;
+                    border:1px solid #e5e7eb;
+                    border-radius:10px;
+                    padding:10px 14px;
+                    margin-bottom:10px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
-                    <!-- Header -->
-                    <div>
-                        <div style="font-size:12px;opacity:.9;">
-                            📅 {pd.to_datetime(r['TransactionDate']).date()}
-                        </div>
-                        <div style="font-size:14px;font-weight:800;">
-                            {r['Category']}
-                        </div>
-                    </div>
-
-                    <!-- Amount -->
+                    <!-- Top Row -->
                     <div style="
-                        font-size:22px;
-                        font-weight:900;
-                        letter-spacing:.3px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
                     ">
-                        ₹ {float(r['Amount']):,.2f}
+                        <div>
+                            <div style="font-size:13px;font-weight:700;">
+                                {r['Category']}
+                            </div>
+                            <div style="font-size:11px;color:#475569;">
+                                {pd.to_datetime(r['TransactionDate']).date()}
+                            </div>
+                        </div>
+
+                        <div style="
+                            font-size:18px;
+                            font-weight:900;
+                            color:{amount_color};
+                        ">
+                            {sign} ₹ {float(r['Amount']):,.2f}
+                        </div>
                     </div>
 
-                    <!-- Flow -->
+                    <!-- Accounts -->
                     <div style="
                         font-size:12px;
-                        opacity:.95;
-                        line-height:1.4;
+                        color:#334155;
+                        margin-top:4px;
                     ">
-                        <b>From:</b> {r['FromAccount']}<br>
-                        <b>To:</b> {r['ToAccount']}
+                        {r['FromAccount']} → {r['ToAccount']}
                     </div>
 
-                    <!-- Balance -->
+                    <!-- Balances -->
                     <div style="
-                        font-size:12px;
-                        background:rgba(255,255,255,0.12);
-                        padding:6px 8px;
-                        border-radius:10px;
+                        font-size:11px;
+                        color:#475569;
+                        margin-top:4px;
                     ">
-                        Opening: ₹ {float(r['OpeningBalance']):,.2f}<br>
+                        Opening: ₹ {float(r['OpeningBalance']):,.2f}
+                        &nbsp; → &nbsp;
                         Closing: <b>₹ {float(r['ClosingBalance']):,.2f}</b>
                     </div>
 
@@ -4567,18 +4566,18 @@ else:
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        font-size:11px;
-                        opacity:.95;
+                        margin-top:6px;
+                        font-size:10px;
+                        color:#64748b;
                     ">
-                        <span>{badge}</span>
+                        <span>TxnID: {r['TransactionID']}</span>
                         <span>👤 {r['CreatedBy']}</span>
                     </div>
 
                 </div>
                 """
 
-                with cols[i % 3]:
-                    components.html(card_html, height=240)
+                components.html(row_html, height=135)
 
             
     # ----------------------------
