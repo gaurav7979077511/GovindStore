@@ -4388,7 +4388,7 @@ else:
                 RelatedEntityType="USER Wallet"
                 if txn_type=="DEBIT":
                     Wallet_txn_type="CREDIT"
-                if txn_type=="CREDIT":
+                elif txn_type=="CREDIT":
                     Wallet_txn_type="DEBIT"
                 # ---- WALLET TXN ----
                 open_wallet_sheet().append_row(
