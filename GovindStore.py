@@ -3565,35 +3565,19 @@ else:
         # ADD MEDICATION FORM
         # ======================================================
         if st.session_state.show_give_medication:
-            st.subheader("💉 Give Medication")
+            st.subheader(" Give Medication")
 
-            # ---------- Medicine selection (outside form) ----------
             med_id = st.selectbox(
-                "Select Medicine",
+                "Medicine",
                 meds_df["MedicineID"].tolist(),
                 format_func=lambda x:
-                    meds_df.loc[meds_df["MedicineID"] == x, "MedicineName"].values[0],
+                    meds_df[meds_df["MedicineID"] == x]["MedicineName"].values[0],
                 key="med_select"
             )
 
             med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
-
-            # Medicine info strip
-            st.markdown(
-                f"""
-                <div style="
-                    background:#f1f5f9;
-                    padding:10px 14px;
-                    border-radius:10px;
-                    margin-bottom:14px;
-                    font-size:13px;
-                ">
-                    💊 <b>{med_row['MedicineName']}</b>  
-                    <br>📦 Stock Available: <b>{med_row['StockAvailable']}</b>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            medicine_name=med_row["MedicineName"]
+            st.info(f"💊 Stock Available: **{med_row['StockAvailable']}**")
 
             # ---------- Form ----------
             with st.form("give_med_form"):
