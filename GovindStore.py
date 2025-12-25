@@ -211,6 +211,8 @@ auth_df = load_auth_data()
 
 def open_wallet_sheet():
             return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
+def open_expense_sheet():
+            return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
 # ============================================================
 # HELPERS
 # ============================================================
@@ -777,8 +779,6 @@ else:
         
     
         # ================= GSHEET =================
-        def open_expense_sheet():
-            return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
     
         def load_expenses():
             ws = open_expense_sheet()
@@ -4405,7 +4405,25 @@ else:
                         value_input_option="USER_ENTERED"
                     )
                 
-            
+            if category=="EXPENSE":
+                ReferenceID = f"EXP{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                RelatedEntityType="EXPENSE"
+                open_expense_sheet().append_row(
+                    [
+                        ReferenceID,
+                        dt.datetime.now().strftime("%Y-%m-%d"),
+                        category,
+                        "All_COW",
+                        amount,
+                        "BANK ONLINE",
+                        "BANK ACCOUNT",
+                        doc_url,
+                        notes,
+                        dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
+                
 
             open_bank_sheet().append_row(
                 [
