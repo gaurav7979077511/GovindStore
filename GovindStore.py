@@ -3583,17 +3583,20 @@ else:
                 f"""
                 <div style="
                     background:#f1f5f9;
+                    color:#0f172a;
                     padding:10px 14px;
                     border-radius:10px;
                     margin-bottom:14px;
                     font-size:13px;
+                    line-height:1.5;
                 ">
-                    💊 <b>{med_row['MedicineName']}</b>  
-                    <br>📦 Stock Available: <b>{med_row['StockAvailable']}</b>
+                    💊 <b>{med_row['MedicineName']}</b><br>
+                    📦 Stock Available: <b>{med_row['StockAvailable']}</b>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+
 
             # ---------- Form ----------
             with st.form("give_med_form"):
