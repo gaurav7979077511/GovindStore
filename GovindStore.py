@@ -4767,8 +4767,26 @@ else:
             dairy_users_df["userid"] != st.session_state.user_id
         ]
 
-        if st.button("➕ Send Money"):
+        st.markdown("""
+        <style>
+        div.stButton > button {
+            background-color: #28a745;
+            color: white;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 0.5em 1.2em;
+            border: none;
+        }
+        div.stButton > button:hover {
+            background-color: #218838;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        if st.button("Send ➤"):
             st.session_state.show_send_money = not st.session_state.show_send_money
+
 
         if st.session_state.show_send_money:
 
