@@ -4764,7 +4764,7 @@ else:
                 auth_df["accesslevel"]
                 .fillna("")
                 .str.contains(r"\bdairy\b", case=False)
-            ][["userid", "name"]]
+            ][["UserID", "Name"]]
 
             users_df = dairy_users_df[dairy_users_df["UserID"] != st.session_state.user_id]
 
