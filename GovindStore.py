@@ -4721,7 +4721,7 @@ else:
         # ----------------------------------
         st.subheader("📊 Wallet Overview")
 
-        k1, k2, k3, k4 = st.columns([3,3,3,2])
+        k1, k2, k3= st.columns(3)
 
         def kpi(title, value, color):
             st.markdown(
@@ -4745,13 +4745,157 @@ else:
         with k2: kpi("Blocked Amount", blocked, "#92400e")
         with k3: kpi("Total Balance", total_balance, "#1e293b")
 
-        with k4:
-            st.markdown("<div style='height:42px'></div>", unsafe_allow_html=True)
-            st.button("Send Money", disabled=True, use_container_width=True)
+        st.divider()
 
-        st.caption("🔒 Send Money will be enabled in Phase 2")
+        # ======================================================
+        # SEND MONEY (INITIATE)
+        # ======================================================
+        if "show_send_money" not in st.session_state:
+            st.session_state.show_send_money = False
+
+        if st.button("➕ Send Money"):
+            st.session_state.show_send_money = not st.session_state.show_send_money
+
+        if st.session_state.show_send_money:
+
+            st.subheader("💸 Send Money")
+
+            users_df = auth_df()   # must return UserID + Name
+            users_df = users_df[users_df["UserID"] != st.session_state.user_id]
+
+            to_user = st.selectbox(
+                "Send To",
+                users_df["UserID"].tolist(),
+                format_func=lambda x:
+                    users_df[users_df["UserID"] == x]["Name"].values[0]
+            )
+
+            amount = st.number_input(
+                "Amount",
+                min_value=1.0,
+                step=1.0
+            )
+
+            c1, c2 = st.columns(2)
+            send = c1.button("✅ Send")
+            cancel = c2.button("❌ Cancel")
+
+            if cancel:
+                st.session_state.show_send_money = False
+                st.rerun()
+
+            if send:
+
+                if amount > available_balance:
+                    st.error("❌ Insufficient available balance")
+                    st.stop()
+
+                now = dt.datetime.now()
+                ref_id = f"REF{now.strftime('%Y%m%d%H%M%S%f')}"
+
+                ws = open_wallet_sheet()
+
+                # ---- SENDER (DEBIT - PENDING) ----
+                ws.append_row(
+                    [
+                        f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
+                        st.session_state.user_id,
+                        st.session_state.user_name,
+                        amount,
+                        "DEBIT",
+                        ref_id,
+                        f"Transfer to {to_user}",
+                        now.strftime("%Y-%m-%d %H:%M:%S"),
+                        "PENDING",
+                        to_user
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
+
+                # ---- RECEIVER (CREDIT - PENDING) ----
+                ws.append_row(
+                    [
+                        f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
+                        to_user,
+                        users_df[users_df["UserID"] == to_user]["Name"].values[0],
+                        amount,
+                        "CREDIT",
+                        ref_id,
+                        f"Transfer from {st.session_state.user_name}",
+                        now.strftime("%Y-%m-%d %H:%M:%S"),
+                        "PENDING",
+                        st.session_state.user_id      
+                        
+                    ],
+                    value_input_option="USER_ENTERED"
+                )
+
+                st.cache_data.clear()
+                st.success("✅ Transfer request sent")
+                st.session_state.show_send_money = False
+                st.rerun()
 
         st.divider()
+
+        # ======================================================
+        # INCOMING REQUESTS (APPROVE / REJECT)
+        # ======================================================
+        st.subheader("📥 Incoming Requests")
+
+        incoming = my_df[
+            (my_df["TxnType"] == "CREDIT") &
+            (my_df["TxnStatus"] == "PENDING")
+        ]
+
+        if incoming.empty:
+            st.info("No incoming requests")
+        else:
+            for _, r in incoming.iterrows():
+                c1, c2, c3 = st.columns([3, 1, 1])
+                c1.write(f"₹ {r['Amount']} from {r['CounterpartyUserID']}")
+
+                if c2.button("✅ Approve", key=f"ap_{r['TxnID']}"):
+                    ws = open_wallet_sheet()
+                    idxs = wallet_df[wallet_df["RefTxnID"] == r["RefTxnID"]].index + 2
+                    ws.update(f"F{idxs.min()}:F{idxs.max()}", [["COMPLETED"], ["COMPLETED"]])
+                    st.cache_data.clear()
+                    st.rerun()
+
+                if c3.button("❌ Reject", key=f"rej_{r['TxnID']}"):
+                    ws = open_wallet_sheet()
+                    idxs = wallet_df[wallet_df["RefTxnID"] == r["RefTxnID"]].index + 2
+                    ws.update(f"F{idxs.min()}:F{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
+                    st.cache_data.clear()
+                    st.rerun()
+
+        st.divider()
+
+        # ======================================================
+        # OUTGOING REQUESTS (CANCEL)
+        # ======================================================
+        st.subheader("📤 Outgoing Requests")
+
+        outgoing = my_df[
+            (my_df["TxnType"] == "DEBIT") &
+            (my_df["TxnStatus"] == "PENDING")
+        ]
+
+        if outgoing.empty:
+            st.info("No outgoing requests")
+        else:
+            for _, r in outgoing.iterrows():
+                c1, c2 = st.columns([4, 1])
+                c1.write(f"₹ {r['Amount']} to {r['CounterpartyUserID']}")
+
+                if c2.button("❌ Cancel", key=f"can_{r['TxnID']}"):
+                    ws = open_wallet_sheet()
+                    idxs = wallet_df[wallet_df["RefTxnID"] == r["RefTxnID"]].index + 2
+                    ws.update(f"F{idxs.min()}:F{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
+                    st.cache_data.clear()
+                    st.rerun()
+
+        st.divider()
+
 
         st.subheader("📜 Wallet Transactions")
 
