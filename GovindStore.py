@@ -4889,20 +4889,22 @@ else:
 
                     with col_text:
                         st.markdown(
-                            f"""
-                            <div style="
-                                background:#f8fafc;
-                                border:1px solid #e5e7eb;
-                                border-radius:8px;
-                                padding:8px 12px;
-                                font-size:13px;
-                                font-family:Inter,system-ui,sans-serif;
-                            ">
-                                💰 Accept <b>₹ {r['Amount']}</b> from <b>{name}</b>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                        f"""
+                        <div style="
+                            background:#f8fafc;
+                            border:1px solid #e5e7eb;
+                            border-radius:8px;
+                            padding:8px 12px;
+                            font-size:13px;
+                            font-family:Inter,system-ui,sans-serif;
+                            color:#111827;          /* ✅ FIX */
+                        ">
+                            💰 Accept <b>₹ {r['Amount']}</b> from <b>{name}</b>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
 
                     with col_btn1:
                         if st.button("✅ Approve", key=f"ap_{r['TxnID']}"):
@@ -4946,12 +4948,14 @@ else:
                                 padding:8px 12px;
                                 font-size:13px;
                                 font-family:Inter,system-ui,sans-serif;
+                                color:#1f2937;          /* ✅ TEXT COLOR FIX */
                             ">
                                 ⏳ Transfer <b>₹ {r['Amount']}</b> to <b>{name}</b> (Pending)
                             </div>
                             """,
                             unsafe_allow_html=True
                         )
+
 
                     with col_btn:
                         if st.button("❌ Cancel", key=f"can_{r['TxnID']}"):
@@ -4964,11 +4968,9 @@ else:
                             st.cache_data.clear()
                             st.rerun()
     
+            st.divider()
 
 
-
-
-        st.divider()
 
 
         st.subheader("📜 Wallet Transactions")
