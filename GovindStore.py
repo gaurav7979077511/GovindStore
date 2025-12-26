@@ -4371,7 +4371,7 @@ else:
             st.markdown(
                 f"""
                 <div style="padding:14px;border-radius:14px;
-                background:#0f172a;color:white;">
+                background:#0f172a;color:white;margin-bottom:14px;">
                     <div style="font-size:13px;opacity:.8">{title}</div>
                     <div style="font-size:24px;font-weight:900">₹ {value:,.2f}</div>
                 </div>
@@ -4586,9 +4586,9 @@ else:
                 <div style="
                     background:#f8fafc;
                     border:1px solid #e5e7eb;
-                    border-radius:10px;
-                    padding:8px 14px;
-                    margin-bottom:4px;
+                    border-radius:8px;
+                    padding:6px 12px;
+                    margin-bottom:2px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
