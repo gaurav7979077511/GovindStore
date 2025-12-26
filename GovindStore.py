@@ -247,24 +247,12 @@ def load_expenses():
                 return pd.DataFrame(columns=rows[0])
             return pd.DataFrame(rows[1:], columns=rows[0])
 
-def open_milking_sheet():
-    return open_sheet(MAIN_SHEET_ID, MILKING_TAB)
-    
-def load_milking_data():
-    ws = open_milking_sheet()
-    rows = ws.get_all_values()
-
-
 def open_wallet_sheet():
             return open_sheet(MAIN_SHEET_ID, WALLET_TRANSACTION_TAB)
 def open_expense_sheet():
             return open_sheet(MAIN_SHEET_ID, EXPENSE_TAB)
 def open_investment_sheet():
             return open_sheet(MAIN_SHEET_ID, INVESTMENT_TAB)
-
-def load_investments():
-            ws = open_investment_sheet()
-            rows = ws.get_all_values()
 # ============================================================
 # HELPERS
 # ============================================================
@@ -673,7 +661,12 @@ else:
         ]
     
         # ================== SHEET HELPERS ==================
-
+        def open_milking_sheet():
+            return open_sheet(MAIN_SHEET_ID, MILKING_TAB)
+    
+        def load_milking_data():
+            ws = open_milking_sheet()
+            rows = ws.get_all_values()
     
             if not rows or rows[0] != MILKING_HEADER:
                 ws.insert_row(MILKING_HEADER, 1)
@@ -1142,6 +1135,9 @@ else:
         # SHEET FUNCTIONS
         # =========================================================
     
+        def load_investments():
+            ws = open_investment_sheet()
+            rows = ws.get_all_values()
     
             if not rows or rows[0] != INVESTMENT_HEADER:
                 ws.insert_row(INVESTMENT_HEADER, 1)
