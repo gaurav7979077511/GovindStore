@@ -4686,6 +4686,30 @@ else:
 
         st.title("👛 My Wallet")
 
+        st.markdown("""
+        <style>
+        div.stButton > button {
+            background-color: #28a745;
+            color: white;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 0.5em 1.2em;
+            border: none;
+        }
+        div.stButton > button:hover {
+            background-color: #218838;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Create columns (left space + button column)
+        col1, col2 = st.columns([8, 2])
+
+        with col2:
+            if st.button("Send ➤"):
+                st.session_state.show_send_money = not st.session_state.show_send_money
+
         wallet_df = load_wallet_df()
 
         # ----------------------------------
@@ -4767,29 +4791,7 @@ else:
             dairy_users_df["userid"] != st.session_state.user_id
         ]
 
-        st.markdown("""
-        <style>
-        div.stButton > button {
-            background-color: #28a745;
-            color: white;
-            font-weight: 600;
-            border-radius: 6px;
-            padding: 0.5em 1.2em;
-            border: none;
-        }
-        div.stButton > button:hover {
-            background-color: #218838;
-            color: white;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Create columns (left space + button column)
-        col1, col2 = st.columns([8, 2])
-
-        with col2:
-            if st.button("Send ➤"):
-                st.session_state.show_send_money = not st.session_state.show_send_money
+        
 
 
         if st.session_state.show_send_money:
