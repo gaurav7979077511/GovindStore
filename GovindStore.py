@@ -4797,6 +4797,7 @@ else:
             amount = st.number_input(
                 "Amount",
                 min_value=1.0,
+                value=None,
                 step=1.0
             )
 
