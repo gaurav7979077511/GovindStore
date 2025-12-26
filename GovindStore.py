@@ -218,6 +218,66 @@ WALLET_HEADER = [
     "TransferID"
 ]
 
+
+
+# ==================================
+# WALLET BALANCE
+# ==================================
+
+@st.cache_data(ttl=30)
+def load_wallet_df():
+    ws = open_wallet_sheet()
+    rows = ws.get_all_values()
+
+    if not rows or rows[0] != WALLET_HEADER:
+        ws.insert_row(WALLET_HEADER, 1)
+        return pd.DataFrame(columns=WALLET_HEADER)
+
+    return pd.DataFrame(rows[1:], columns=rows[0])
+
+wallet_df = load_wallet_df()
+
+# ----------------------------------
+# FILTER ONLY LOGGED-IN USER
+# ----------------------------------
+user_id = st.session_state.user_id
+my_df = wallet_df[wallet_df["UserID"] == user_id].copy()
+
+# ----------------------------------
+# DATA CLEANING
+# ----------------------------------
+if not my_df.empty:
+    my_df["Amount"] = (
+        pd.to_numeric(my_df["Amount"], errors="coerce")
+        .fillna(0)
+    )
+    my_df["TxnDate"] = pd.to_datetime(
+        my_df["TxnDate"], errors="coerce"
+    )
+
+# ----------------------------------
+# BALANCE CALCULATION
+# ----------------------------------
+credit = my_df[
+    (my_df["TxnType"] == "CREDIT") &
+    (my_df["TxnStatus"] == "COMPLETED")
+]["Amount"].sum()
+
+debit = my_df[
+    (my_df["TxnType"] == "DEBIT") &
+    (my_df["TxnStatus"] == "COMPLETED")
+]["Amount"].sum()
+
+blocked = my_df[
+    (my_df["TxnType"] == "DEBIT") &
+    (my_df["TxnStatus"] == "PENDING")
+]["Amount"].sum()
+
+available_balance = credit - debit - blocked
+total_balance = available_balance + blocked
+
+
+
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
@@ -337,16 +397,7 @@ for k, v in defaults.items():
 def open_bank_sheet():
     return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
 
-@st.cache_data(ttl=30)
-def load_wallet_df():
-    ws = open_wallet_sheet()
-    rows = ws.get_all_values()
 
-    if not rows or rows[0] != WALLET_HEADER:
-        ws.insert_row(WALLET_HEADER, 1)
-        return pd.DataFrame(columns=WALLET_HEADER)
-
-    return pd.DataFrame(rows[1:], columns=rows[0])
 
 
 @st.cache_data(ttl=30)
@@ -4686,39 +4737,7 @@ else:
 
         st.title("👛 My Wallet")
 
-        wallet_df = load_wallet_df()
 
-        # ----------------------------------
-        # FILTER ONLY LOGGED-IN USER
-        # ----------------------------------
-        user_id = st.session_state.user_id
-
-        my_df = wallet_df[wallet_df["UserID"] == user_id].copy()
-
-        if not my_df.empty:
-            my_df["Amount"] = pd.to_numeric(my_df["Amount"], errors="coerce").fillna(0)
-            my_df["TxnDate"] = pd.to_datetime(my_df["TxnDate"], errors="coerce")
-
-        # ----------------------------------
-        # BALANCE CALCULATION
-        # ----------------------------------
-        credit = my_df[
-            (my_df["TxnType"] == "CREDIT") &
-            (my_df["TxnStatus"] == "COMPLETED")
-        ]["Amount"].sum()
-
-        debit = my_df[
-            (my_df["TxnType"] == "DEBIT") &
-            (my_df["TxnStatus"] == "COMPLETED")
-        ]["Amount"].sum()
-
-        blocked = my_df[
-            (my_df["TxnType"] == "DEBIT") &
-            (my_df["TxnStatus"] == "PENDING")
-        ]["Amount"].sum()
-
-        available_balance = credit - debit - blocked
-        total_balance = available_balance + blocked
 
         # ----------------------------------
         # KPI SECTION
