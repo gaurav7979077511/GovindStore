@@ -4755,7 +4755,7 @@ else:
         # SEND MONEY (INITIATE)
         # ======================================================
         # Create columns (left space + button column)
-        if st.button("Transfer ➤"):
+        if st.button("Wallet Transfer"):
             st.session_state.show_send_money = not st.session_state.show_send_money
         if "show_send_money" not in st.session_state:
             st.session_state.show_send_money = False
@@ -4859,75 +4859,114 @@ else:
                 st.rerun()
 
 
-        st.divider()
-
         # ======================================================
         # INCOMING REQUESTS (APPROVE / REJECT)
         # ======================================================
-        st.subheader("📥 Incoming Requests")
-
         incoming = my_df[
             (my_df["TxnType"] == "CREDIT") &
             (my_df["TxnStatus"] == "PENDING")
         ]
-
-        if incoming.empty:
-            st.info("No incoming requests")
-        else:
-            for _, r in incoming.iterrows():
-                c1, c2, c3 = st.columns([3, 1, 1])
-                name = users_df.loc[
-                    users_df['userid'] == r['CounterpartyUserID'],
-                    'name'
-                ].iloc[0]
-
-                c1.write(f"Approve this request to accept ₹ {r['Amount']} from {name}")
-
-
-                if c2.button("✅ Approve", key=f"ap_{r['TxnID']}"):
-                    ws = open_wallet_sheet()
-                    idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["COMPLETED"], ["COMPLETED"]])
-                    st.cache_data.clear()
-                    st.rerun()
-
-                if c3.button("❌ Reject", key=f"rej_{r['TxnID']}"):
-                    ws = open_wallet_sheet()
-                    idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
-                    st.cache_data.clear()
-                    st.rerun()
-
-        st.divider()
-
-        # ======================================================
-        # OUTGOING REQUESTS (CANCEL)
-        # ======================================================
-        st.subheader("📤 Outgoing Requests")
 
         outgoing = my_df[
             (my_df["TxnType"] == "DEBIT") &
             (my_df["TxnStatus"] == "PENDING")
         ]
 
-        if outgoing.empty:
-            st.info("No outgoing requests")
-        else:
-            for _, r in outgoing.iterrows():
-                c1, c2 = st.columns([4, 1])
-                name = users_df.loc[
-                    users_df['userid'] == r['CounterpartyUserID'],
-                    'name'
-                ].iloc[0]
+        has_pending = not incoming.empty or not outgoing.empty
 
-                c1.write(f"Transfer request of ₹ {r['Amount']} to {name}")
+        if has_pending:
+            st.subheader("🕒 Pending Requests")
 
-                if c2.button("❌ Cancel", key=f"can_{r['TxnID']}"):
-                    ws = open_wallet_sheet()
-                    idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
-                    st.cache_data.clear()
-                    st.rerun()
+            if not incoming.empty:
+                for _, r in incoming.iterrows():
+
+                    name = users_df.loc[
+                        users_df["userid"] == r["CounterpartyUserID"],
+                        "name"
+                    ].iloc[0]
+
+                    col_text, col_btn1, col_btn2 = st.columns([6, 1.2, 1.2])
+
+                    with col_text:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background:#f8fafc;
+                                border:1px solid #e5e7eb;
+                                border-radius:8px;
+                                padding:8px 12px;
+                                font-size:13px;
+                                font-family:Inter,system-ui,sans-serif;
+                            ">
+                                💰 Accept <b>₹ {r['Amount']}</b> from <b>{name}</b>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    with col_btn1:
+                        if st.button("✅ Approve", key=f"ap_{r['TxnID']}"):
+                            ws = open_wallet_sheet()
+                            idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
+                            ws.update(
+                                f"I{idxs.min()}:I{idxs.max()}",
+                                [["COMPLETED"]] * len(idxs)
+                            )
+                            st.cache_data.clear()
+                            st.rerun()
+
+                    with col_btn2:
+                        if st.button("❌ Reject", key=f"rej_{r['TxnID']}"):
+                            ws = open_wallet_sheet()
+                            idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
+                            ws.update(
+                                f"I{idxs.min()}:I{idxs.max()}",
+                                [["CANCELLED"]] * len(idxs)
+                            )
+                            st.cache_data.clear()
+                            st.rerun()
+
+            if not outgoing.empty:
+                for _, r in outgoing.iterrows():
+
+                    name = users_df.loc[
+                        users_df["userid"] == r["CounterpartyUserID"],
+                        "name"
+                    ].iloc[0]
+
+                    col_text, col_btn = st.columns([7.2, 1.8])
+
+                    with col_text:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background:#fff7ed;
+                                border:1px solid #fed7aa;
+                                border-radius:8px;
+                                padding:8px 12px;
+                                font-size:13px;
+                                font-family:Inter,system-ui,sans-serif;
+                            ">
+                                ⏳ Transfer <b>₹ {r['Amount']}</b> to <b>{name}</b> (Pending)
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    with col_btn:
+                        if st.button("❌ Cancel", key=f"can_{r['TxnID']}"):
+                            ws = open_wallet_sheet()
+                            idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
+                            ws.update(
+                                f"I{idxs.min()}:I{idxs.max()}",
+                                [["CANCELLED"]] * len(idxs)
+                            )
+                            st.cache_data.clear()
+                            st.rerun()
+    
+
+
+
 
         st.divider()
 
