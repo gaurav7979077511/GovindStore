@@ -1371,6 +1371,7 @@ else:
                     if destination != "Company Account"
                     else "Company Account"
                 )
+                
 
     
                 file_url = upload_to_cloudinary(proof,folder) if proof else ""
@@ -4532,6 +4533,13 @@ else:
                 st.rerun()
 
             if save:
+
+                #----Check wallet transfer id greater than wallet balance---
+
+                if category=="USER_WALLET_CREDIT":
+                    if amount>available_balance:
+                        st.error(f"You don't have sufficent Balance You can transfet upto ₹ {available_balance}")
+                        st.stop()
 
                 if amount <= 0:
                     st.error("Amount must be greater than zero")
