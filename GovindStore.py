@@ -4878,7 +4878,7 @@ else:
                     'name'
                 ].iloc[0]
 
-                c1.write(f"₹ {r['Amount']} from {name}")
+                c1.write(f"Approve this request to accept ₹ {r['Amount']} from {name}")
 
 
                 if c2.button("✅ Approve", key=f"ap_{r['TxnID']}"):
@@ -4917,7 +4917,7 @@ else:
                     'name'
                 ].iloc[0]
 
-                c1.write(f"₹ {r['Amount']} from {name}")
+                c1.write(f"Transfer request of ₹ {r['Amount']} to {name}")
 
                 if c2.button("❌ Cancel", key=f"can_{r['TxnID']}"):
                     ws = open_wallet_sheet()
