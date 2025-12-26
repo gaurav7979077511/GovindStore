@@ -4872,7 +4872,7 @@ else:
         else:
             for _, r in incoming.iterrows():
                 c1, c2, c3 = st.columns([3, 1, 1])
-                c1.write(f"₹ {r['Amount']} from {r['CounterpartyUserID']}")
+                c1.write(f"₹ {r['Amount']} from {r['to_user_name']}")
 
                 if c2.button("✅ Approve", key=f"ap_{r['TxnID']}"):
                     ws = open_wallet_sheet()
@@ -4905,7 +4905,7 @@ else:
         else:
             for _, r in outgoing.iterrows():
                 c1, c2 = st.columns([4, 1])
-                c1.write(f"₹ {r['Amount']} to {r['CounterpartyUserID']}")
+                c1.write(f"₹ {r['Amount']} to {r['to_user_name']}")
 
                 if c2.button("❌ Cancel", key=f"can_{r['TxnID']}"):
                     ws = open_wallet_sheet()
