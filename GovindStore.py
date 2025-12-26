@@ -4430,7 +4430,7 @@ else:
                     if category =="BANK_CHARGE":
                         to_account = "BANK ACCOUNT"
                     elif category =="EXPENSE":
-                        to_account = "VENDOR ACCOUNT"
+                        to_account = "VENDOR"
                     else:
                         to_account = st.session_state.user_name
                     from_account = "BANK ACCOUNT"
