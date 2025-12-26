@@ -4756,6 +4756,16 @@ else:
         # ======================================================
         if "show_send_money" not in st.session_state:
             st.session_state.show_send_money = False
+        # ---- Filter Dairy Users ----
+        dairy_users_df = auth_df[
+            auth_df["accesslevel"]
+            .fillna("")
+            .str.contains(r"\bdairy\b", case=False)
+        ][["userid", "name"]]
+
+        users_df = dairy_users_df[
+            dairy_users_df["userid"] != st.session_state.user_id
+        ]
 
         if st.button("➕ Send Money"):
             st.session_state.show_send_money = not st.session_state.show_send_money
@@ -4764,16 +4774,7 @@ else:
 
             st.subheader("💸 Send Money")
 
-            # ---- Filter Dairy Users ----
-            dairy_users_df = auth_df[
-                auth_df["accesslevel"]
-                .fillna("")
-                .str.contains(r"\bdairy\b", case=False)
-            ][["userid", "name"]]
-
-            users_df = dairy_users_df[
-                dairy_users_df["userid"] != st.session_state.user_id
-            ]
+            
 
             if users_df.empty:
                 st.warning("No users available to send money")
