@@ -4588,7 +4588,7 @@ else:
                     border:1px solid #e5e7eb;
                     border-radius:8px;
                     padding:6px 12px;
-                    margin-bottom:2px;
+                    margin-bottom:1px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
@@ -4651,7 +4651,7 @@ else:
                 """
 
 
-                components.html(row_html, height=60)
+                components.html(row_html, height=70)
 
             
     # ----------------------------
