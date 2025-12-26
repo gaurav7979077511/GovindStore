@@ -995,7 +995,8 @@ else:
                             "DEBIT",
                             expense_id,
                             f"Amount used for  {category}",
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "COMPLETED"
                         ],
                         value_input_option="USER_ENTERED"
                     )
@@ -1350,6 +1351,7 @@ else:
                             InvestmentID,
                             f"Investment Amount From {st.session_state.user_name}",
                             dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            "COMPLETED"
                         ],
                         value_input_option="USER_ENTERED"
                     )
@@ -1681,7 +1683,8 @@ else:
                             "CREDIT",
                             bill["BillID"],
                             f"Payment received from {bill['CustomerName']}",
-                            now.strftime("%Y-%m-%d %H:%M:%S")
+                            now.strftime("%Y-%m-%d %H:%M:%S"),
+                            "COMPLETED"
                         ],
                         value_input_option="USER_ENTERED"
                     )
@@ -4520,7 +4523,8 @@ else:
                                 Wallet_txn_type,
                                 bankTransactionId,
                                 f"Amount from {from_account} to {to_account}",
-                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "COMPLETED"
                             ],
                             value_input_option="USER_ENTERED"
                         )
