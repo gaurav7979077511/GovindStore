@@ -4622,18 +4622,9 @@ else:
                         color:#334155;
                         margin-top:4px;
                     ">
-                        {r['FromAccount']} → {r['ToAccount']}
-                    </div>
-
-                    <!-- Balances -->
-                    <div style="
-                        font-size:11px;
-                        color:#475569;
-                        margin-top:4px;
-                    ">
-                        Opening: ₹ {float(r['OpeningBalance']):,.2f}
-                        &nbsp; → &nbsp;
-                        Closing: <b>₹ {float(r['ClosingBalance']):,.2f}</b>
+                        
+                        <span>TxnID: {r['FromAccount']} → {r['ToAccount']}</span>
+                        <span> ₹ {float(r['ClosingBalance']):,.2f}</span>
                     </div>
 
                     <!-- Footer -->
@@ -4652,7 +4643,7 @@ else:
                 </div>
                 """
 
-                components.html(row_html, height=135)
+                components.html(row_html, height=115)
 
             
     # ----------------------------
