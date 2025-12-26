@@ -4873,14 +4873,14 @@ else:
                 if c2.button("✅ Approve", key=f"ap_{r['TxnID']}"):
                     ws = open_wallet_sheet()
                     idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"I{idxs.min()}:F{idxs.max()}", [["COMPLETED"], ["COMPLETED"]])
+                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["COMPLETED"], ["COMPLETED"]])
                     st.cache_data.clear()
                     st.rerun()
 
                 if c3.button("❌ Reject", key=f"rej_{r['TxnID']}"):
                     ws = open_wallet_sheet()
                     idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"F{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
+                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
                     st.cache_data.clear()
                     st.rerun()
 
@@ -4906,7 +4906,7 @@ else:
                 if c2.button("❌ Cancel", key=f"can_{r['TxnID']}"):
                     ws = open_wallet_sheet()
                     idxs = wallet_df[wallet_df["RefID"] == r["RefID"]].index + 2
-                    ws.update(f"F{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
+                    ws.update(f"I{idxs.min()}:I{idxs.max()}", [["CANCELLED"], ["CANCELLED"]])
                     st.cache_data.clear()
                     st.rerun()
 
