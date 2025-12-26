@@ -1350,7 +1350,7 @@ else:
                             "CREDIT",
                             InvestmentID,
                             f"Investment Amount From {st.session_state.user_name}",
-                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "COMPLETED"
                         ],
                         value_input_option="USER_ENTERED"
