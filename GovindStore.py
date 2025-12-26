@@ -4587,8 +4587,8 @@ else:
                     background:#f8fafc;
                     border:1px solid #e5e7eb;
                     border-radius:10px;
-                    padding:10px 14px;
-                    margin-bottom:10px;
+                    padding:8px 14px;
+                    margin-bottom:8px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
@@ -4608,7 +4608,7 @@ else:
                         </div>
 
                         <div style="
-                            font-size:18px;
+                            font-size:17px;
                             font-weight:900;
                             color:{amount_color};
                         ">
@@ -4616,15 +4616,22 @@ else:
                         </div>
                     </div>
 
-                    <!-- Accounts -->
+                    <!-- From → To + Closing Balance -->
                     <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        margin-top:4px;
                         font-size:12px;
                         color:#334155;
-                        margin-top:4px;
                     ">
-                        
-                        <span>TxnID: {r['FromAccount']} → {r['ToAccount']}</span>
-                        <span> ₹ {float(r['ClosingBalance']):,.2f}</span>
+                        <div>
+                            {r['FromAccount']} → {r['ToAccount']}
+                        </div>
+
+                        <div style="font-weight:700;color:#0f172a;">
+                            Bal: ₹ {float(r['ClosingBalance']):,.2f}
+                        </div>
                     </div>
 
                     <!-- Footer -->
@@ -4632,16 +4639,17 @@ else:
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        margin-top:6px;
+                        margin-top:4px;
                         font-size:10px;
                         color:#64748b;
                     ">
-                        <span>TxnID: {r['TransactionID']}</span>
+                        <span>{r['TransactionID']}</span>
                         <span>👤 {r['CreatedBy']}</span>
                     </div>
 
                 </div>
                 """
+
 
                 components.html(row_html, height=115)
 
