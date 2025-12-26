@@ -4686,30 +4686,6 @@ else:
 
         st.title("👛 My Wallet")
 
-        st.markdown("""
-        <style>
-        div.stButton > button {
-            background-color: #28a745;
-            color: white;
-            font-weight: 600;
-            border-radius: 6px;
-            padding: 0.5em 1.2em;
-            border: none;
-        }
-        div.stButton > button:hover {
-            background-color: #218838;
-            color: white;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Create columns (left space + button column)
-        col1, col2 = st.columns([8, 2])
-
-        with col2:
-            if st.button("Send ➤"):
-                st.session_state.show_send_money = not st.session_state.show_send_money
-
         wallet_df = load_wallet_df()
 
         # ----------------------------------
@@ -4778,6 +4754,9 @@ else:
         # ======================================================
         # SEND MONEY (INITIATE)
         # ======================================================
+        # Create columns (left space + button column)
+        if st.button("Transfer ➤"):
+            st.session_state.show_send_money = not st.session_state.show_send_money
         if "show_send_money" not in st.session_state:
             st.session_state.show_send_money = False
         # ---- Filter Dairy Users ----
