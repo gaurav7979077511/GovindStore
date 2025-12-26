@@ -4764,15 +4764,15 @@ else:
                 auth_df["accesslevel"]
                 .fillna("")
                 .str.contains(r"\bdairy\b", case=False)
-            ][["UserID", "Name"]]
+            ][["userid", "name"]]
 
-            users_df = dairy_users_df[dairy_users_df["UserID"] != st.session_state.user_id]
+            users_df = dairy_users_df[dairy_users_df["userid"] != st.session_state.user_id]
 
             to_user = st.selectbox(
                 "Send To",
-                users_df["UserID"].tolist(),
+                users_df["userid"].tolist(),
                 format_func=lambda x:
-                    users_df[users_df["UserID"] == x]["Name"].values[0]
+                    users_df[users_df["userid"] == x]["name"].values[0]
             )
 
             amount = st.number_input(
@@ -4822,7 +4822,7 @@ else:
                     [
                         f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
                         to_user,
-                        users_df[users_df["UserID"] == to_user]["Name"].values[0],
+                        users_df[users_df["userid"] == to_user]["Name"].values[0],
                         amount,
                         "CREDIT",
                         ref_id,
