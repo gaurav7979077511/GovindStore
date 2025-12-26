@@ -4895,6 +4895,7 @@ else:
                             border:1px solid #e5e7eb;
                             border-radius:8px;
                             padding:8px 12px;
+                            margin-bottom:2px;
                             font-size:13px;
                             font-family:Inter,system-ui,sans-serif;
                             color:#111827;          /* ✅ FIX */
@@ -4947,6 +4948,7 @@ else:
                                 border-radius:8px;
                                 padding:8px 12px;
                                 font-size:13px;
+                                margin-bottom:2px;
                                 font-family:Inter,system-ui,sans-serif;
                                 color:#1f2937;          /* ✅ TEXT COLOR FIX */
                             ">
