@@ -4588,7 +4588,7 @@ else:
                     border:1px solid #e5e7eb;
                     border-radius:8px;
                     padding:6px 12px;
-                    margin-bottom:0.1px;
+                    margin-bottom:2px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
 
