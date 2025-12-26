@@ -4760,20 +4760,31 @@ else:
 
             st.subheader("💸 Send Money")
 
+            # ---- Filter Dairy Users ----
             dairy_users_df = auth_df[
                 auth_df["accesslevel"]
                 .fillna("")
                 .str.contains(r"\bdairy\b", case=False)
             ][["userid", "name"]]
 
-            users_df = dairy_users_df[dairy_users_df["userid"] != st.session_state.user_id]
+            users_df = dairy_users_df[
+                dairy_users_df["userid"] != st.session_state.user_id
+            ]
+
+            if users_df.empty:
+                st.warning("No users available to send money")
+                st.stop()
 
             to_user = st.selectbox(
                 "Send To",
                 users_df["userid"].tolist(),
                 format_func=lambda x:
-                    users_df[users_df["userid"] == x]["name"].values[0]
+                    users_df.loc[users_df["userid"] == x, "name"].values[0]
             )
+
+            to_user_name = users_df.loc[
+                users_df["userid"] == to_user, "name"
+            ].values[0]
 
             amount = st.number_input(
                 "Amount",
@@ -4809,7 +4820,7 @@ else:
                         amount,
                         "DEBIT",
                         ref_id,
-                        f"Transfer to {to_user}",
+                        f"Transfer to {to_user_name}",
                         now.strftime("%Y-%m-%d %H:%M:%S"),
                         "PENDING",
                         to_user
@@ -4822,15 +4833,14 @@ else:
                     [
                         f"WTXN{now.strftime('%Y%m%d%H%M%S%f')}",
                         to_user,
-                        users_df[users_df["userid"] == to_user]["Name"].values[0],
+                        to_user_name,
                         amount,
                         "CREDIT",
                         ref_id,
                         f"Transfer from {st.session_state.user_name}",
                         now.strftime("%Y-%m-%d %H:%M:%S"),
                         "PENDING",
-                        st.session_state.user_id      
-                        
+                        st.session_state.user_id
                     ],
                     value_input_option="USER_ENTERED"
                 )
@@ -4839,6 +4849,7 @@ else:
                 st.success("✅ Transfer request sent")
                 st.session_state.show_send_money = False
                 st.rerun()
+
 
         st.divider()
 
