@@ -563,6 +563,7 @@ else:
             "Medicine",
             "Medication",
             "Bank Account",
+            "My Wallet",
             "Profile"
 
             
@@ -4653,7 +4654,8 @@ else:
 
                 components.html(row_html, height=90)
 
-            
+    elif page == "My Wallet":
+        st.markdown("My Wallet")
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
