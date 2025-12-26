@@ -204,6 +204,19 @@ BANK_TRANSACTION_HEADER = [
     "Timestamp"
 ]
 
+WALLET_HEADER = [
+    "TxnID",
+    "UserID",
+    "Name",
+    "Amount",
+    "TxnType",
+    "RefID",
+    "Description",
+    "TxnDate",
+    "TxnStatus",
+    "CounterpartyUserID",
+    "TransferID"
+]
 
 # ============================================================
 # LOAD AUTH DATA
@@ -323,6 +336,17 @@ for k, v in defaults.items():
 
 def open_bank_sheet():
     return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
+
+@st.cache_data(ttl=30)
+def load_wallet_df():
+    ws = open_wallet_sheet()
+    rows = ws.get_all_values()
+
+    if not rows or rows[0] != WALLET_HEADER:
+        ws.insert_row(WALLET_HEADER, 1)
+        return pd.DataFrame(columns=WALLET_HEADER)
+
+    return pd.DataFrame(rows[1:], columns=rows[0])
 
 
 @st.cache_data(ttl=30)
@@ -4655,7 +4679,142 @@ else:
                 components.html(row_html, height=90)
 
     elif page == "My Wallet":
-        st.markdown("My Wallet")
+
+        st.title("👛 My Wallet")
+
+        wallet_df = load_wallet_df()
+
+        # ----------------------------------
+        # FILTER ONLY LOGGED-IN USER
+        # ----------------------------------
+        user_id = st.session_state.user_id
+
+        my_df = wallet_df[wallet_df["UserID"] == user_id].copy()
+
+        if not my_df.empty:
+            my_df["Amount"] = pd.to_numeric(my_df["Amount"], errors="coerce").fillna(0)
+            my_df["TxnDate"] = pd.to_datetime(my_df["TxnDate"], errors="coerce")
+
+        # ----------------------------------
+        # BALANCE CALCULATION
+        # ----------------------------------
+        credit = my_df[
+            (my_df["TxnType"] == "CREDIT") &
+            (my_df["TxnStatus"] == "COMPLETED")
+        ]["Amount"].sum()
+
+        debit = my_df[
+            (my_df["TxnType"] == "DEBIT") &
+            (my_df["TxnStatus"] == "COMPLETED")
+        ]["Amount"].sum()
+
+        blocked = my_df[
+            (my_df["TxnType"] == "DEBIT") &
+            (my_df["TxnStatus"] == "PENDING")
+        ]["Amount"].sum()
+
+        available_balance = credit - debit - blocked
+        total_balance = available_balance + blocked
+
+        # ----------------------------------
+        # KPI SECTION
+        # ----------------------------------
+        st.subheader("📊 Wallet Overview")
+
+        k1, k2, k3, k4 = st.columns([3,3,3,2])
+
+        def kpi(title, value, color):
+            st.markdown(
+                f"""
+                <div style="
+                    padding:14px;
+                    border-radius:14px;
+                    background:{color};
+                    color:white;
+                    margin-bottom:14px;
+                    font-family:Inter,system-ui,sans-serif;
+                ">
+                    <div style="font-size:13px;opacity:.85">{title}</div>
+                    <div style="font-size:22px;font-weight:900">₹ {value:,.2f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1: kpi("Available Balance", available_balance, "#065f46")
+        with k2: kpi("Blocked Amount", blocked, "#92400e")
+        with k3: kpi("Total Balance", total_balance, "#1e293b")
+
+        with k4:
+            st.markdown("<div style='height:42px'></div>", unsafe_allow_html=True)
+            st.button("Send Money", disabled=True, use_container_width=True)
+
+        st.caption("🔒 Send Money will be enabled in Phase 2")
+
+        st.divider()
+
+        st.subheader("📜 Wallet Transactions")
+
+        if my_df.empty:
+            st.info("No wallet transactions yet.")
+            st.stop()
+
+        my_df = my_df.sort_values("TxnDate", ascending=False)
+
+        for _, r in my_df.iterrows():
+
+            is_credit = r["TxnType"] == "CREDIT"
+            color = "#065f46" if is_credit else "#7f1d1d"
+            sign = "+" if is_credit else "−"
+
+            status_badge = {
+                "COMPLETED": "🟢 Completed",
+                "PENDING": "🟡 Pending",
+                "REJECTED": "🔴 Rejected",
+                "CANCELLED": "⚪ Cancelled"
+            }.get(r["TxnStatus"], r["TxnStatus"])
+
+            card_html = f"""
+            <div style="
+                background:#f8fafc;
+                border:1px solid #e5e7eb;
+                border-radius:10px;
+                padding:10px 14px;
+                margin-bottom:6px;
+                font-family:Inter,system-ui,sans-serif;
+            ">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:13px;font-weight:700;">
+                            {r['Description']}
+                        </div>
+                        <div style="font-size:11px;color:#475569;">
+                            {r['TxnDate']}
+                        </div>
+                    </div>
+
+                    <div style="font-size:18px;font-weight:900;color:{color};">
+                        {sign} ₹ {float(r['Amount']):,.2f}
+                    </div>
+                </div>
+
+                <div style="font-size:11px;color:#334155;margin-top:4px;">
+                    Status: {status_badge}
+                </div>
+
+                <div style="font-size:10px;color:#64748b;margin-top:4px;">
+                    TxnID: {r['TxnID']}
+                </div>
+
+            </div>
+            """
+
+            components.html(card_html, height=110)
+
+
+
+
     # ----------------------------
     # REFRESH BUTTON
     # ----------------------------
