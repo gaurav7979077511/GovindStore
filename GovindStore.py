@@ -4814,7 +4814,9 @@ else:
                 if amount > available_balance:
                     st.error("❌ Insufficient available balance")
                     st.stop()
-
+                if amount <1:
+                    st.error("❌ Enter a valid amount")
+                    st.stop()
                 now = dt.datetime.now()
                 ref_id = f"REF{now.strftime('%Y%m%d%H%M%S%f')}"
 
