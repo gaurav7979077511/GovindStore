@@ -4760,8 +4760,13 @@ else:
 
             st.subheader("💸 Send Money")
 
-            users_df = auth_df()   # must return UserID + Name
-            users_df = users_df[users_df["UserID"] != st.session_state.user_id]
+            dairy_users_df = auth_df[
+                auth_df["accesslevel"]
+                .fillna("")
+                .str.contains(r"\bdairy\b", case=False)
+            ][["userid", "name"]]
+
+            users_df = dairy_users_df[dairy_users_df["UserID"] != st.session_state.user_id]
 
             to_user = st.selectbox(
                 "Send To",
