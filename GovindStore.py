@@ -4651,7 +4651,7 @@ else:
                 """
 
 
-                components.html(row_html, height=85)
+                components.html(row_html, height=60)
 
             
     # ----------------------------
