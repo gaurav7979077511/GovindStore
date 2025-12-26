@@ -639,9 +639,136 @@ else:
     # ----------------------------
     # MANAGE CUSTOMERS PAGE
     # ----------------------------
-    if page =="Dashboard":
-        st.title("Dashboard")
-        reset_Session_value()
+    if page == "Dashboard":
+
+        st.title("📊 Dashboard")
+        st.caption("System overview & quick insights")
+
+        today = pd.Timestamp.today().date()
+
+        # ======================================================
+        # SAFE LOADERS (READ ONLY)
+        # ======================================================
+        @st.cache_data(ttl=60)
+        def load_df(tab):
+            try:
+                ws = open_sheet(MAIN_SHEET_ID, tab)
+                rows = ws.get_all_values()
+                if len(rows) <= 1:
+                    return pd.DataFrame()
+                return pd.DataFrame(rows[1:], columns=rows[0])
+            except:
+                return pd.DataFrame()
+
+        customers_df = load_df(CUSTOMER_TAB)
+        bitran_df = load_df(BITRAN_TAB)
+        cows_df = load_df(COW_PROFILE_TAB)
+        expense_df = load_df(EXPENSE_TAB)
+        investment_df = load_df(INVESTMENT_TAB)
+        payment_df = load_df(PAYMENT_TAB)
+        billing_df = load_df(BILLING_TAB)
+        meds_df = load_df(MEDICATION_MASTER_TAB)
+        medlog_df = load_df(MEDICATION_LOG_TAB)
+        bank_df = load_df(BANK_TRANSACTION_TAB)
+        wallet_df = load_df(WALLET_TRANSACTION_TAB)
+
+        # ======================================================
+        # KPI HELPER
+        # ======================================================
+        def kpi(title, value, bg="#0f172a"):
+            st.markdown(
+                f"""
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:{bg};
+                    color:white;
+                    box-shadow:0 6px 16px rgba(0,0,0,.25);
+                    font-family:Inter,system-ui,sans-serif;
+                ">
+                    <div style="font-size:13px;opacity:.85">{title}</div>
+                    <div style="font-size:24px;font-weight:900">{value}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # ======================================================
+        # KPI ROW 1 — SYSTEM
+        # ======================================================
+        st.subheader("⚙️ System Overview")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            kpi("Customers", len(customers_df), "#1e293b")
+        with c2:
+            kpi("Cows", len(cows_df), "#1e293b")
+        with c3:
+            kpi("Medicines", len(meds_df), "#1e293b")
+        with c4:
+            kpi("Users Wallets", wallet_df["UserID"].nunique() if not wallet_df.empty else 0, "#1e293b")
+
+        # ======================================================
+        # KPI ROW 2 — FINANCIAL SNAPSHOT
+        # ======================================================
+        st.subheader("💰 Financial Snapshot")
+
+        f1, f2, f3, f4 = st.columns(4)
+
+        total_expense = (
+            pd.to_numeric(expense_df["Amount"], errors="coerce").sum()
+            if "Amount" in expense_df else 0
+        )
+
+        total_investment = (
+            pd.to_numeric(investment_df["Amount"], errors="coerce").sum()
+            if "Amount" in investment_df else 0
+        )
+
+        total_collected = (
+            pd.to_numeric(payment_df["Amount"], errors="coerce").sum()
+            if "Amount" in payment_df else 0
+        )
+
+        bank_balance = (
+            pd.to_numeric(bank_df["ClosingBalance"], errors="coerce").iloc[-1]
+            if "ClosingBalance" in bank_df and not bank_df.empty else 0
+        )
+
+        with f1:
+            kpi("Expenses", f"₹ {total_expense:,.0f}", "#7f1d1d")
+        with f2:
+            kpi("Investment", f"₹ {total_investment:,.0f}", "#065f46")
+        with f3:
+            kpi("Payments Collected", f"₹ {total_collected:,.0f}", "#1d4ed8")
+        with f4:
+            kpi("Bank Balance", f"₹ {bank_balance:,.0f}", "#0f766e")
+
+        st.divider()
+
+        # ======================================================
+        # QUICK INSIGHTS (PLACEHOLDERS)
+        # ======================================================
+        st.subheader("📌 Quick Insights")
+
+        q1, q2 = st.columns(2)
+
+        with q1:
+            st.info("🍼 Milk, billing & delivery insights will appear here")
+
+        with q2:
+            st.info("⏳ Pending actions (payments, meds, approvals) will appear here")
+
+        st.divider()
+
+        # ======================================================
+        # SAFE MESSAGE
+        # ======================================================
+        st.caption(
+            "This dashboard is read-only. All numbers are computed safely from Google Sheets."
+        )
+
     
     elif page == "Milking":
 
