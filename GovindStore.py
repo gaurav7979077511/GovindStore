@@ -4784,8 +4784,12 @@ else:
         </style>
         """, unsafe_allow_html=True)
 
-        if st.button("Send ➤"):
-            st.session_state.show_send_money = not st.session_state.show_send_money
+        # Create columns (left space + button column)
+        col1, col2 = st.columns([8, 2])
+
+        with col2:
+            if st.button("Send ➤"):
+                st.session_state.show_send_money = not st.session_state.show_send_money
 
 
         if st.session_state.show_send_money:
