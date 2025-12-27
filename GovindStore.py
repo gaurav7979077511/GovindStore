@@ -1151,6 +1151,7 @@ else:
                     border:1px solid #334155;
                     border-radius:12px;
                     padding:16px;
+                    margin-bottom:8px;
                     font-family:Inter,system-ui,sans-serif;
                 ">
                     <div style="font-size:12px;color:#94a3b8">{title}</div>
@@ -1176,6 +1177,7 @@ else:
 
 
 
+
         st.divider()
         st.subheader("🐄 Cow-wise Milking Summary")
 
@@ -1189,7 +1191,7 @@ else:
         if cows_df.empty:
             st.info("No active milking cows.")
         else:
-            # Aggregations
+            # ---------- Aggregations ----------
             lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
             month_total = month_df.groupby("CowID")["MilkQuantity"].sum()
             month_avg = month_df.groupby("CowID")["MilkQuantity"].mean()
@@ -1203,42 +1205,70 @@ else:
                     .to_dict()
                 )
 
+            last_update_map = (
+                df_milk.groupby("CowID")["Timestamp"]
+                .max()
+                .apply(lambda x: x.split(" ")[0] if isinstance(x, str) else "")
+                .to_dict()
+            )
+
             cols = st.columns(6)  # compact grid
             i = 0
 
             for _, cow in cows_df.iterrows():
                 cid = cow["CowID"]
                 tag = cow["TagNumber"]
+                last_upd = last_update_map.get(cid, "-")
 
                 card_html = f"""
                 <div style="
-                    background:linear-gradient(135deg,#2dd4bf,#0ea5e9);
+                    background:linear-gradient(135deg,#64748b,#334155);
                     border-radius:12px;
-                    padding:10px 12px;
-                    height:120px;
+                    padding:12px 14px;
+                    height:115px;
                     color:#ffffff;
                     font-family:Inter,system-ui,sans-serif;
-                    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+                    box-shadow:0 4px 10px rgba(0,0,0,0.25);
                 ">
+
+                    <!-- Header -->
                     <div style="
-                        font-size:13px;
-                        font-weight:700;
-                        margin-bottom:6px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        margin-bottom:8px;
                     ">
-                        {tag}
+                        <div style="font-size:13px;font-weight:700;">
+                            🐄 {tag}
+                        </div>
+                        <div style="
+                            font-size:10px;
+                            opacity:0.75;
+                        ">
+                            ⏱ {last_upd}
+                        </div>
                     </div>
 
-                    <div style="font-size:11px;line-height:1.4;opacity:0.95;">
-                        <div>Total&nbsp;&nbsp;&nbsp;: <b>{lifetime.get(cid,0):.1f} L</b></div>
-                        <div>Month&nbsp;: <b>{month_total.get(cid,0):.1f} L</b></div>
-                        <div>Avg/day: <b>{month_avg.get(cid,0):.1f} L</b></div>
-                        <div>Last day: <b>{last_day_map.get(cid,0):.1f} L</b></div>
+                    <!-- Metrics -->
+                    <div style="
+                        display:grid;
+                        grid-template-columns:1fr 1fr;
+                        row-gap:4px;
+                        font-size:11px;
+                        line-height:1.35;
+                    ">
+                        <div>Total :<b>{lifetime.get(cid,0):.1f} L</b></div>
+                        <div>Avg/day :b>{month_avg.get(cid,0):.1f} L</b></div>
+
+                        <div>Month :<b>{month_total.get(cid,0):.1f} L</b></div>
+                        <div>Last day :b>{last_day_map.get(cid,0):.1f} L</b></div>
                     </div>
+
                 </div>
                 """
 
                 with cols[i % 6]:
-                    components.html(card_html, height=135)
+                    components.html(card_html, height=130)
 
                 i += 1
 
