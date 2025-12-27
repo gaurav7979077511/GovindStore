@@ -151,6 +151,15 @@ if "edit_cow_id" not in st.session_state:
 if "edit_cow_row" not in st.session_state:
     st.session_state.edit_cow_row = None
 
+# ================= SESSION STATE INIT =================
+if "show_form" not in st.session_state:
+    st.session_state.show_form = None
+
+if "locked_bitran_date" not in st.session_state:
+    st.session_state.locked_bitran_date = None
+
+
+
 #--helper for billing----
 
 def safe_cell(val):
@@ -3529,7 +3538,7 @@ else:
         # 📝 LOCKED BITRAN ENTRY
         # ===============================
 
-        if st.session_state.show_form and "locked_bitran_date" in st.session_state:
+        if st.session_state.show_form and st.session_state.locked_bitran_date:
 
             shift = st.session_state.show_form
             date = st.session_state.locked_bitran_date
