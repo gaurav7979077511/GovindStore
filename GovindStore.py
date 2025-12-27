@@ -937,13 +937,13 @@ else:
             credit = my_wallet[(my_wallet["TxnType"]=="CREDIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
             debit = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
             blocked = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="PENDING")]["Amount"].sum()
-            available = credit - debit - blocked
+            total_balance=credit - debit
+            available = total_balance - blocked
 
-            c = st.columns(4)
-            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Credit</div><div class="kpi-value">₹ {credit:,.0f}</div></div>', unsafe_allow_html=True)
-            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Debit</div><div class="kpi-value">₹ {debit:,.0f}</div></div>', unsafe_allow_html=True)
-            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Blocked</div><div class="kpi-value">₹ {blocked:,.0f}</div></div>', unsafe_allow_html=True)
-            c[3].markdown(f'<div class="kpi"><div class="kpi-title">Available</div><div class="kpi-value">₹ {available:,.0f}</div></div>', unsafe_allow_html=True)
+            c = st.columns(3)
+            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Available</div><div class="kpi-value">₹ {available:,.0f}</div></div>', unsafe_allow_html=True)
+            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Blocked</div><div class="kpi-value">₹ {blocked:,.0f}</div></div>', unsafe_allow_html=True)
+            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Total Balance</div><div class="kpi-value">₹ {total_balance:,.0f}</div></div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
 
