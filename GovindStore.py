@@ -3600,19 +3600,6 @@ else:
                 st.rerun()
 
 
-        # ================= STATE =================
-        if "show_form" not in st.session_state:
-            st.session_state.show_form = None
-
-        col1, col2 = st.columns(2)
-        # ===================== SHIFT BUTTONS =====================
-        with col1:
-            if st.button("🌅 Morning Bitran", use_container_width=True):
-                st.session_state.show_form = "Morning"
-        
-        with col2:
-            if st.button("🌃 Evening Bitran", use_container_width=True):
-                st.session_state.show_form = "Evening"
 
         # ==================================================
         # 👥 STEP-2: ACTIVE CUSTOMERS – DELIVERY SNAPSHOT
@@ -3717,76 +3704,6 @@ else:
 
             st.divider()
 
-
-        
-
-
-        
-        # ================= ENTRY FORM =================
-        if st.session_state.show_form:
-
-            shift = st.session_state.show_form
-            st.divider()
-            st.subheader(f"📝 {shift} Bitran Entry")
-
-            date = st.date_input("Date")
-
-            customers = load_customers()
-            customers = customers[
-                (customers["Status"].str.lower() == "active")
-                & (customers["Shift"].isin([shift, "Both"]))
-            ]
-
-            with st.form("bitran_form"):
-                entries = []
-                for _, c in customers.iterrows():
-                    qty = st.text_input(
-                        f"{c['Name']} ({c['CustomerID']})",
-                        placeholder="Enter milk in liters",
-                        key=f"{shift}_{c['CustomerID']}",
-                    )
-                    entries.append((c, qty))
-
-                save = st.form_submit_button("💾 Save")
-                cancel = st.form_submit_button("❌ Cancel")
-
-            if cancel:
-                st.session_state.show_form = None
-                st.rerun()
-
-            if save:
-                date_str = date.strftime("%Y-%m-%d")
-                df_existing = load_bitran_data()
-
-                rows, has_error = [], False
-                ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
-
-                for c, qty in entries:
-                    if not qty.strip():
-                        st.error(f"Milk value required for {c['Name']}")
-                        has_error = True
-                        break
-
-                    if (
-                        (df_existing["Date"] == date_str)
-                        & (df_existing["Shift"] == shift)
-                        & (df_existing["CustomerID"] == c["CustomerID"])
-                    ).any():
-                        st.error(f"Duplicate entry: {c['Name']}")
-                        has_error = True
-                        break
-
-                    rows.append([
-                        date_str, shift, c["CustomerID"],
-                        c["Name"], float(qty), ts
-                    ])
-
-                if not has_error:
-                    append_bitran_rows(rows)
-                    st.success("Milk Bitran saved successfully ✅")
-                    st.session_state.show_form = None
-                    st.query_params.clear()
-                    st.rerun()
 
         # ===================== SUMMARY CARDS =====================
         df_bitran = load_bitran_data()
