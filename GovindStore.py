@@ -3512,7 +3512,10 @@ else:
                 shift = task["Shift"]
                 qty = task["MilkTotal"]
 
+                qty = float(task["MilkTotal"]) if task["MilkTotal"] else 0.0
+
                 btn_label = f"🧾 {date} • {shift} • {qty:.1f} L"
+
 
                 if st.button(btn_label, use_container_width=True):
                     st.session_state.show_form = shift
