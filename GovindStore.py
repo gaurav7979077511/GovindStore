@@ -1175,14 +1175,11 @@ else:
             )
 
 
-        # ==================================================
-        # 🐄 PER-COW MINI CARDS (HTML FIXED)
-        # ==================================================
 
         st.divider()
         st.subheader("🐄 Cow-wise Milking Summary")
 
-        # --- Active milking cows ---
+        # Active + Milking cows
         cows_df = load_cows()
         cows_df = cows_df[
             (cows_df["Status"] == "Active") &
@@ -1190,67 +1187,61 @@ else:
         ]
 
         if cows_df.empty:
-            st.info("No active milking cows found.")
+            st.info("No active milking cows.")
         else:
-            # --- Aggregations ---
-            total_lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
-            month_total_cow = month_df.groupby("CowID")["MilkQuantity"].sum()
-            month_avg_cow = month_df.groupby("CowID")["MilkQuantity"].mean()
+            # Aggregations
+            lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
+            month_total = month_df.groupby("CowID")["MilkQuantity"].sum()
+            month_avg = month_df.groupby("CowID")["MilkQuantity"].mean()
 
-            last_day_cow = (
-                df_milk[df_milk["Date"] == last_complete_date]
-                .groupby("CowID")["MilkQuantity"].sum()
-                if last_complete_date else {}
-            )
+            last_day_map = {}
+            if last_complete_date:
+                last_day_map = (
+                    df_milk[df_milk["Date"] == last_complete_date]
+                    .groupby("CowID")["MilkQuantity"]
+                    .sum()
+                    .to_dict()
+                )
 
-            cols = st.columns(5)  # compact layout
+            cols = st.columns(6)  # compact grid
             i = 0
 
             for _, cow in cows_df.iterrows():
-                cow_id = cow["CowID"]
+                cid = cow["CowID"]
                 tag = cow["TagNumber"]
-
-                life = total_lifetime.get(cow_id, 0)
-                m_total = month_total_cow.get(cow_id, 0)
-                m_avg = month_avg_cow.get(cow_id, 0)
-                last_d = last_day_cow.get(cow_id, 0)
 
                 card_html = f"""
                 <div style="
-                    background:#020617;
-                    border:1px solid #334155;
-                    border-radius:10px;
-                    padding:12px;
+                    background:linear-gradient(135deg,#2dd4bf,#0ea5e9);
+                    border-radius:12px;
+                    padding:10px 12px;
+                    height:120px;
+                    color:#ffffff;
                     font-family:Inter,system-ui,sans-serif;
-                    height:140px;
-                    box-sizing:border-box;
+                    box-shadow:0 6px 14px rgba(0,0,0,0.25);
                 ">
-                    <div style="font-size:13px;font-weight:700;color:#f8fafc;">
-                        🐄 {tag}
+                    <div style="
+                        font-size:13px;
+                        font-weight:700;
+                        margin-bottom:6px;
+                    ">
+                        {tag}
                     </div>
 
-                    <div style="font-size:11px;color:#cbd5f5;margin-top:8px;">
-                        Total: <b>{life:.1f} L</b>
-                    </div>
-
-                    <div style="font-size:11px;color:#cbd5f5;">
-                        Month: <b>{m_total:.1f} L</b>
-                    </div>
-
-                    <div style="font-size:11px;color:#cbd5f5;">
-                        Avg/day: <b>{m_avg:.1f} L</b>
-                    </div>
-
-                    <div style="font-size:11px;color:#cbd5f5;">
-                        Last day: <b>{last_d:.1f} L</b>
+                    <div style="font-size:11px;line-height:1.4;opacity:0.95;">
+                        <div>Total&nbsp;&nbsp;&nbsp;: <b>{lifetime.get(cid,0):.1f} L</b></div>
+                        <div>Month&nbsp;: <b>{month_total.get(cid,0):.1f} L</b></div>
+                        <div>Avg/day: <b>{month_avg.get(cid,0):.1f} L</b></div>
+                        <div>Last day: <b>{last_day_map.get(cid,0):.1f} L</b></div>
                     </div>
                 </div>
                 """
 
-                with cols[i % 5]:
-                    components.html(card_html, height=150)
+                with cols[i % 6]:
+                    components.html(card_html, height=135)
 
                 i += 1
+
 
 
     
@@ -1260,12 +1251,10 @@ else:
         with c1:
             if st.button("🌅 Morning Milking", use_container_width=True):
                 st.session_state.show_milking_form = "Morning"
-                st.session_state.show_milking_form = None
     
         with c2:
             if st.button("🌃 Evening Milking", use_container_width=True):
                 st.session_state.show_milking_form = "Evening"
-                st.session_state.show_milking_form = None
     
 
 
