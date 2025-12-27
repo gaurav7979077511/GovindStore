@@ -166,16 +166,27 @@ def safe_cell(val):
 
 @st.cache_data(ttl=30)
 def load_bills():
-            ws = open_billing_sheet()
-            rows = ws.get_all_values()
+    ws = open_billing_sheet()
+    rows = ws.get_all_values()
 
 
-            if not rows or rows[0] != BILLING_HEADER:
-                ws.insert_row(BILLING_HEADER, 1)
-                return pd.DataFrame(columns=BILLING_HEADER)
+    if not rows or rows[0] != BILLING_HEADER:
+        ws.insert_row(BILLING_HEADER, 1)
+        return pd.DataFrame(columns=BILLING_HEADER)
 
-            return pd.DataFrame(rows[1:], columns=rows[0])
+    return pd.DataFrame(rows[1:], columns=rows[0])
 
+INVESTMENT_HEADER = [
+            "InvestmentID",
+            "Date",
+            "InvestedBy",
+            "Amount",
+            "InvestmentType",
+            "FundDestination",
+            "FileURL",
+            "Notes",
+            "Timestamp",
+        ]
 BILLING_HEADER = [
             "BillID","CustomerID","CustomerName",
             "FromDate","ToDate",
@@ -224,6 +235,58 @@ BITRAN_HEADER = [
             "Date", "Shift", "CustomerID",
             "CustomerName", "MilkDelivered", "Timestamp"
         ]
+MEDECINE_HEADER = [
+            "MedicineID","MedicineName","MedicineType","ApplicableFor",
+            "DefaultDose","DoseUnit",
+            "FrequencyType","FrequencyValue","FrequencyUnit",
+            "TotalCost","TotalUnits","CostPerDose",
+            "StockAvailable","Status","MedicineImageURL",
+            "Notes","CreatedBy","CreatedOn"
+        ]
+
+# =======================
+# 🐄 Cow Master Header
+# =======================
+
+COW_HEADER = [
+    "CowID",
+    "ParentCowID",
+    "TagNumber",
+    "Gender",
+    "Breed",
+    "AgeYears",
+    "PurchaseDate",
+    "PurchasePrice",
+    "SoldPrice",
+    "SoldDate",
+    "Status",
+    "MilkingStatus",
+    "Notes",
+    "BirthYear",
+    "Timestamp"
+]
+
+
+# =======================
+# 💊 Medication Log Header
+# =======================
+
+MEDICATION_LOG_HEADER = [
+    "LogID",
+    "CowID",
+    "MedicineID",
+    "MedicineName",
+    "DoseGiven",
+    "DoseUnit",
+    "GivenOn",
+    "GivenBy",
+    "FrequencyType",
+    "FrequencyValue",
+    "FrequencyUnit",
+    "Notes",
+    "NextDueDate"
+]
+
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
@@ -654,29 +717,7 @@ else:
     # GLOBAL COW HELPERS (USED BY MULTIPLE MODULES)
     # ============================================================
     
-    COW_HEADER = [
-        "CowID","ParentCowID","TagNumber","Gender","Breed",
-        "AgeYears","PurchaseDate","PurchasePrice",
-        "SoldPrice","SoldDate",
-        "Status","MilkingStatus",
-        "Notes","BirthYear","Timestamp"
-    ]
     
-    MEDICATION_LOG_HEADER = [
-        "LogID",
-        "CowID",
-        "MedicineID",
-        "MedicineName",
-        "DoseGiven",
-        "DoseUnit",
-        "GivenOn",
-        "GivenBy",
-        "FrequencyType",
-        "FrequencyValue",
-        "FrequencyUnit",
-        "Notes",
-        "NextDueDate"
-    ]
 
 
     def open_cow_sheet():
@@ -1276,17 +1317,7 @@ else:
         # =========================================================
         # CONSTANTS
         # =========================================================
-        INVESTMENT_HEADER = [
-            "InvestmentID",
-            "Date",
-            "InvestedBy",
-            "Amount",
-            "InvestmentType",
-            "FundDestination",
-            "FileURL",
-            "Notes",
-            "Timestamp",
-        ]
+        
     
         # =========================================================
         # SHEET FUNCTIONS
@@ -2794,11 +2825,6 @@ else:
         if "edit_customer_id" not in st.session_state:
             st.session_state.edit_customer_id = None
 
-    
-
-        
-
-        
 
         def update_customer_by_id(customer_id, updated):
             ws = open_customer_sheet()
@@ -3182,14 +3208,7 @@ else:
         # ======================================================
         # CONSTANTS
         # ======================================================
-        MEDECINE_HEADER = [
-            "MedicineID","MedicineName","MedicineType","ApplicableFor",
-            "DefaultDose","DoseUnit",
-            "FrequencyType","FrequencyValue","FrequencyUnit",
-            "TotalCost","TotalUnits","CostPerDose",
-            "StockAvailable","Status","MedicineImageURL",
-            "Notes","CreatedBy","CreatedOn"
-        ]
+        
 
         # ======================================================
         # cloudinary uploader
