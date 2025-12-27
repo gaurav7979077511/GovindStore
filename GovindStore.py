@@ -1103,8 +1103,6 @@ else:
                         st.success("Milking data saved successfully ✅")
                         st.session_state.show_milking_form = None
                         st.cache_data.clear()
-                        load_milking_data.clear()
-                        load_bitran_data.clear()
                         st.query_params.clear()
                         st.rerun()
     
@@ -2927,7 +2925,6 @@ else:
                 st.success("Cow profile added successfully ✅")
                 st.session_state.show_add_cow = False
                 st.cache_data.clear()
-                load_cows.clear()
                 st.query_params.clear()
                 st.rerun()
     
