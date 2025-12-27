@@ -2241,6 +2241,12 @@ else:
         # ======================================================
         st.subheader("📜 Payment History")
 
+        def mask_customer_id(cid: str) -> str:
+            if not cid or len(cid) < 6:
+                return cid
+            return f"{cid[:2]}**{cid[-4:]}"
+
+
         if payments_df.empty:
             st.info("No payments recorded yet.")
         else:
@@ -2256,6 +2262,7 @@ else:
                     r["ReceivedOn"].strftime("%d %b %H:%M")
                     if pd.notna(r["ReceivedOn"]) else "-"
                 )
+                masked_id = mask_customer_id(str(r["CustomerID"]))
 
                 card_html = f"""
                 <div style="
@@ -2263,7 +2270,7 @@ else:
                     border:1px solid #1f2937;
                     border-radius:12px;
                     padding:10px 12px;
-                    height:95px;
+                    height:75px;
                     font-family:Inter,system-ui,sans-serif;
                     display:flex;
                     flex-direction:column;
@@ -2294,7 +2301,7 @@ else:
 
                     <!-- Body -->
                     <div style="font-size:12px;color:#e5e7eb;">
-                        👤 {r['CustomerName']}
+                        👤 {r['CustomerName']} ({masked_id})
                     </div>
 
                     <div style="font-size:11px;color:#cbd5f5;">
@@ -2309,7 +2316,7 @@ else:
                         overflow:hidden;
                         text-overflow:ellipsis;
                     ">
-                        {r['PaymentID']} • {r['BillID']}
+                        {r['BillID']}
                     </div>
 
                 </div>
