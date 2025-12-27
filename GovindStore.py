@@ -3545,7 +3545,7 @@ else:
                     ">
                         <div style="display:flex;justify-content:space-between;">
                             <div style="font-weight:700;font-size:13px;">
-                                🧑‍🌾 {card['name']}
+                                🧑‍🌾 {card['name'].split(' ')[0]}
                             </div>
                             <div style="font-size:10px;opacity:.85;">
                                 ⏱ {card['updated']}
