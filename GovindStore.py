@@ -217,7 +217,9 @@ WALLET_HEADER = [
     "CounterpartyUserID",
     "TransferID"
 ]
-
+MILKING_HEADER = [
+            "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
+        ]
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
@@ -387,6 +389,24 @@ def load_investments():
                 return pd.DataFrame(columns=INVESTMENT_HEADER)
     
             return pd.DataFrame(rows[1:], columns=rows[0])
+
+def open_milking_sheet():
+            return open_sheet(MAIN_SHEET_ID, MILKING_TAB)
+    
+def load_milking_data():
+    ws = open_milking_sheet()
+    rows = ws.get_all_values()
+    
+    if not rows or rows[0] != MILKING_HEADER:
+        ws.insert_row(MILKING_HEADER, 1)
+        return pd.DataFrame(columns=MILKING_HEADER)
+    
+    return pd.DataFrame(rows[1:], columns=rows[0])
+    
+def append_milking_rows(rows):
+    ws = open_milking_sheet()
+    for r in rows:
+        ws.append_row(r, value_input_option="USER_ENTERED")
 # ============================================================
 # QUERY PARAM (SAFE)
 # ============================================================
@@ -793,28 +813,10 @@ else:
         st.title("🥛 Milking")
     
     
-        MILKING_HEADER = [
-            "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
-        ]
+        
     
         # ================== SHEET HELPERS ==================
-        def open_milking_sheet():
-            return open_sheet(MAIN_SHEET_ID, MILKING_TAB)
-    
-        def load_milking_data():
-            ws = open_milking_sheet()
-            rows = ws.get_all_values()
-    
-            if not rows or rows[0] != MILKING_HEADER:
-                ws.insert_row(MILKING_HEADER, 1)
-                return pd.DataFrame(columns=MILKING_HEADER)
-    
-            return pd.DataFrame(rows[1:], columns=rows[0])
-    
-        def append_milking_rows(rows):
-            ws = open_milking_sheet()
-            for r in rows:
-                ws.append_row(r, value_input_option="USER_ENTERED")
+        
     
         # ================== STATE ==================
         if "show_milking_form" not in st.session_state:
