@@ -743,21 +743,16 @@ else:
     # ----------------------------
     if page == "Dashboard":
 
+
         st.title("📊 Dairy Farm Dashboard")
 
-        # ======================================================
-        # 🎨 CLEAN PROFESSIONAL STYLES
-        # ======================================================
+        # ==================================================
+        # 🎨 GLOBAL STYLES (READABLE + PROFESSIONAL)
+        # ==================================================
         st.markdown("""
         <style>
-        body {
-            background-color:#0e1117;
-            color:#e5e7eb;
-            font-family:Inter,system-ui,sans-serif;
-        }
-
         .section {
-            background:#111827;
+            background:#0f172a;
             border:1px solid #1f2937;
             border-radius:14px;
             padding:18px;
@@ -765,10 +760,10 @@ else:
         }
 
         .kpi {
-            background:#0b1220;
+            background:#020617;
             border:1px solid #1f2937;
             border-radius:12px;
-            padding:16px;
+            padding:14px;
         }
 
         .kpi-title {
@@ -778,46 +773,36 @@ else:
 
         .kpi-value {
             font-size:26px;
-            font-weight:700;
-            margin-top:6px;
+            font-weight:800;
+            color:#ffffff;
+            margin-top:4px;
         }
 
-        .row {
+        .mini-card {
+            background:#020617;
+            border:1px solid #1f2937;
+            border-radius:10px;
+            padding:10px 14px;
+            margin-bottom:8px;
+            font-size:13px;
+            color:#e5e7eb;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            padding:8px 0;
-            border-bottom:1px dashed #1f2937;
-            font-size:13px;
         }
-        .row:last-child { border-bottom:none; }
 
-        .ok { color:#22c55e; }
-        .warn { color:#facc15; }
-        .bad { color:#ef4444; }
+        .meta {
+            color:#9ca3af;
+            font-size:11px;
+        }
         </style>
         """, unsafe_allow_html=True)
 
-        # ======================================================
-        # 🔧 HELPERS
-        # ======================================================
-        def kpi(title, value):
-            st.markdown(
-                f"""
-                <div class="kpi">
-                    <div class="kpi-title">{title}</div>
-                    <div class="kpi-value">{value}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
         today = dt.date.today()
-        month_start = today.replace(day=1)
 
-        # ======================================================
-        # 📥 LOAD REQUIRED DATA ONLY
-        # ======================================================
+        # ==================================================
+        # 📥 LOAD DATA (SAFE)
+        # ==================================================
         milking_df = load_milking_data()
         bitran_df = load_bitran_data()
         bills_df = load_bills()
@@ -826,7 +811,7 @@ else:
         bank_df = load_bank_transactions()
         wallet_df = load_wallet_df()
 
-        # ---- Numeric safety ----
+        # ---- numeric safety ----
         for df, col in [
             (milking_df, "MilkQuantity"),
             (bitran_df, "MilkDelivered"),
@@ -835,139 +820,95 @@ else:
             (bills_df, "PaidAmount"),
             (wallet_df, "Amount")
         ]:
-            if not df.empty and col in df.columns:
+            if not df.empty and col in df:
                 df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # ======================================================
+        # ==================================================
         # 📌 OVERALL SUMMARY
-        # ======================================================
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("📌 Overall Summary")
+        # ==================================================
+        with st.container():
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("📌 Overall Summary")
 
-        total_produced = milking_df["MilkQuantity"].sum()
-        total_delivered = bitran_df["MilkDelivered"].sum()
-        total_investment = invest_df["Amount"].sum()
-        total_expense = expense_df["Amount"].sum()
-        total_payment = bills_df["PaidAmount"].sum()
-        bank_balance = get_current_bank_balance(bank_df)
+            total_produced = milking_df["MilkQuantity"].sum()
+            total_delivered = bitran_df["MilkDelivered"].sum()
+            total_investment = invest_df["Amount"].sum()
+            total_expense = expense_df["Amount"].sum()
+            total_payment = bills_df["PaidAmount"].sum()
+            bank_balance = get_current_bank_balance(bank_df)
 
-        c1, c2, c3, c4, c5, c6 = st.columns(6)
-        with c1: kpi("Milk Produced", f"{total_produced:.2f} L")
-        with c2: kpi("Milk Delivered", f"{total_delivered:.2f} L")
-        with c3: kpi("Total Investment", f"₹ {total_investment:,.0f}")
-        with c4: kpi("Total Expense", f"₹ {total_expense:,.0f}")
-        with c5: kpi("Payments Received", f"₹ {total_payment:,.0f}")
-        with c6: kpi("Bank Balance", f"₹ {bank_balance:,.0f}")
+            c = st.columns(6)
+            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Milk Produced</div><div class="kpi-value">{total_produced:.2f} L</div></div>', unsafe_allow_html=True)
+            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Milk Delivered</div><div class="kpi-value">{total_delivered:.2f} L</div></div>', unsafe_allow_html=True)
+            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Investment</div><div class="kpi-value">₹ {total_investment:,.0f}</div></div>', unsafe_allow_html=True)
+            c[3].markdown(f'<div class="kpi"><div class="kpi-title">Expense</div><div class="kpi-value">₹ {total_expense:,.0f}</div></div>', unsafe_allow_html=True)
+            c[4].markdown(f'<div class="kpi"><div class="kpi-title">Payments</div><div class="kpi-value">₹ {total_payment:,.0f}</div></div>', unsafe_allow_html=True)
+            c[5].markdown(f'<div class="kpi"><div class="kpi-title">Bank Balance</div><div class="kpi-value">₹ {bank_balance:,.0f}</div></div>', unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # ======================================================
-        # 📅 THIS MONTH
-        # ======================================================
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("📅 This Month")
+        # ==================================================
+        # 👛 WALLET SNAPSHOT (FIXED)
+        # ==================================================
+        with st.container():
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("👛 My Wallet")
 
-        def month_filter(df, col):
-            if df.empty:
-                return df
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-            return df[df[col].dt.date >= month_start]
+            my_wallet = wallet_df[wallet_df["UserID"] == st.session_state.user_id]
 
-        m_prod = month_filter(milking_df.copy(), "Date")["MilkQuantity"].sum()
-        m_del = month_filter(bitran_df.copy(), "Date")["MilkDelivered"].sum()
-        m_exp = month_filter(expense_df.copy(), "Date")["Amount"].sum()
-        m_pay = month_filter(bills_df.copy(), "PaidDate")["PaidAmount"].sum()
+            credit = my_wallet[(my_wallet["TxnType"]=="CREDIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
+            debit = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
+            blocked = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="PENDING")]["Amount"].sum()
+            available = credit - debit - blocked
 
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: kpi("Produced", f"{m_prod:.2f} L")
-        with c2: kpi("Delivered", f"{m_del:.2f} L")
-        with c3: kpi("Expense", f"₹ {m_exp:,.0f}")
-        with c4: kpi("Payments", f"₹ {m_pay:,.0f}")
+            c = st.columns(4)
+            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Credit</div><div class="kpi-value">₹ {credit:,.0f}</div></div>', unsafe_allow_html=True)
+            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Debit</div><div class="kpi-value">₹ {debit:,.0f}</div></div>', unsafe_allow_html=True)
+            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Blocked</div><div class="kpi-value">₹ {blocked:,.0f}</div></div>', unsafe_allow_html=True)
+            c[3].markdown(f'<div class="kpi"><div class="kpi-title">Available</div><div class="kpi-value">₹ {available:,.0f}</div></div>', unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # ======================================================
-        # 📍 TODAY’S OPERATIONS (LAST 2 ENTRIES)
-        # ======================================================
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("📍 Today’s Operations")
+        # ==================================================
+        # 🐄 TODAY — LAST 2 MILKING + LAST 2 DELIVERY
+        # ==================================================
+        with st.container():
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("📍 Latest Operations")
 
-        def today_last_two(df, date_col, qty_col, label):
-            if df.empty:
-                st.markdown(f"<div class='row'>{label} — No entry</div>", unsafe_allow_html=True)
-                return
+            col1, col2 = st.columns(2)
 
-            df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-            today_df = df[df[date_col].dt.date == today]
+            with col1:
+                st.markdown("**🐄 Milking (Last 2)**")
+                if milking_df.empty:
+                    st.info("No records")
+                else:
+                    m = milking_df.sort_values("Timestamp", ascending=False).head(2)
+                    for _, r in m.iterrows():
+                        st.markdown(
+                            f'<div class="mini-card">'
+                            f'{r["Shift"]} • {r["MilkQuantity"]} L'
+                            f'<span class="meta">{r["Date"]}</span>'
+                            f'</div>',
+                            unsafe_allow_html=True
+                        )
 
-            if today_df.empty:
-                st.markdown(f"<div class='row'>{label} — No entry</div>", unsafe_allow_html=True)
-                return
+            with col2:
+                st.markdown("**🚚 Milk Distribution (Last 2)**")
+                if bitran_df.empty:
+                    st.info("No records")
+                else:
+                    b = bitran_df.sort_values("Timestamp", ascending=False).head(2)
+                    for _, r in b.iterrows():
+                        st.markdown(
+                            f'<div class="mini-card">'
+                            f'{r["Shift"]} • {r["MilkDelivered"]} L'
+                            f'<span class="meta">{r["Date"]}</span>'
+                            f'</div>',
+                            unsafe_allow_html=True
+                        )
 
-            today_df = today_df.sort_values("Timestamp", ascending=False).head(2)
-
-            for _, r in today_df.iterrows():
-                st.markdown(
-                    f"""
-                    <div class="row">
-                        <span>{label} ({r['Shift']})</span>
-                        <b>{r[qty_col]} L</b>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-        today_last_two(milking_df.copy(), "Date", "MilkQuantity", "Milking")
-        today_last_two(bitran_df.copy(), "Date", "MilkDelivered", "Delivered")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # ======================================================
-        # ⏳ PENDING ACTIONS
-        # ======================================================
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("⏳ Pending Actions")
-
-        pending_items = []
-
-        if not bills_df[bills_df["BillStatus"] != "Paid"].empty:
-            pending_items.append("Pending Bills")
-
-        my_wallet = wallet_df[wallet_df["UserID"] == st.session_state.user_id]
-        if not my_wallet[(my_wallet["TxnType"]=="CREDIT") & (my_wallet["TxnStatus"]=="PENDING")].empty:
-            pending_items.append("Wallet Approval Pending")
-
-        if not pending_items:
-            st.markdown("<span class='ok'>✔ No pending actions</span>", unsafe_allow_html=True)
-        else:
-            for p in pending_items:
-                st.markdown(f"<div class='row'>• {p}</div>", unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # ======================================================
-        # 📈 MILKING vs DELIVERY TREND
-        # ======================================================
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("📈 Milking vs Delivery Trend")
-
-        if not milking_df.empty and not bitran_df.empty:
-            g1 = milking_df.groupby("Date")["MilkQuantity"].sum()
-            g2 = bitran_df.groupby("Date")["MilkDelivered"].sum()
-
-            trend_df = pd.DataFrame({
-                "Produced": g1,
-                "Delivered": g2
-            }).fillna(0)
-
-            trend_df.index = pd.to_datetime(trend_df.index)
-            trend_df = trend_df.sort_index()
-
-            st.line_chart(trend_df, height=300, use_container_width=True)
-        else:
-            st.info("Not enough data for trend analysis")
-
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
 
 
