@@ -1551,6 +1551,7 @@ else:
     
                 st.success("✅ Expense saved successfully")
                 st.session_state.show_expense_form = False
+                st.cache_data.clear()
                 st.query_params.clear()
                 st.rerun()
     
