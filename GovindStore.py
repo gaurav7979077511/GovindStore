@@ -3382,6 +3382,11 @@ else:
         # 📊 STEP-1: MILK BITRAN OVERVIEW (GLOBAL KPI)
         # ==================================================
 
+        def append_bitran_rows(rows):
+            ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
+            for r in rows:
+                ws.append_row(r, value_input_option="USER_ENTERED")
+
         df_bitran = load_bitran_data()
 
         if not df_bitran.empty:
@@ -3459,6 +3464,7 @@ else:
         # ===============================
 
         pending_tasks = []
+        df_milk = load_milking_data()
 
         # total milking per day + shift
         milk_grp = (
@@ -3515,6 +3521,80 @@ else:
                     st.rerun()
         else:
             st.info("✅ No pending Milk Bitran")
+
+        # ===============================
+        # 📝 LOCKED BITRAN ENTRY
+        # ===============================
+
+        if st.session_state.show_form and "locked_bitran_date" in st.session_state:
+
+            shift = st.session_state.show_form
+            date = st.session_state.locked_bitran_date
+            max_qty = st.session_state.locked_milk_qty
+
+            st.divider()
+            st.subheader(f"📝 Milk Bitran Entry — {date} ({shift})")
+            st.caption(f"⚠️ Total milk to deliver: {max_qty:.2f} L (exact match required)")
+
+            customers = load_customers()
+            customers = customers[
+                (customers["Status"].str.lower() == "active") &
+                (customers["Shift"].isin([shift, "Both"]))
+            ]
+
+            with st.form("locked_bitran_form"):
+                entries = []
+                total_entered = 0
+
+                for _, c in customers.iterrows():
+                    qty = st.number_input(
+                        f"{c['Name']} ({c['CustomerID']})",
+                        min_value=0.0,
+                        step=0.1,
+                        key=f"{date}_{shift}_{c['CustomerID']}"
+                    )
+                    entries.append((c, qty))
+                    total_entered += qty
+
+                save = st.form_submit_button("💾 Save Delivery")
+                cancel = st.form_submit_button("❌ Cancel")
+
+            if cancel:
+                st.session_state.show_form = None
+                st.session_state.pop("locked_bitran_date", None)
+                st.session_state.pop("locked_milk_qty", None)
+                st.rerun()
+
+            if save:
+
+                if round(total_entered, 2) != round(max_qty, 2):
+                    st.error(
+                        f"❌ Delivered {total_entered:.2f} L "
+                        f"but milking is {max_qty:.2f} L"
+                    )
+                    st.stop()
+
+                ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
+                rows = []
+
+                for c, qty in entries:
+                    if qty > 0:
+                        rows.append([
+                            str(date),
+                            shift,
+                            c["CustomerID"],
+                            c["Name"],
+                            qty,
+                            ts
+                        ])
+
+                append_bitran_rows(rows)
+
+                st.success("✅ Milk Bitran saved successfully")
+                st.session_state.show_form = None
+                st.session_state.pop("locked_bitran_date", None)
+                st.session_state.pop("locked_milk_qty", None)
+                st.rerun()
 
 
         # ================= STATE =================
@@ -3635,10 +3715,7 @@ else:
             st.divider()
 
 
-        def append_bitran_rows(rows):
-            ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
-            for r in rows:
-                ws.append_row(r, value_input_option="USER_ENTERED")
+        
 
 
         
