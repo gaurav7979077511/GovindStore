@@ -848,6 +848,84 @@ else:
             st.markdown('</div>', unsafe_allow_html=True)
 
         # ==================================================
+        # 📅 THIS MONTH DETAILS
+        # ==================================================
+        with st.container():
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("📅 This Month Details")
+
+            today = dt.date.today()
+            month_start = today.replace(day=1)
+
+            def filter_this_month(df, date_col):
+                if df.empty or date_col not in df:
+                    return df.iloc[0:0]
+                df = df.copy()
+                df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+                return df[df[date_col].dt.date >= month_start]
+
+            # Filter monthly data
+            m_milking = filter_this_month(milking_df, "Date")
+            m_bitran = filter_this_month(bitran_df, "Date")
+            m_expense = filter_this_month(expense_df, "Date")
+            m_payment = filter_this_month(bills_df, "PaidDate")
+
+            # Monthly totals
+            month_produced = m_milking["MilkQuantity"].sum()
+            month_delivered = m_bitran["MilkDelivered"].sum()
+            month_expense = m_expense["Amount"].sum()
+            month_payment = m_payment["PaidAmount"].sum()
+
+            c1, c2, c3, c4 = st.columns(4)
+
+            with c1:
+                st.markdown(
+                    f"""
+                    <div class="kpi">
+                        <div class="kpi-title">Milk Produced</div>
+                        <div class="kpi-value">{month_produced:.2f} L</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with c2:
+                st.markdown(
+                    f"""
+                    <div class="kpi">
+                        <div class="kpi-title">Milk Delivered</div>
+                        <div class="kpi-value">{month_delivered:.2f} L</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with c3:
+                st.markdown(
+                    f"""
+                    <div class="kpi">
+                        <div class="kpi-title">Total Expense</div>
+                        <div class="kpi-value">₹ {month_expense:,.0f}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with c4:
+                st.markdown(
+                    f"""
+                    <div class="kpi">
+                        <div class="kpi-title">Payments Received</div>
+                        <div class="kpi-value">₹ {month_payment:,.0f}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+
+        # ==================================================
         # 👛 WALLET SNAPSHOT (FIXED)
         # ==================================================
         with st.container():
