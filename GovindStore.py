@@ -1225,7 +1225,7 @@ else:
                     background:linear-gradient(135deg,#64748b,#334155);
                     border-radius:12px;
                     padding:12px 14px;
-                    height:115px;
+                    height:90px;
                     color:#ffffff;
                     font-family:Inter,system-ui,sans-serif;
                     box-shadow:0 4px 10px rgba(0,0,0,0.25);
@@ -1258,17 +1258,17 @@ else:
                         line-height:1.35;
                     ">
                         <div>Total :<b>{lifetime.get(cid,0):.1f} L</b></div>
-                        <div>Avg/day :b>{month_avg.get(cid,0):.1f} L</b></div>
+                        <div>Avg/day :<b>{month_avg.get(cid,0):.1f} L</b></div>
 
                         <div>Month :<b>{month_total.get(cid,0):.1f} L</b></div>
-                        <div>Last day :b>{last_day_map.get(cid,0):.1f} L</b></div>
+                        <div>Last day :<b>{last_day_map.get(cid,0):.1f} L</b></div>
                     </div>
 
                 </div>
                 """
 
                 with cols[i % 6]:
-                    components.html(card_html, height=130)
+                    components.html(card_html, height=110)
 
                 i += 1
 
