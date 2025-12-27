@@ -1222,7 +1222,7 @@ else:
                 .to_dict()
             )
 
-            cols = st.columns(6)  # compact grid
+            cols = st.columns(5)  # compact grid
             i = 0
 
             for _, cow in cows_df.iterrows():
