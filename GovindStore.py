@@ -759,6 +759,13 @@ else:
         bank_df = load_bank_transactions()
         wallet_df = load_wallet_df()
 
+        if not wallet_df.empty:
+            wallet_df["Amount"] = pd.to_numeric(
+                wallet_df["Amount"],
+                errors="coerce"
+            ).fillna(0)
+
+
         # ---------- Type safety ----------
         for df, col in [
             (milking_df, "MilkQuantity"),
@@ -841,6 +848,7 @@ else:
         st.subheader("👛 My Wallet")
 
         my_wallet = wallet_df[wallet_df["UserID"] == st.session_state.user_id]
+        
 
         credit = my_wallet[
             (my_wallet["TxnType"] == "CREDIT") &
