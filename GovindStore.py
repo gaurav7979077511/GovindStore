@@ -369,6 +369,24 @@ def get_current_bank_balance(bank_df: pd.DataFrame) -> float:
         return 0.0
     return float(bank_df.iloc[-1]["ClosingBalance"])
 
+@st.cache_data(ttl=30)
+def load_expenses():
+            ws = open_expense_sheet()
+            rows = ws.get_all_values()
+            if len(rows) <= 1:
+                return pd.DataFrame(columns=rows[0])
+            return pd.DataFrame(rows[1:], columns=rows[0])
+
+@st.cache_data(ttl=30)
+def load_investments():
+            ws = open_investment_sheet()
+            rows = ws.get_all_values()
+    
+            if not rows or rows[0] != INVESTMENT_HEADER:
+                ws.insert_row(INVESTMENT_HEADER, 1)
+                return pd.DataFrame(columns=INVESTMENT_HEADER)
+    
+            return pd.DataFrame(rows[1:], columns=rows[0])
 # ============================================================
 # QUERY PARAM (SAFE)
 # ============================================================
@@ -956,12 +974,7 @@ else:
     
         # ================= GSHEET =================
     
-        def load_expenses():
-            ws = open_expense_sheet()
-            rows = ws.get_all_values()
-            if len(rows) <= 1:
-                return pd.DataFrame(columns=rows[0])
-            return pd.DataFrame(rows[1:], columns=rows[0])
+        
     
         # ================= LOAD DATA =================
         expense_df = load_expenses()
@@ -1259,15 +1272,7 @@ else:
         # SHEET FUNCTIONS
         # =========================================================
     
-        def load_investments():
-            ws = open_investment_sheet()
-            rows = ws.get_all_values()
-    
-            if not rows or rows[0] != INVESTMENT_HEADER:
-                ws.insert_row(INVESTMENT_HEADER, 1)
-                return pd.DataFrame(columns=INVESTMENT_HEADER)
-    
-            return pd.DataFrame(rows[1:], columns=rows[0])
+        
     
         # =========================================================
         # CLOUDINARY UPLOAD
