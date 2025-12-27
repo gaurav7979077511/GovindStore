@@ -756,7 +756,7 @@ else:
             border:1px solid #1f2937;
             border-radius:14px;
             padding:18px;
-            margin-bottom:30px;
+            margin-bottom:22px;
         }
 
         .kpi {
@@ -764,6 +764,7 @@ else:
             border:1px solid #1f2937;
             border-radius:12px;
             padding:14px;
+            margin-bottom:12px;
         }
 
         .kpi-title {
