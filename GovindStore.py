@@ -4352,6 +4352,7 @@ else:
             )
 
             med_row = meds_df[meds_df["MedicineID"] == med_id].iloc[0]
+            medicine_name=med_row['MedicineName']
 
             # Medicine info strip
             st.markdown(
@@ -4365,7 +4366,7 @@ else:
                     font-size:13px;
                     line-height:1.5;
                 ">
-                    💊 <b>{med_row['MedicineName']}</b><br>
+                    💊 <b>{medicine_name}</b><br>
                     📦 Stock Available: <b>{med_row['StockAvailable']}</b>
                 </div>
                 """,
