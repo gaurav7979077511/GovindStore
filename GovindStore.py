@@ -2301,7 +2301,7 @@ else:
 
                     <!-- Body -->
                     <div style="font-size:12px;color:#e5e7eb;">
-                        👤 {r['CustomerName']} ({masked_id})
+                        👤 {r['CustomerName'].split(' ')[0]} ({masked_id})
                     </div>
 
                     <div style="font-size:11px;color:#cbd5f5;">
