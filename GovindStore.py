@@ -714,19 +714,19 @@ else:
         "Go to",
         [
             "Dashboard",
-            "Milk Bitran",
+            "Cow Profile",
             "Milking",
             "Customers",
+            "Milk Bitran",
             "Expense",
-            "Investment",
-            "Payment",
             "Billing",
-            "Cow Profile",
+            "Payment",
             "Medicine",
             "Medication",
+            "Investment",
             "Bank Account",
             "My Wallet",
-            "Profile"
+            "My Profile"
 
             
         ],
@@ -3454,6 +3454,69 @@ else:
 
             st.divider()
 
+        # ===============================
+        # ⏳ FIND PENDING MILK BITRAN
+        # ===============================
+
+        pending_tasks = []
+
+        # total milking per day + shift
+        milk_grp = (
+            df_milk
+            .groupby(["Date", "Shift"])["MilkQuantity"]
+            .sum()
+            .reset_index()
+        )
+
+        # total bitran per day + shift
+        bitran_grp = (
+            df_bitran
+            .groupby(["Date", "Shift"])["MilkDelivered"]
+            .sum()
+            .reset_index()
+        )
+
+        for _, row in milk_grp.iterrows():
+            date = row["Date"]
+            shift = row["Shift"]
+            milk_total = row["MilkQuantity"]
+
+            delivered = bitran_grp[
+                (bitran_grp["Date"] == date) &
+                (bitran_grp["Shift"] == shift)
+            ]
+
+            if delivered.empty:
+                pending_tasks.append({
+                    "Date": date,
+                    "Shift": shift,
+                    "MilkTotal": milk_total
+                })
+        
+        # ===============================
+        # ⏳ PENDING MILK BITRAN UI
+        # ===============================
+
+        if pending_tasks:
+
+            st.subheader("⏳ Pending Milk Bitran")
+
+            for task in pending_tasks:
+                date = task["Date"]
+                shift = task["Shift"]
+                qty = task["MilkTotal"]
+
+                btn_label = f"🧾 {date} • {shift} • {qty:.1f} L"
+
+                if st.button(btn_label, use_container_width=True):
+                    st.session_state.show_form = shift
+                    st.session_state.locked_bitran_date = date
+                    st.session_state.locked_milk_qty = qty
+                    st.rerun()
+        else:
+            st.info("✅ No pending Milk Bitran")
+
+
         # ================= STATE =================
         if "show_form" not in st.session_state:
             st.session_state.show_form = None
@@ -4474,7 +4537,7 @@ else:
                     components.html(card_html, height=135)
 
 
-    elif page == "Profile":
+    elif page == "My Profile":
         
 
         # ==================================================
