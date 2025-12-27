@@ -2063,11 +2063,13 @@ else:
         # ======================================================
         # PENDING BILLS (QUICK PICK)
         # ======================================================
-        
+        st.subheader("🧾 Pending Bills")
+
         pending_bills = bills_df[bills_df["BalanceAmount"] > 0]
 
-        if pending_bills:
-            st.subheader("🧾 Pending Bills")
+        if pending_bills.empty:
+            st.success("🎉 No pending bills")
+        else:
             PER_ROW = 4  # change to 3 / 5 if you want
             rows = [
                 pending_bills.iloc[i:i + PER_ROW]
