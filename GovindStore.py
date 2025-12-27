@@ -3435,6 +3435,7 @@ else:
                         border:1px solid #e5e7eb;
                         border-radius:12px;
                         padding:14px;
+                        margin-bottom:14px;
                         font-family:Inter,system-ui,sans-serif;
                     ">
                         <div style="font-size:12px;color:#6b7280;">{title}</div>
@@ -3566,7 +3567,7 @@ else:
                     </div>
                     """
                     with cols[idx]:
-                        components.html(card_html, height=150)
+                        components.html(card_html, height=130)
 
             st.divider()
 
