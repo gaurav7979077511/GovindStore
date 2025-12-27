@@ -1307,7 +1307,7 @@ else:
                 </div>
                 """
 
-                with cols[i % 5]:
+                with cols[i % 4]:
                     components.html(card_html, height=110)
 
                 i += 1
