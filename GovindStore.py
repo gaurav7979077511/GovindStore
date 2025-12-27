@@ -1138,15 +1138,18 @@ else:
 
         # --- Last complete day (Morning + Evening) ---
         complete_days = (
-            df_milk.groupby(["Date", "Shift"])
+            df_milk
+            .groupby(["Date", "Shift"])
             .size()
             .unstack(fill_value=0)
+            .reindex(columns=["Morning", "Evening"], fill_value=0)
         )
 
         complete_days = complete_days[
-            (complete_days.get("Morning", 0) > 0) &
-            (complete_days.get("Evening", 0) > 0)
+            (complete_days["Morning"] > 0) &
+            (complete_days["Evening"] > 0)
         ]
+
 
         last_complete_date = complete_days.index.max() if not complete_days.empty else None
 
