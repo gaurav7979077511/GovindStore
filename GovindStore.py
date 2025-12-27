@@ -220,6 +220,10 @@ WALLET_HEADER = [
 MILKING_HEADER = [
             "Date", "Shift", "CowID", "TagNumber", "MilkQuantity", "Timestamp"
         ]
+BITRAN_HEADER = [
+            "Date", "Shift", "CustomerID",
+            "CustomerName", "MilkDelivered", "Timestamp"
+        ]
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
@@ -407,6 +411,20 @@ def append_milking_rows(rows):
     ws = open_milking_sheet()
     for r in rows:
         ws.append_row(r, value_input_option="USER_ENTERED")
+def load_customers():
+    ws = open_sheet(MAIN_SHEET_ID, CUSTOMER_TAB)
+    rows = ws.get_all_values()
+    if len(rows) <= 1:
+        return pd.DataFrame(columns=["CustomerID", "Name", "Shift", "Status"])
+    return pd.DataFrame(rows[1:], columns=rows[0])
+
+def load_bitran_data():
+    ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
+    rows = ws.get_all_values()
+    if not rows or rows[0] != BITRAN_HEADER:
+        ws.insert_row(BITRAN_HEADER, 1)
+        return pd.DataFrame(columns=BITRAN_HEADER)
+    return pd.DataFrame(rows[1:], columns=rows[0])
 # ============================================================
 # QUERY PARAM (SAFE)
 # ============================================================
@@ -3004,30 +3022,6 @@ else:
 
         st.title("🥛 Milk Bitran")
         
-
-
-        BITRAN_HEADER = [
-            "Date", "Shift", "CustomerID",
-            "CustomerName", "MilkDelivered", "Timestamp"
-        ]
-
-        
-
-        def load_customers():
-            ws = open_sheet(MAIN_SHEET_ID, CUSTOMER_TAB)
-            rows = ws.get_all_values()
-            if len(rows) <= 1:
-                return pd.DataFrame(columns=["CustomerID", "Name", "Shift", "Status"])
-            return pd.DataFrame(rows[1:], columns=rows[0])
-
-        def load_bitran_data():
-            ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
-            rows = ws.get_all_values()
-            if not rows or rows[0] != BITRAN_HEADER:
-                ws.insert_row(BITRAN_HEADER, 1)
-                return pd.DataFrame(columns=BITRAN_HEADER)
-            return pd.DataFrame(rows[1:], columns=rows[0])
-
         def append_bitran_rows(rows):
             ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
             for r in rows:
