@@ -2880,7 +2880,7 @@ else:
                         sold_price = st.number_input("Sold Price", min_value=0.0, step=100.0)
                         sold_date = st.date_input("Sold Date")
                     age = st.number_input(
-                            f"Age (Years) on {purchase_date}",
+                            "Age (Years) on Purchase Date",
                             min_value=0,
                             step=1,
                             value=None,
