@@ -1102,6 +1102,8 @@ else:
                         append_milking_rows(rows_to_insert)
                         st.success("Milking data saved successfully ✅")
                         st.session_state.show_milking_form = None
+                        load_milking_data.clear()
+                        load_bitran_data.clear()
                         st.query_params.clear()
                         st.rerun()
     
