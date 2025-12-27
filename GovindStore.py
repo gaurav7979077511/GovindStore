@@ -488,6 +488,25 @@ def load_bitran_data():
         ws.insert_row(BITRAN_HEADER, 1)
         return pd.DataFrame(columns=BITRAN_HEADER)
     return pd.DataFrame(rows[1:], columns=rows[0])
+
+# =======================
+# 🐄 Cow Sheet Helpers
+# =======================
+
+def open_cow_sheet():
+    return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
+
+
+@st.cache_data(ttl=60)
+def load_cows():
+    ws = open_cow_sheet()
+    rows = ws.get_all_values()
+
+    if not rows or rows[0] != COW_HEADER:
+        return pd.DataFrame(columns=COW_HEADER)
+
+    return pd.DataFrame(rows[1:], columns=rows[0])
+
 # ============================================================
 # QUERY PARAM (SAFE)
 # ============================================================
@@ -717,21 +736,7 @@ else:
     # GLOBAL COW HELPERS (USED BY MULTIPLE MODULES)
     # ============================================================
     
-    
 
-
-    def open_cow_sheet():
-        return open_sheet(MAIN_SHEET_ID, COW_PROFILE_TAB)
-    
-    @st.cache_data(ttl=60)
-    def load_cows():
-        ws = open_cow_sheet()
-        rows = ws.get_all_values()
-    
-        if not rows or rows[0] != COW_HEADER:
-            return pd.DataFrame(columns=COW_HEADER)
-    
-        return pd.DataFrame(rows[1:], columns=rows[0])
 
     # ----------------------------
     # MANAGE CUSTOMERS PAGE
