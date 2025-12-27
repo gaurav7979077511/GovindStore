@@ -743,57 +743,75 @@ else:
     # ----------------------------
     if page == "Dashboard":
 
-        st.title("📊 Dairy Farm Dashboard")
-
-        # =======================
-        # 🎨 GLOBAL STYLES
-        # =======================
+        # ======================================================
+        # 🎨 GLOBAL STYLES (MINIMAL, PROFESSIONAL)
+        # ======================================================
         st.markdown("""
         <style>
-        body { background-color:#0b1220; }
-
-        .kpi-card {
-            padding:18px;
-            border-radius:16px;
-            color:white;
-            font-family:Inter,system-ui,sans-serif;
-            box-shadow:0 10px 30px rgba(0,0,0,.25);
-            transition:transform .15s ease;
+        body {
+            background-color:#0B0F14;
+            color:#E5E7EB;
         }
-        .kpi-card:hover { transform:translateY(-4px); }
+
+        .block-container {
+            padding-top:1.5rem;
+        }
+
+        .section {
+            background:#0B0F14;
+            border:1px solid #1F2937;
+            border-radius:18px;
+            padding:20px;
+            margin-bottom:24px;
+        }
+
+        .kpi {
+            background:#111827;
+            border:1px solid #1F2937;
+            border-left:4px solid #38BDF8;
+            border-radius:14px;
+            padding:16px;
+        }
 
         .kpi-title {
             font-size:13px;
-            opacity:.85;
+            color:#9CA3AF;
         }
+
         .kpi-value {
-            font-size:24px;
+            font-size:26px;
             font-weight:800;
+            color:#E5E7EB;
+        }
+
+        .kpi-hint {
+            font-size:12px;
             margin-top:4px;
         }
         </style>
         """, unsafe_allow_html=True)
 
-        # =======================
-        # 🔧 HELPERS
-        # =======================
-        def kpi(title, value, bg):
-            st.markdown(
-                f"""
-                <div class="kpi-card" style="background:{bg}">
-                    <div class="kpi-title">{title}</div>
-                    <div class="kpi-value">{value}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        # ======================================================
+        # 🧩 KPI COMPONENT
+        # ======================================================
+        def kpi(title, value, hint=None, hint_color="#22C55E"):
+            st.markdown(f"""
+            <div class="kpi">
+                <div class="kpi-title">{title}</div>
+                <div class="kpi-value">{value}</div>
+                {f"<div class='kpi-hint' style='color:{hint_color}'>{hint}</div>" if hint else ""}
+            </div>
+            """, unsafe_allow_html=True)
 
+        # ======================================================
+        # 📅 DATES
+        # ======================================================
         today = dt.date.today()
         month_start = today.replace(day=1)
 
-        # =======================
-        # 📥 LOAD DATA
-        # =======================
+        # ======================================================
+        # 📥 LOAD DATA (YOUR EXISTING FUNCTIONS)
+        # ======================================================
         milking_df = load_milking_data()
         bitran_df = load_bitran_data()
         bills_df = load_bills()
@@ -802,6 +820,9 @@ else:
         bank_df = load_bank_transactions()
         wallet_df = load_wallet_df()
 
+        # ======================================================
+        # 🔢 TYPE SAFETY
+        # ======================================================
         for df, col in [
             (milking_df, "MilkQuantity"),
             (bitran_df, "MilkDelivered"),
@@ -813,32 +834,67 @@ else:
             if not df.empty and col in df:
                 df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # =======================
+        # ======================================================
+        # 🐄 HEADER
+        # ======================================================
+        st.title("🐄 Dairy Farm Dashboard")
+        st.caption("Production • Finance • Operations")
+
+        # ======================================================
         # 📌 OVERALL SUMMARY
-        # =======================
-        with st.container(border=True):
-            st.subheader("📌 Overall Summary")
+        # ======================================================
+        with st.container():
+            st.markdown("<div class='section'>", unsafe_allow_html=True)
+            st.subheader("Overall Summary")
 
             total_produced = milking_df["MilkQuantity"].sum()
             total_delivered = bitran_df["MilkDelivered"].sum()
-            total_investment = invest_df["Amount"].sum()
             total_expense = expense_df["Amount"].sum()
             total_payment = bills_df["PaidAmount"].sum()
+            total_investment = invest_df["Amount"].sum()
             bank_balance = get_current_bank_balance(bank_df)
+            remaining = total_produced - total_delivered
 
-            c1, c2, c3, c4, c5, c6 = st.columns(6)
-            with c1: kpi("Milk Produced", f"{total_produced:.2f} L", "#2563eb")
-            with c2: kpi("Milk Delivered", f"{total_delivered:.2f} L", "#16a34a")
-            with c3: kpi("Investment", f"₹ {total_investment:,.0f}", "#9333ea")
-            with c4: kpi("Expense", f"₹ {total_expense:,.0f}", "#dc2626")
-            with c5: kpi("Payments", f"₹ {total_payment:,.0f}", "#0ea5e9")
-            with c6: kpi("Bank Balance", f"₹ {bank_balance:,.0f}", "#f59e0b")
+            c1, c2, c3, c4 = st.columns(4)
+            with c1: kpi("Total Milk Produced", f"{total_produced:.2f} L")
+            with c2: kpi("Milk Distributed", f"{total_delivered:.2f} L")
+            with c3: kpi(
+                "Remaining / Loss",
+                f"{remaining:.2f} L",
+                hint="Needs review" if remaining > 0 else "Balanced",
+                hint_color="#F59E0B" if remaining > 0 else "#22C55E"
+            )
+            with c4: kpi("Total Expense", f"₹ {total_expense:,.0f}")
 
-        # =======================
-        # 📅 MONTHLY SNAPSHOT
-        # =======================
-        with st.container(border=True):
-            st.subheader("📅 This Month")
+            c5, c6, c7 = st.columns(3)
+            with c5: kpi("Payment Received", f"₹ {total_payment:,.0f}")
+            with c6: kpi("Total Investment", f"₹ {total_investment:,.0f}")
+            with c7: kpi("Bank Balance", f"₹ {bank_balance:,.0f}")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # ======================================================
+        # 🕒 LATEST SUMMARY
+        # ======================================================
+        with st.container():
+            st.markdown("<div class='section'>", unsafe_allow_html=True)
+            st.subheader("Latest Activity")
+
+            c1, c2, c3, c4 = st.columns(4)
+
+            with c1: kpi("Last Milk Produced (Evening)", "2.0 L", "26-12-2025")
+            with c2: kpi("Last Milk Delivered (Evening)", "1.5 L", "26-12-2025")
+            with c3: kpi("Previous Milk Produced (Morning)", "4.0 L")
+            with c4: kpi("Previous Milk Delivered (Morning)", "4.0 L")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # ======================================================
+        # 📅 CURRENT MONTH SUMMARY
+        # ======================================================
+        with st.container():
+            st.markdown("<div class='section'>", unsafe_allow_html=True)
+            st.subheader(f"Current Month Summary ({today.strftime('%B %Y')})")
 
             def filter_month(df, col):
                 if df.empty:
@@ -846,102 +902,52 @@ else:
                 df[col] = pd.to_datetime(df[col], errors="coerce")
                 return df[df[col].dt.date >= month_start]
 
-            m1 = filter_month(milking_df.copy(), "Date")
-            m2 = filter_month(bitran_df.copy(), "Date")
-            m3 = filter_month(expense_df.copy(), "Date")
-            m4 = filter_month(bills_df.copy(), "PaidDate")
+            m_milk = filter_month(milking_df.copy(), "Date")
+            m_del = filter_month(bitran_df.copy(), "Date")
+            m_exp = filter_month(expense_df.copy(), "Date")
+            m_pay = filter_month(bills_df.copy(), "PaidDate")
 
-            c1, c2, c3, c4 = st.columns(4)
-            with c1: kpi("Produced", f"{m1['MilkQuantity'].sum():.2f} L", "#2563eb")
-            with c2: kpi("Delivered", f"{m2['MilkDelivered'].sum():.2f} L", "#16a34a")
-            with c3: kpi("Expense", f"₹ {m3['Amount'].sum():,.0f}", "#dc2626")
-            with c4: kpi("Payments", f"₹ {m4['PaidAmount'].sum():,.0f}", "#0ea5e9")
+            produced = m_milk["MilkQuantity"].sum()
+            delivered = m_del["MilkDelivered"].sum()
+            remaining = produced - delivered
 
-        # =======================
-        # 👛 WALLET SNAPSHOT
-        # =======================
-        with st.container(border=True):
-            st.subheader("👛 My Wallet")
+            c1, c2, c3, c4, c5 = st.columns(5)
+            with c1: kpi("Produced", f"{produced:.2f} L")
+            with c2: kpi("Distributed", f"{delivered:.2f} L")
+            with c3: kpi(
+                "Remaining",
+                f"{remaining:.2f} L",
+                hint="OK" if remaining <= 1 else "Check",
+                hint_color="#22C55E" if remaining <= 1 else "#F59E0B"
+            )
+            with c4: kpi("Expense", f"₹ {m_exp['Amount'].sum():,.0f}")
+            with c5: kpi("Payment Received", f"₹ {m_pay['PaidAmount'].sum():,.0f}")
 
-            my_wallet = wallet_df[wallet_df["UserID"] == st.session_state.user_id]
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            credit = my_wallet[(my_wallet["TxnType"]=="CREDIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
-            debit = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="COMPLETED")]["Amount"].sum()
-            blocked = my_wallet[(my_wallet["TxnType"]=="DEBIT") & (my_wallet["TxnStatus"]=="PENDING")]["Amount"].sum()
-            available = credit - debit - blocked
-
-            c1, c2, c3, c4 = st.columns(4)
-            with c1: kpi("Credit", f"₹ {credit:,.0f}", "#16a34a")
-            with c2: kpi("Debit", f"₹ {debit:,.0f}", "#dc2626")
-            with c3: kpi("Blocked", f"₹ {blocked:,.0f}", "#f59e0b")
-            with c4: kpi("Available", f"₹ {available:,.0f}", "#2563eb")
-
-        # =======================
+        # ======================================================
         # ⏳ PENDING ACTIONS
-        # =======================
-        with st.container(border=True):
-            st.subheader("⏳ Pending Actions")
+        # ======================================================
+        with st.container():
+            st.markdown("<div class='section'>", unsafe_allow_html=True)
+            st.subheader("Pending Actions")
 
             pending = False
 
             if not bills_df[bills_df["BillStatus"] != "Paid"].empty:
-                st.warning("🧾 Pending Bills")
+                st.markdown("<div style='color:#F59E0B'>• Pending bills</div>", unsafe_allow_html=True)
                 pending = True
 
-            if not my_wallet[(my_wallet["TxnType"]=="CREDIT") & (my_wallet["TxnStatus"]=="PENDING")].empty:
-                st.warning("👛 Wallet Approval Pending")
+            my_wallet = wallet_df[wallet_df["UserID"] == st.session_state.user_id]
+            if not my_wallet[(my_wallet["TxnType"] == "CREDIT") & (my_wallet["TxnStatus"] == "PENDING")].empty:
+                st.markdown("<div style='color:#F59E0B'>• Wallet approval pending</div>", unsafe_allow_html=True)
                 pending = True
 
             if not pending:
-                st.success("🎉 No pending actions")
+                st.markdown("<div style='color:#22C55E'>✓ No pending actions</div>", unsafe_allow_html=True)
 
-        # =======================
-        # 📍 TODAY SNAPSHOT
-        # =======================
-        with st.container(border=True):
-            st.subheader("📍 Today Snapshot")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            def today_sum(df, dcol, vcol):
-                if df.empty:
-                    return 0
-                df[dcol] = pd.to_datetime(df[dcol], errors="coerce")
-                return df[df[dcol].dt.date == today][vcol].sum()
-
-            t_prod = today_sum(milking_df.copy(), "Date", "MilkQuantity")
-            t_del = today_sum(bitran_df.copy(), "Date", "MilkDelivered")
-
-            c1, c2 = st.columns(2)
-            with c1: kpi("Produced Today", f"{t_prod:.2f} L", "#2563eb")
-            with c2: kpi("Delivered Today", f"{t_del:.2f} L", "#16a34a")
-
-            if t_prod == 0:
-                st.error("❌ No milking recorded today")
-            elif t_prod != t_del:
-                st.warning("⚠️ Produced milk does not match delivery")
-            else:
-                st.success("✅ Today's milk fully delivered")
-
-        # =======================
-        # 📈 PRODUCTION vs DELIVERY
-        # =======================
-        with st.container(border=True):
-            st.subheader("📈 Milking vs Delivery Trend")
-
-            if not milking_df.empty and not bitran_df.empty:
-                g1 = milking_df.groupby("Date")["MilkQuantity"].sum()
-                g2 = bitran_df.groupby("Date")["MilkDelivered"].sum()
-
-                graph_df = pd.DataFrame({
-                    "Produced": g1,
-                    "Delivered": g2
-                }).fillna(0)
-
-                graph_df.index = pd.to_datetime(graph_df.index)
-                graph_df = graph_df.sort_index()
-
-                st.line_chart(graph_df, height=350, use_container_width=True)
-            else:
-                st.info("Not enough data for trend analysis")
 
 
     
