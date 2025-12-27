@@ -1174,8 +1174,9 @@ else:
                 f"{last_day_total:.2f} L" if last_complete_date else "-"
             )
 
+
         # ==================================================
-        # 🐄 PER-COW MINI CARDS (COMPACT + SCALABLE)
+        # 🐄 PER-COW MINI CARDS (HTML FIXED)
         # ==================================================
 
         st.divider()
@@ -1199,10 +1200,10 @@ else:
             last_day_cow = (
                 df_milk[df_milk["Date"] == last_complete_date]
                 .groupby("CowID")["MilkQuantity"].sum()
-                if last_complete_date else pd.Series()
+                if last_complete_date else {}
             )
 
-            cols = st.columns(5)  # 5 compact cards per row
+            cols = st.columns(5)  # compact layout
             i = 0
 
             for _, cow in cows_df.iterrows():
@@ -1214,41 +1215,43 @@ else:
                 m_avg = month_avg_cow.get(cow_id, 0)
                 last_d = last_day_cow.get(cow_id, 0)
 
+                card_html = f"""
+                <div style="
+                    background:#020617;
+                    border:1px solid #334155;
+                    border-radius:10px;
+                    padding:12px;
+                    font-family:Inter,system-ui,sans-serif;
+                    height:140px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:13px;font-weight:700;color:#f8fafc;">
+                        🐄 {tag}
+                    </div>
+
+                    <div style="font-size:11px;color:#cbd5f5;margin-top:8px;">
+                        Total: <b>{life:.1f} L</b>
+                    </div>
+
+                    <div style="font-size:11px;color:#cbd5f5;">
+                        Month: <b>{m_total:.1f} L</b>
+                    </div>
+
+                    <div style="font-size:11px;color:#cbd5f5;">
+                        Avg/day: <b>{m_avg:.1f} L</b>
+                    </div>
+
+                    <div style="font-size:11px;color:#cbd5f5;">
+                        Last day: <b>{last_d:.1f} L</b>
+                    </div>
+                </div>
+                """
+
                 with cols[i % 5]:
-                    st.markdown(
-                        f"""
-                        <div style="
-                            background:#020617;
-                            border:1px solid #334155;
-                            border-radius:10px;
-                            padding:12px;
-                            margin-bottom:12px;
-                            font-family:Inter,system-ui,sans-serif;
-                        ">
-                            <div style="font-size:13px;font-weight:700;color:white">
-                                🐄 {tag}
-                            </div>
+                    components.html(card_html, height=150)
 
-                            <div style="font-size:11px;color:#94a3b8;margin-top:6px">
-                                Total: <b>{life:.1f} L</b>
-                            </div>
-
-                            <div style="font-size:11px;color:#94a3b8">
-                                Month: <b>{m_total:.1f} L</b>
-                            </div>
-
-                            <div style="font-size:11px;color:#94a3b8">
-                                Avg/day: <b>{m_avg:.1f} L</b>
-                            </div>
-
-                            <div style="font-size:11px;color:#94a3b8">
-                                Last day: <b>{last_d:.1f} L</b>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
                 i += 1
+
 
     
         # ================== SHIFT BUTTONS ==================
