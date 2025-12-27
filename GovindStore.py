@@ -3480,12 +3480,13 @@ else:
 
             st.subheader("👥 Active Customers – Delivery Snapshot")
 
-            cust_cards = st.columns(5)
+            cards_per_row = 5
+            valid_cards = []
 
-            for i, c in customers_df.iterrows():
+            # ---------------- COLLECT CARD DATA FIRST ----------------
+            for _, c in customers_df.iterrows():
 
                 c_df = df_bitran[df_bitran["CustomerID"] == c["CustomerID"]]
-
                 if c_df.empty:
                     continue
 
@@ -3496,24 +3497,16 @@ else:
                 m_avg = round(m_total / m_days, 2) if m_days else 0
 
                 # ---- Last complete day ----
-                cd = (
-                    c_df.groupby(["Date", "Shift"])
-                    .size()
-                    .unstack(fill_value=0)
-                )
-
-                valid = cd[
-                    (cd.get("Morning", 0) > 0)
-                    | (cd.get("Evening", 0) > 0)
+                cd = c_df.groupby(["Date", "Shift"]).size().unstack(fill_value=0)
+                valid_days = cd[
+                    (cd.get("Morning", 0) > 0) | (cd.get("Evening", 0) > 0)
                 ].index
 
-                if len(valid) > 0:
-                    last_day = valid.max()
-                    last_day_total = c_df[
-                        c_df["Date"] == last_day
-                    ]["MilkDelivered"].sum()
-                else:
-                    last_day_total = 0
+                last_day = valid_days.max() if len(valid_days) else None
+                last_day_total = (
+                    c_df[c_df["Date"] == last_day]["MilkDelivered"].sum()
+                    if last_day else 0
+                )
 
                 last_updated = (
                     c_df["Date"].max().strftime("%d %b")
@@ -3521,14 +3514,30 @@ else:
                 )
 
                 # ---- Conditional gradient ----
-                if last_day_total < m_avg:
-                    gradient = "linear-gradient(135deg,#fde68a,#f59e0b)"  # warning amber
-                else:
-                    gradient = "linear-gradient(135deg,#bbf7d0,#22c55e)"  # healthy green
+                gradient = (
+                    "linear-gradient(135deg,#fde68a,#f59e0b)"
+                    if last_day_total < m_avg
+                    else "linear-gradient(135deg,#bbf7d0,#22c55e)"
+                )
 
-                card_html = f"""
+                valid_cards.append({
+                    "name": c["Name"],
+                    "month": m_total,
+                    "avg": m_avg,
+                    "last": last_day_total,
+                    "updated": last_updated,
+                    "gradient": gradient
+                })
+
+            # ---------------- RENDER IN PROPER ROWS ----------------
+            for i in range(0, len(valid_cards), cards_per_row):
+                row_cards = valid_cards[i:i + cards_per_row]
+                cols = st.columns(cards_per_row)
+
+                for idx, card in enumerate(row_cards):
+                    card_html = f"""
                     <div style="
-                        background:{gradient};
+                        background:{card['gradient']};
                         padding:14px;
                         border-radius:12px;
                         font-family:Inter,system-ui,sans-serif;
@@ -3536,10 +3545,10 @@ else:
                     ">
                         <div style="display:flex;justify-content:space-between;">
                             <div style="font-weight:700;font-size:13px;">
-                                🧑‍🌾 {c['Name']}
+                                🧑‍🌾 {card['name']}
                             </div>
                             <div style="font-size:10px;opacity:.85;">
-                                ⏱ {last_updated}
+                                ⏱ {card['updated']}
                             </div>
                         </div>
 
@@ -3550,24 +3559,14 @@ else:
                             margin-top:10px;
                             font-size:12px;
                         ">
-                            <div>
-                                <b>{m_total:.1f}</b><br>
-                                Month
-                            </div>
-                            <div>
-                                <b>{m_avg:.1f}</b><br>
-                                Avg / Day
-                            </div>
-                            <div>
-                                <b>{last_day_total:.1f}</b><br>
-                                Last Day
-                            </div>
+                            <div><b>{card['month']:.1f}</b><br>Month</div>
+                            <div><b>{card['avg']:.1f}</b><br>Avg / Day</div>
+                            <div><b>{card['last']:.1f}</b><br>Last Day</div>
                         </div>
                     </div>
                     """
-                   
-                with cust_cards[i % 5]:
-                    components.html(card_html, height=150)
+                    with cols[idx]:
+                        components.html(card_html, height=150)
 
             st.divider()
 
