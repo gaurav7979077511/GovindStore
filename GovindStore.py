@@ -1113,7 +1113,7 @@ else:
         # ================== STATE ==================
         if "show_milking_form" not in st.session_state:
             st.session_state.show_milking_form = None
-            
+
         # ================== SHIFT BUTTONS ==================
         c1, c2 = st.columns(2)
     
@@ -2828,6 +2828,11 @@ else:
         # ======================================================
         if st.button("Create Cow Profile"):
             st.session_state.show_add_cow = True
+        
+        def calculate_age_years(from_date: dt.date) -> int:
+            today = dt.date.today()
+            return max(0, int((today - from_date).days / 365.25))
+
     
         if st.session_state.show_add_cow:
             with st.form("add_cow"):
@@ -2847,7 +2852,7 @@ else:
                     breed = st.text_input("Breed")
     
                 with c2:
-                    age = st.number_input("Age (Years)", value=None, step=1)
+
                     df = load_cows()
                     active_parents_df = df[df["Status"] == "Active"][["CowID", "TagNumber"]]
 
@@ -2863,16 +2868,8 @@ else:
                         format_func=lambda x: "" if x == "" else cowid_to_tag.get(x, x)
                     )
 
-
-    
-                    if parent:
-                        dob = st.date_input("Date of Birth")
-                        purchase_date = ""
-                        purchase_price = ""
-                    else:
-                        purchase_date = st.date_input("Purchase Date")
-                        purchase_price = st.number_input("Purchase Price", min_value=0.0,value=None, step=100.0)
-                        dob = None
+                    purchase_date = st.date_input("Purchase Date or DOB")
+                    purchase_price = st.number_input("Purchase Price", min_value=0.0,value=None, step=100.0)
     
                 with c3:
                     status = st.selectbox("Status", ["Active", "Sick", "Sold", "Dead"])
@@ -2904,6 +2901,7 @@ else:
                 prefix = "COW" 
                 cow_id = f"{prefix}{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
                 birth_year = CURRENT_YEAR - int(age)
+                age = calculate_age_years(purchase_date.strftime("%Y-%m-%d"))
     
                 open_cow_sheet().append_row(
                     [
@@ -2913,7 +2911,7 @@ else:
                         gender,
                         breed,
                         age,
-                        dob.strftime("%Y-%m-%d") if dob else purchase_date.strftime("%Y-%m-%d"),
+                        purchase_date.strftime("%Y-%m-%d"),
                         purchase_price,
                         sold_price,
                         sold_date.strftime("%Y-%m-%d") if sold_date else "",
