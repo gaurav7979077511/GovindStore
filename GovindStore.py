@@ -2868,7 +2868,7 @@ else:
                         purchase_price = ""
                     else:
                         purchase_date = st.date_input("Purchase Date")
-                        purchase_price = st.number_input("Purchase Price", min_value=0.0, step=100.0)
+                        purchase_price = st.number_input("Purchase Price", min_value=0.0,value=None, step=100.0)
                         dob = None
     
                 with c3:
@@ -2925,6 +2925,7 @@ else:
     
                 st.success("Cow profile added successfully ✅")
                 st.session_state.show_add_cow = False
+                load_cows.clear()
                 st.query_params.clear()
                 st.rerun()
     
