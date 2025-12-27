@@ -1174,6 +1174,7 @@ else:
                 "Last Complete Day",
                 f"{last_day_total:.2f} L" if last_complete_date else "-"
             )
+        st.divider()
 
         # ================== SHIFT BUTTONS ==================
         c1, c2 = st.columns(2)
@@ -1290,7 +1291,7 @@ else:
                 """
 
                 with cols[i % 6]:
-                    components.html(card_html, height=110)
+                    components.html(card_html, height=100)
 
                 i += 1
 
@@ -1300,7 +1301,8 @@ else:
         
     
 
-
+        st.divider()
+        #------------- Daily Milk Summary-----------
         if not df_milk.empty:
             df_milk["MilkQuantity"] = pd.to_numeric(
                 df_milk["MilkQuantity"], errors="coerce"
