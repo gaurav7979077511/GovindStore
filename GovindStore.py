@@ -2244,10 +2244,79 @@ else:
         if payments_df.empty:
             st.info("No payments recorded yet.")
         else:
-            st.dataframe(
-                payments_df.sort_values("ReceivedOn", ascending=False),
-                use_container_width=True
-            )
+
+            cols = st.columns(4)  # 4 cards per row
+
+            for i, r in payments_df.sort_values(
+                "ReceivedOn", ascending=False
+            ).iterrows():
+
+                amount = float(r["PaidAmount"])
+                date_str = (
+                    r["ReceivedOn"].strftime("%d %b %H:%M")
+                    if pd.notna(r["ReceivedOn"]) else "-"
+                )
+
+                card_html = f"""
+                <div style="
+                    background:#0f172a;
+                    border:1px solid #1f2937;
+                    border-radius:12px;
+                    padding:10px 12px;
+                    height:95px;
+                    font-family:Inter,system-ui,sans-serif;
+                    display:flex;
+                    flex-direction:column;
+                    justify-content:space-between;
+                ">
+
+                    <!-- Header -->
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    ">
+                        <div style="
+                            font-size:16px;
+                            font-weight:800;
+                            color:#22c55e;
+                        ">
+                            ₹ {amount:,.0f}
+                        </div>
+
+                        <div style="
+                            font-size:10px;
+                            color:#94a3b8;
+                        ">
+                            {date_str}
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div style="font-size:12px;color:#e5e7eb;">
+                        👤 {r['CustomerName']}
+                    </div>
+
+                    <div style="font-size:11px;color:#cbd5f5;">
+                        💳 {r['PaymentMode']} • {r['ReceivedBy']}
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="
+                        font-size:9px;
+                        color:#64748b;
+                        white-space:nowrap;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                    ">
+                        {r['PaymentID']} • {r['BillID']}
+                    </div>
+
+                </div>
+                """
+
+                with cols[i % 4]:
+                    components.html(card_html, height=110)
 
 
     
