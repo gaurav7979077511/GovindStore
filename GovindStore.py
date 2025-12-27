@@ -3378,6 +3378,81 @@ else:
 
         st.title("🥛 Milk Bitran")
         
+        # ==================================================
+        # 📊 STEP-1: MILK BITRAN OVERVIEW (GLOBAL KPI)
+        # ==================================================
+
+        df_bitran = load_bitran_data()
+
+        if not df_bitran.empty:
+            df_bitran["MilkDelivered"] = pd.to_numeric(
+                df_bitran["MilkDelivered"], errors="coerce"
+            ).fillna(0)
+
+            df_bitran["Date"] = pd.to_datetime(df_bitran["Date"])
+
+            today = pd.Timestamp.today().normalize()
+            month_start = today.replace(day=1)
+
+            # ---- Lifetime ----
+            total_delivered = df_bitran["MilkDelivered"].sum()
+
+            # ---- This month ----
+            m_df = df_bitran[df_bitran["Date"] >= month_start]
+            month_total = m_df["MilkDelivered"].sum()
+            month_days = m_df["Date"].dt.date.nunique()
+            month_avg = round(month_total / month_days, 2) if month_days else 0
+
+            # ---- Last complete day (Morning + Evening both) ----
+            last_complete_day = (
+                df_bitran.groupby(["Date", "Shift"])
+                .size()
+                .unstack(fill_value=0)
+            )
+
+            valid_days = last_complete_day[
+                (last_complete_day.get("Morning", 0) > 0)
+                & (last_complete_day.get("Evening", 0) > 0)
+            ].index
+
+            if len(valid_days) > 0:
+                last_day = valid_days.max()
+                last_day_total = df_bitran[
+                    df_bitran["Date"] == last_day
+                ]["MilkDelivered"].sum()
+            else:
+                last_day_total = 0
+
+            st.subheader("📊 Milk Bitran Overview")
+
+            k1, k2, k3, k4 = st.columns(4)
+
+            def kpi(title, value):
+                st.markdown(
+                    f"""
+                    <div style="
+                        background:#ffffff;
+                        border:1px solid #e5e7eb;
+                        border-radius:12px;
+                        padding:14px;
+                        font-family:Inter,system-ui,sans-serif;
+                    ">
+                        <div style="font-size:12px;color:#6b7280;">{title}</div>
+                        <div style="font-size:20px;font-weight:700;color:#111827;">
+                            {value}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with k1: kpi("Total Delivered", f"{total_delivered:.2f} L")
+            with k2: kpi("This Month", f"{month_total:.2f} L")
+            with k3: kpi("Avg / Day", f"{month_avg:.2f} L")
+            with k4: kpi("Last Complete Day", f"{last_day_total:.2f} L")
+
+            st.divider()
+
         def append_bitran_rows(rows):
             ws = open_sheet(MAIN_SHEET_ID, BITRAN_TAB)
             for r in rows:
