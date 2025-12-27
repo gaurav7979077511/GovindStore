@@ -1022,90 +1022,6 @@ else:
         # ================== SHEET HELPERS ==================
         
     
-        # ================== STATE ==================
-        if "show_milking_form" not in st.session_state:
-            st.session_state.show_milking_form = None
-    
-        
-        # ================== ENTRY FORM ==================
-        if st.session_state.show_milking_form:
-    
-            shift = st.session_state.show_milking_form
-            st.divider()
-            st.subheader(f"📝 {shift} Milking Entry")
-    
-            date = st.date_input("Date", value=dt.date.today())
-    
-            # 🔹 Load only Active + Milking cows
-            cows_df = load_cows()
-            cows_df = cows_df[
-                (cows_df["Status"] == "Active") &
-                (cows_df["MilkingStatus"] == "Milking")
-            ]
-    
-            if cows_df.empty:
-                st.info("No active milking cows available.")
-            else:
-                with st.form("milking_form"):
-                    entries = []
-    
-                    for _, cow in cows_df.iterrows():
-                        qty = st.text_input(
-                            f"COW: {cow['TagNumber']}",
-                            placeholder="Milk in litres",
-                            key=f"{shift}_{cow['CowID']}"
-                        )
-                        entries.append((cow, qty))
-    
-                    save, cancel = st.columns(2)
-                    save_btn = save.form_submit_button("💾 Save")
-                    cancel_btn = cancel.form_submit_button("❌ Cancel")
-    
-                if cancel_btn:
-                    st.session_state.show_milking_form = None
-                    st.rerun()
-    
-                if save_btn:
-                    date_str = date.strftime("%Y-%m-%d")
-                    ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-                    df_existing = load_milking_data()
-                    rows_to_insert = []
-                    has_error = False
-    
-                    for cow, qty in entries:
-                        if not qty.strip():
-                            st.error(f"Milk quantity required for {cow['TagNumber']}")
-                            has_error = True
-                            break
-    
-                        # ❌ Duplicate check
-                        if (
-                            (df_existing["Date"] == date_str) &
-                            (df_existing["Shift"] == shift) &
-                            (df_existing["CowID"] == cow["CowID"])
-                        ).any():
-                            st.error(f"Duplicate entry found for {cow['TagNumber']}")
-                            has_error = True
-                            break
-    
-                        rows_to_insert.append([
-                            date_str,
-                            shift,
-                            cow["CowID"],
-                            cow["TagNumber"],
-                            float(qty),
-                            ts
-                        ])
-    
-                    if not has_error:
-                        append_milking_rows(rows_to_insert)
-                        st.success("Milking data saved successfully ✅")
-                        st.session_state.show_milking_form = None
-                        st.cache_data.clear()
-                        st.query_params.clear()
-                        st.rerun()
-    
         # ================== SUMMARY CARDS ==================
         df_milk = load_milking_data()
 
@@ -1193,6 +1109,11 @@ else:
             )
         st.divider()
 
+
+        # ================== STATE ==================
+        if "show_milking_form" not in st.session_state:
+            st.session_state.show_milking_form = None
+            
         # ================== SHIFT BUTTONS ==================
         c1, c2 = st.columns(2)
     
@@ -1203,6 +1124,89 @@ else:
         with c2:
             if st.button("🌃 Evening Milking", use_container_width=True):
                 st.session_state.show_milking_form = "Evening"
+
+
+        
+    
+        
+        # ================== ENTRY FORM ==================
+        if st.session_state.show_milking_form:
+    
+            shift = st.session_state.show_milking_form
+            st.divider()
+            st.subheader(f"📝 {shift} Milking Entry")
+    
+            date = st.date_input("Date", value=dt.date.today())
+    
+            # 🔹 Load only Active + Milking cows
+            cows_df = load_cows()
+            cows_df = cows_df[
+                (cows_df["Status"] == "Active") &
+                (cows_df["MilkingStatus"] == "Milking")
+            ]
+    
+            if cows_df.empty:
+                st.info("No active milking cows available.")
+            else:
+                with st.form("milking_form"):
+                    entries = []
+    
+                    for _, cow in cows_df.iterrows():
+                        qty = st.text_input(
+                            f"COW: {cow['TagNumber']}",
+                            placeholder="Milk in litres",
+                            key=f"{shift}_{cow['CowID']}"
+                        )
+                        entries.append((cow, qty))
+    
+                    save, cancel = st.columns(2)
+                    save_btn = save.form_submit_button("💾 Save")
+                    cancel_btn = cancel.form_submit_button("❌ Cancel")
+    
+                if cancel_btn:
+                    st.session_state.show_milking_form = None
+                    st.rerun()
+    
+                if save_btn:
+                    date_str = date.strftime("%Y-%m-%d")
+                    ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+                    df_existing = load_milking_data()
+                    rows_to_insert = []
+                    has_error = False
+    
+                    for cow, qty in entries:
+                        if not qty.strip():
+                            st.error(f"Milk quantity required for {cow['TagNumber']}")
+                            has_error = True
+                            break
+    
+                        # ❌ Duplicate check
+                        if (
+                            (df_existing["Date"] == date_str) &
+                            (df_existing["Shift"] == shift) &
+                            (df_existing["CowID"] == cow["CowID"])
+                        ).any():
+                            st.error(f"Duplicate entry found for {cow['TagNumber']}")
+                            has_error = True
+                            break
+    
+                        rows_to_insert.append([
+                            date_str,
+                            shift,
+                            cow["CowID"],
+                            cow["TagNumber"],
+                            float(qty),
+                            ts
+                        ])
+    
+                    if not has_error:
+                        append_milking_rows(rows_to_insert)
+                        st.success("Milking data saved successfully ✅")
+                        st.session_state.show_milking_form = None
+                        st.cache_data.clear()
+                        st.query_params.clear()
+                        st.rerun()
 
         # ================== Cow Wise Summary ==================
         st.divider()
