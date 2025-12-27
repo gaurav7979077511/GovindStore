@@ -4472,25 +4472,40 @@ else:
                     elif unit == "Months":
                         next_due = now + pd.DateOffset(months=value)
 
+
+                # --- SAFE DATE CONVERSION ---
+                given_date_str = (
+                    givendate.strftime("%Y-%m-%d")
+                    if isinstance(givendate, (dt.date, pd.Timestamp))
+                    else ""
+                )
+
+                next_due_str = (
+                    next_due.strftime("%Y-%m-%d")
+                    if isinstance(next_due, (dt.date, pd.Timestamp))
+                    else ""
+                )
+
                 # ---- INSERT LOG ----
                 open_med_log().append_row(
                     [
-                        f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",
-                        TagNumber,
-                        med_id,
-                        medicine_name,
-                        dose_given,
-                        med_row["DoseUnit"],
-                        givendate,
-                        st.session_state.user_name,
-                        med_row["FrequencyType"],
-                        med_row["FrequencyValue"],
-                        med_row["FrequencyUnit"],
-                        notes,
-                        next_due.strftime("%Y-%m-%d") if next_due != "" else "",
+                        f"MEDLOG{now.strftime('%Y%m%d%H%M%S%f')}",  # LogID
+                        TagNumber,                                 # CowID
+                        med_id,                                    # MedicineID
+                        medicine_name,                             # MedicineName
+                        float(dose_given),                         # DoseGiven
+                        med_row["DoseUnit"],                       # DoseUnit
+                        given_date_str,                            # GivenOn (STRING)
+                        st.session_state.user_name,                # GivenBy
+                        med_row["FrequencyType"],                  # FrequencyType
+                        med_row["FrequencyValue"],                 # FrequencyValue
+                        med_row["FrequencyUnit"],                  # FrequencyUnit
+                        notes,                                     # Notes
+                        next_due_str                               # NextDueDate (STRING)
                     ],
                     value_input_option="USER_ENTERED"
                 )
+
 
                 # ---- UPDATE STOCK ----
                 new_stock = med_row["StockAvailable"] - dose_given
@@ -4503,7 +4518,6 @@ else:
 
                 st.cache_data.clear()
                 st.success("✅ Medication recorded & stock updated")
-
                 st.session_state.show_give_medication = False
                 st.query_params.clear()
                 st.rerun()
