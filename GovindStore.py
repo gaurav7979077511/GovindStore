@@ -93,6 +93,7 @@ def upload_to_cloudinary(file, folder):
     )
     return res.get("secure_url", "")
 
+@st.cache_resource
 def open_sheet(sheet_id: str, tab: str):
     client = init_gsheets()
     sh = client.open_by_key(sheet_id)
@@ -105,7 +106,10 @@ def open_sheet(sheet_id: str, tab: str):
 def open_customer_sheet():
     client = init_gsheets()
     sh = client.open_by_key(MAIN_SHEET_ID)
-    return sh.worksheet(CUSTOMER_TAB)
+    try:
+        return sh.worksheet(CUSTOMER_TAB)
+    except gspread.WorksheetNotFound:
+        return sh.worksheet(0)
 
 @st.cache_data(ttl=300)  # cache for 5 minutes
 def get_customers_df():
