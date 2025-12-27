@@ -1248,7 +1248,7 @@ else:
                     background:{gradient};
                     border-radius:12px;
                     padding:12px 14px;
-                    height:75px;
+                    height:70px;
                     color:#ffffff;
                     font-family:Inter,system-ui,sans-serif;
                     box-shadow:0 4px 10px rgba(0,0,0,0.25);
@@ -1259,7 +1259,7 @@ else:
                         display:flex;
                         justify-content:space-between;
                         align-items:center;
-                        margin-bottom:8px;
+                        margin-bottom:6px;
                     ">
                         <div style="font-size:13px;font-weight:700;">
                             🐄 {tag}
@@ -1291,7 +1291,7 @@ else:
                 """
 
                 with cols[i % 6]:
-                    components.html(card_html, height=100)
+                    components.html(card_html, height=110)
 
                 i += 1
 
