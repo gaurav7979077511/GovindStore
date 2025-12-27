@@ -2828,11 +2828,6 @@ else:
         # ======================================================
         if st.button("Create Cow Profile"):
             st.session_state.show_add_cow = True
-        
-        def calculate_age_years(from_date: dt.date) -> int:
-            today = dt.date.today()
-            return max(0, int((today - from_date).days / 365.25))
-
     
         if st.session_state.show_add_cow:
             with st.form("add_cow"):
@@ -2852,7 +2847,7 @@ else:
                     breed = st.text_input("Breed")
     
                 with c2:
-
+                    
                     df = load_cows()
                     active_parents_df = df[df["Status"] == "Active"][["CowID", "TagNumber"]]
 
@@ -2884,7 +2879,13 @@ else:
                     if status == "Sold":
                         sold_price = st.number_input("Sold Price", min_value=0.0, step=100.0)
                         sold_date = st.date_input("Sold Date")
-    
+                    age = st.number_input(
+                            "Age (Years) *",
+                            min_value=0,
+                            step=1,
+                            value=None,
+                            help="Age is required"
+                        )
                 notes = st.text_area("Notes")
                 save, cancel = st.columns(2)
     
@@ -2901,7 +2902,6 @@ else:
                 prefix = "COW" 
                 cow_id = f"{prefix}{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
                 birth_year = CURRENT_YEAR - int(age)
-                age = calculate_age_years(purchase_date.strftime("%Y-%m-%d"))
     
                 open_cow_sheet().append_row(
                     [
