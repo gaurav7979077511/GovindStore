@@ -3553,6 +3553,7 @@ else:
                     qty = st.number_input(
                         f"{c['Name']} ({c['CustomerID']})",
                         min_value=0.0,
+                        step=0.1,
                         value=None,
                         key=f"{date}_{shift}_{c['CustomerID']}"
                     )
