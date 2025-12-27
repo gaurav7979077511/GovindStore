@@ -3453,6 +3453,20 @@ else:
 
             st.divider()
 
+        # ================= STATE =================
+        if "show_form" not in st.session_state:
+            st.session_state.show_form = None
+
+        col1, col2 = st.columns(2)
+        # ===================== SHIFT BUTTONS =====================
+        with col1:
+            if st.button("🌅 Morning Bitran", use_container_width=True):
+                st.session_state.show_form = "Morning"
+        
+        with col2:
+            if st.button("🌃 Evening Bitran", use_container_width=True):
+                st.session_state.show_form = "Evening"
+
         # ==================================================
         # 👥 STEP-2: ACTIVE CUSTOMERS – DELIVERY SNAPSHOT
         # ==================================================
@@ -3490,7 +3504,7 @@ else:
 
                 valid = cd[
                     (cd.get("Morning", 0) > 0)
-                    & (cd.get("Evening", 0) > 0)
+                    | (cd.get("Evening", 0) > 0)
                 ].index
 
                 if len(valid) > 0:
@@ -3562,19 +3576,7 @@ else:
             for r in rows:
                 ws.append_row(r, value_input_option="USER_ENTERED")
 
-        # ================= STATE =================
-        if "show_form" not in st.session_state:
-            st.session_state.show_form = None
 
-        col1, col2 = st.columns(2)
-        # ===================== SHIFT BUTTONS =====================
-        with col1:
-            if st.button("🌅 Morning Bitran", use_container_width=True):
-                st.session_state.show_form = "Morning"
-        
-        with col2:
-            if st.button("🌃 Evening Bitran", use_container_width=True):
-                st.session_state.show_form = "Evening"
         
         # ================= ENTRY FORM =================
         if st.session_state.show_form:
