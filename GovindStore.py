@@ -1225,7 +1225,7 @@ else:
                     background:linear-gradient(135deg,#64748b,#334155);
                     border-radius:12px;
                     padding:12px 14px;
-                    height:90px;
+                    height:80px;
                     color:#ffffff;
                     font-family:Inter,system-ui,sans-serif;
                     box-shadow:0 4px 10px rgba(0,0,0,0.25);
