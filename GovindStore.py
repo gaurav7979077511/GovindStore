@@ -752,18 +752,29 @@ else:
         st.markdown("""
         <style>
         .section {
-            background:#0f172a;
-            border:1px solid #1f2937;
-            border-radius:14px;
-            padding:18px;
-            margin-bottom:22px;
+            background: linear-gradient(
+                180deg,
+                #0f172a 0%,
+                #020617 100%
+            );
+
+            border: 1.5px solid #334155;   /* more visible */
+            border-radius: 14px;
+
+            padding: 18px;
+            margin-bottom: 28px;
+
+            box-shadow:
+                0 0 0 1px rgba(148,163,184,0.08),
+                0 10px 30px rgba(0,0,0,0.45);
         }
+
 
         .kpi {
             background:#020617;
-            border:1px solid #1f2937;
+            border:1px solid #334155;
             border-radius:12px;
-            padding:14px;
+            padding:16px;
             margin-bottom:12px;
         }
 
@@ -831,20 +842,16 @@ else:
             st.markdown('<div class="section">', unsafe_allow_html=True)
             st.subheader("📌 Overall Summary")
 
-            total_produced = milking_df["MilkQuantity"].sum()
-            total_delivered = bitran_df["MilkDelivered"].sum()
             total_investment = invest_df["Amount"].sum()
             total_expense = expense_df["Amount"].sum()
             total_payment = bills_df["PaidAmount"].sum()
             bank_balance = get_current_bank_balance(bank_df)
 
-            c = st.columns(6)
-            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Milk Produced</div><div class="kpi-value">{total_produced:.2f} L</div></div>', unsafe_allow_html=True)
-            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Milk Delivered</div><div class="kpi-value">{total_delivered:.2f} L</div></div>', unsafe_allow_html=True)
-            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Investment</div><div class="kpi-value">₹ {total_investment:,.0f}</div></div>', unsafe_allow_html=True)
-            c[3].markdown(f'<div class="kpi"><div class="kpi-title">Expense</div><div class="kpi-value">₹ {total_expense:,.0f}</div></div>', unsafe_allow_html=True)
-            c[4].markdown(f'<div class="kpi"><div class="kpi-title">Payments</div><div class="kpi-value">₹ {total_payment:,.0f}</div></div>', unsafe_allow_html=True)
-            c[5].markdown(f'<div class="kpi"><div class="kpi-title">Bank Balance</div><div class="kpi-value">₹ {bank_balance:,.0f}</div></div>', unsafe_allow_html=True)
+            c = st.columns(4)
+            c[0].markdown(f'<div class="kpi"><div class="kpi-title">Investment</div><div class="kpi-value">₹ {total_investment:,.0f}</div></div>', unsafe_allow_html=True)
+            c[1].markdown(f'<div class="kpi"><div class="kpi-title">Expense</div><div class="kpi-value">₹ {total_expense:,.0f}</div></div>', unsafe_allow_html=True)
+            c[2].markdown(f'<div class="kpi"><div class="kpi-title">Payments</div><div class="kpi-value">₹ {total_payment:,.0f}</div></div>', unsafe_allow_html=True)
+            c[3].markdown(f'<div class="kpi"><div class="kpi-title">Bank Balance</div><div class="kpi-value">₹ {bank_balance:,.0f}</div></div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
 
