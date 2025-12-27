@@ -3526,8 +3526,7 @@ else:
                 else:
                     gradient = "linear-gradient(135deg,#bbf7d0,#22c55e)"  # healthy green
 
-                with cust_cards[i % 5]:
-                    card_html = f"""
+                card_html = f"""
                     <div style="
                         background:{gradient};
                         padding:14px;
@@ -3566,6 +3565,8 @@ else:
                         </div>
                     </div>
                     """
+                   
+                with cust_cards[i % 5]:
                     components.html(card_html, height=150)
 
             st.divider()
