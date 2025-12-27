@@ -1889,6 +1889,7 @@ else:
     
                 st.success("Investment added successfully ✅")
                 st.session_state.show_add_investment = False
+                st.cache_data.clear()
                 st.query_params.clear()
                 st.rerun()
     
