@@ -3535,7 +3535,7 @@ else:
             st.info("✅ No pending Milk Bitran")
 
         # ===============================
-        # 📝 LOCKED BITRAN ENTRY
+        # 📝 LOCKED BITRAN ENTRY (FIXED)
         # ===============================
 
         if st.session_state.show_form and st.session_state.locked_bitran_date:
@@ -3555,30 +3555,33 @@ else:
             ]
 
             with st.form("locked_bitran_form"):
+
                 entries = []
-                total_entered = 0
 
                 for _, c in customers.iterrows():
                     qty = st.number_input(
                         f"{c['Name']} ({c['CustomerID']})",
                         min_value=0.0,
                         step=0.1,
-                        value=None,
+                        value=0.0,   # ✅ MUST be numeric
                         key=f"{date}_{shift}_{c['CustomerID']}"
                     )
                     entries.append((c, qty))
-                    total_entered += qty
 
                 save = st.form_submit_button("💾 Save Delivery")
                 cancel = st.form_submit_button("❌ Cancel")
 
+            # ---------- CANCEL ----------
             if cancel:
                 st.session_state.show_form = None
                 st.session_state.pop("locked_bitran_date", None)
                 st.session_state.pop("locked_milk_qty", None)
                 st.rerun()
 
+            # ---------- SAVE ----------
             if save:
+
+                total_entered = sum(qty for _, qty in entries)
 
                 if round(total_entered, 2) != round(max_qty, 2):
                     st.error(
@@ -3608,7 +3611,6 @@ else:
                 st.session_state.pop("locked_bitran_date", None)
                 st.session_state.pop("locked_milk_qty", None)
                 st.rerun()
-
 
 
         # ==================================================
