@@ -3513,30 +3513,38 @@ else:
                 })
         
         # ===============================
-        # ⏳ PENDING MILK BITRAN UI
+        # ⏳ PENDING MILK BITRAN (RESPONSIVE)
         # ===============================
 
         if pending_tasks:
 
             st.subheader("⏳ Pending Milk Bitran")
 
-            for task in pending_tasks:
-                date = task["Date"]
-                shift = task["Shift"]
-                qty = task["MilkTotal"]
+            MAX_COLS = 4
 
-                qty = float(task["MilkTotal"]) if task["MilkTotal"] else 0.0
+            for i in range(0, len(pending_tasks), MAX_COLS):
 
-                btn_label = f"🧾 {date} • {shift} • {qty:.1f} L"
+                row_tasks = pending_tasks[i:i + MAX_COLS]
+                cols = st.columns(len(row_tasks))  # dynamic width
 
+                for col, task in zip(cols, row_tasks):
 
-                if st.button(btn_label, use_container_width=True):
-                    st.session_state.show_form = shift
-                    st.session_state.locked_bitran_date = date
-                    st.session_state.locked_milk_qty = qty
-                    st.rerun()
+                    date = task["Date"]
+                    shift = task["Shift"]
+                    qty = float(task["MilkTotal"] or 0)
+
+                    btn_label = f"🧾 {date} • {shift} • {qty:.1f} L"
+
+                    with col:
+                        if st.button(btn_label, use_container_width=True):
+                            st.session_state.show_form = shift
+                            st.session_state.locked_bitran_date = date
+                            st.session_state.locked_milk_qty = qty
+                            st.rerun()
+
         else:
             st.info("✅ No pending Milk Bitran")
+
 
         # ===============================
         # 📝 LOCKED BITRAN ENTRY (FIXED)
@@ -3567,7 +3575,7 @@ else:
                         f"{c['Name']} ({c['CustomerID']})",
                         min_value=0.0,
                         step=0.1,
-                        value=0.0,   # ✅ MUST be numeric
+                        value=None,   # ✅ MUST be numeric
                         key=f"{date}_{shift}_{c['CustomerID']}"
                     )
                     entries.append((c, qty))
