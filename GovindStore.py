@@ -1175,9 +1175,18 @@ else:
                 f"{last_day_total:.2f} L" if last_complete_date else "-"
             )
 
+        # ================== SHIFT BUTTONS ==================
+        c1, c2 = st.columns(2)
+    
+        with c1:
+            if st.button("🌅 Morning Milking", use_container_width=True):
+                st.session_state.show_milking_form = "Morning"
+    
+        with c2:
+            if st.button("🌃 Evening Milking", use_container_width=True):
+                st.session_state.show_milking_form = "Evening"
 
-
-
+        # ================== Cow Wise Summary ==================
         st.divider()
         st.subheader("🐄 Cow-wise Milking Summary")
 
@@ -1219,10 +1228,23 @@ else:
                 cid = cow["CowID"]
                 tag = cow["TagNumber"]
                 last_upd = last_update_map.get(cid, "-")
+                avg_val = float(month_avg.get(cid, 0))
+                last_day_val = float(last_day_map.get(cid, 0))
+
+                is_below_avg = last_day_val < avg_val
+
+                gradient = (
+                    "linear-gradient(135deg,#92400e,#78350f)"  # warning
+                    if is_below_avg
+                    else "linear-gradient(135deg,#64748b,#334155)"  # normal
+                )
+
+
+
 
                 card_html = f"""
                 <div style="
-                    background:linear-gradient(135deg,#64748b,#334155);
+                    background:{gradient};
                     border-radius:12px;
                     padding:12px 14px;
                     height:75px;
@@ -1275,16 +1297,7 @@ else:
 
 
     
-        # ================== SHIFT BUTTONS ==================
-        c1, c2 = st.columns(2)
-    
-        with c1:
-            if st.button("🌅 Morning Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Morning"
-    
-        with c2:
-            if st.button("🌃 Evening Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Evening"
+        
     
 
 
