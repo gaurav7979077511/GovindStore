@@ -1013,17 +1013,7 @@ else:
         if "show_milking_form" not in st.session_state:
             st.session_state.show_milking_form = None
     
-        # ================== SHIFT BUTTONS ==================
-        c1, c2 = st.columns(2)
-    
-        with c1:
-            if st.button("🌅 Morning Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Morning"
-    
-        with c2:
-            if st.button("🌃 Evening Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Evening"
-    
+        
         # ================== ENTRY FORM ==================
         if st.session_state.show_milking_form:
     
@@ -1104,7 +1094,178 @@ else:
     
         # ================== SUMMARY CARDS ==================
         df_milk = load_milking_data()
+
+        # ==================================================
+        # 📌 MILKING KPIs (MONTH + LAST COMPLETE DAY)
+        # ==================================================
+
+        st.divider()
+        st.subheader("📌 Milking Overview")
+
+        # --- Prepare data ---
+        df_milk["MilkQuantity"] = pd.to_numeric(
+            df_milk["MilkQuantity"], errors="coerce"
+        ).fillna(0)
+
+        df_milk["Date"] = pd.to_datetime(
+            df_milk["Date"], errors="coerce"
+        ).dt.date
+
+        today = dt.date.today()
+        month_start = today.replace(day=1)
+
+        # --- This month ---
+        month_df = df_milk[df_milk["Date"] >= month_start]
+
+        month_total = month_df["MilkQuantity"].sum()
+        month_days = month_df["Date"].nunique()
+        month_avg = month_total / month_days if month_days > 0 else 0
+
+        # --- Last complete day (Morning + Evening) ---
+        complete_days = (
+            df_milk.groupby(["Date", "Shift"])
+            .size()
+            .unstack(fill_value=0)
+        )
+
+        complete_days = complete_days[
+            (complete_days.get("Morning", 0) > 0) &
+            (complete_days.get("Evening", 0) > 0)
+        ]
+
+        last_complete_date = complete_days.index.max() if not complete_days.empty else None
+
+        last_day_total = (
+            df_milk[df_milk["Date"] == last_complete_date]["MilkQuantity"].sum()
+            if last_complete_date else 0
+        )
+
+        # --- KPI UI ---
+        k1, k2, k3 = st.columns(3)
+
+        def milking_kpi(title, value):
+            st.markdown(
+                f"""
+                <div style="
+                    background:#020617;
+                    border:1px solid #334155;
+                    border-radius:12px;
+                    padding:16px;
+                    font-family:Inter,system-ui,sans-serif;
+                ">
+                    <div style="font-size:12px;color:#94a3b8">{title}</div>
+                    <div style="font-size:22px;font-weight:800;color:white;margin-top:4px">
+                        {value}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with k1:
+            milking_kpi("This Month Total", f"{month_total:.2f} L")
+
+        with k2:
+            milking_kpi("Monthly Avg / Day", f"{month_avg:.2f} L")
+
+        with k3:
+            milking_kpi(
+                "Last Complete Day",
+                f"{last_day_total:.2f} L" if last_complete_date else "-"
+            )
+
+        # ==================================================
+        # 🐄 PER-COW MINI CARDS (COMPACT + SCALABLE)
+        # ==================================================
+
+        st.divider()
+        st.subheader("🐄 Cow-wise Milking Summary")
+
+        # --- Active milking cows ---
+        cows_df = load_cows()
+        cows_df = cows_df[
+            (cows_df["Status"] == "Active") &
+            (cows_df["MilkingStatus"] == "Milking")
+        ]
+
+        if cows_df.empty:
+            st.info("No active milking cows found.")
+        else:
+            # --- Aggregations ---
+            total_lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
+            month_total_cow = month_df.groupby("CowID")["MilkQuantity"].sum()
+            month_avg_cow = month_df.groupby("CowID")["MilkQuantity"].mean()
+
+            last_day_cow = (
+                df_milk[df_milk["Date"] == last_complete_date]
+                .groupby("CowID")["MilkQuantity"].sum()
+                if last_complete_date else pd.Series()
+            )
+
+            cols = st.columns(5)  # 5 compact cards per row
+            i = 0
+
+            for _, cow in cows_df.iterrows():
+                cow_id = cow["CowID"]
+                tag = cow["TagNumber"]
+
+                life = total_lifetime.get(cow_id, 0)
+                m_total = month_total_cow.get(cow_id, 0)
+                m_avg = month_avg_cow.get(cow_id, 0)
+                last_d = last_day_cow.get(cow_id, 0)
+
+                with cols[i % 5]:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background:#020617;
+                            border:1px solid #334155;
+                            border-radius:10px;
+                            padding:12px;
+                            margin-bottom:12px;
+                            font-family:Inter,system-ui,sans-serif;
+                        ">
+                            <div style="font-size:13px;font-weight:700;color:white">
+                                🐄 {tag}
+                            </div>
+
+                            <div style="font-size:11px;color:#94a3b8;margin-top:6px">
+                                Total: <b>{life:.1f} L</b>
+                            </div>
+
+                            <div style="font-size:11px;color:#94a3b8">
+                                Month: <b>{m_total:.1f} L</b>
+                            </div>
+
+                            <div style="font-size:11px;color:#94a3b8">
+                                Avg/day: <b>{m_avg:.1f} L</b>
+                            </div>
+
+                            <div style="font-size:11px;color:#94a3b8">
+                                Last day: <b>{last_d:.1f} L</b>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                i += 1
+
     
+        # ================== SHIFT BUTTONS ==================
+        c1, c2 = st.columns(2)
+    
+        with c1:
+            if st.button("🌅 Morning Milking", use_container_width=True):
+                st.session_state.show_milking_form = "Morning"
+                st.session_state.show_milking_form = None
+    
+        with c2:
+            if st.button("🌃 Evening Milking", use_container_width=True):
+                st.session_state.show_milking_form = "Evening"
+                st.session_state.show_milking_form = None
+    
+
+
         if not df_milk.empty:
             df_milk["MilkQuantity"] = pd.to_numeric(
                 df_milk["MilkQuantity"], errors="coerce"
