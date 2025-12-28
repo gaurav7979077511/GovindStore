@@ -3726,26 +3726,38 @@ else:
             cards_per_row = 5
             valid_cards = []
 
-            # ---------------- COLLECT CARD DATA FIRST ----------------
             for _, c in customers_df.iterrows():
 
+                # Filter customer bitran
                 c_df = df_bitran[df_bitran["CustomerID"] == c["CustomerID"]]
                 if c_df.empty:
                     continue
 
-                # ---- Monthly stats ----
+                # ---- Monthly stats (CURRENT MONTH ONLY) ----
                 m_df = c_df[c_df["Date"] >= month_start]
                 m_total = m_df["MilkDelivered"].sum()
+
+                # 🚫 SKIP if no delivery this month
+                if m_total <= 0:
+                    continue
+
                 m_days = m_df["Date"].dt.date.nunique()
                 m_avg = round(m_total / m_days, 2) if m_days else 0
 
                 # ---- Last complete day ----
-                cd = c_df.groupby(["Date", "Shift"]).size().unstack(fill_value=0)
+                cd = (
+                    c_df
+                    .groupby(["Date", "Shift"])
+                    .size()
+                    .unstack(fill_value=0)
+                )
+
                 valid_days = cd[
                     (cd.get("Morning", 0) > 0) | (cd.get("Evening", 0) > 0)
                 ].index
 
                 last_day = valid_days.max() if len(valid_days) else None
+
                 last_day_total = (
                     c_df[c_df["Date"] == last_day]["MilkDelivered"].sum()
                     if last_day else 0
@@ -3771,6 +3783,7 @@ else:
                     "updated": last_updated,
                     "gradient": gradient
                 })
+
 
             # ---------------- RENDER IN PROPER ROWS ----------------
             for i in range(0, len(valid_cards), cards_per_row):
