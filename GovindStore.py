@@ -1037,10 +1037,10 @@ else:
         # ---- UI ----
         if pending_milking:
             st.subheader("⏳ Pending Milking")
-            cols = st.columns(6)
+            cols = st.columns(5)
 
             for i, (d, s) in enumerate(pending_milking):
-                with cols[i % 6]:
+                with cols[i % 5]:
                     st.markdown(
                         f"""
                         <div class="mini-card">
@@ -1064,18 +1064,19 @@ else:
 
         if not pending_bills.empty:
             st.subheader("💰 Pending Payments")
-
-            for _, r in pending_bills.iterrows():
+            cols = st.columns(4)
+            for i,(_, r) in enumerate(pending_bills.iterrows()):
                 short_id = f"{r['CustomerID'][:2]}**{r['CustomerID'][-4:]}"
-                st.markdown(
-                    f"""
-                    <div class="mini-card">
-                        👤 {r['CustomerName']} ({short_id})<br>
-                        💵 ₹ {r['BalanceAmount']:,.0f}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                with cols[i % 4]:
+                    st.markdown(
+                        f"""
+                        <div class="mini-card">
+                            👤 {r['CustomerName']} ({short_id})<br>
+                            💵 ₹ {r['BalanceAmount']:,.0f}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
         
 
 
