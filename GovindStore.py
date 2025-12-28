@@ -1189,33 +1189,82 @@ else:
         st.divider()
 
 
-        # ================== STATE ==================
+        # ================== code for Dynamic Button of Milking ==================
         if "show_milking_form" not in st.session_state:
             st.session_state.show_milking_form = None
 
-        # ================== SHIFT BUTTONS ==================
-        c1, c2 = st.columns(2)
-    
-        with c1:
-            if st.button("🌅 Morning Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Morning"
-    
-        with c2:
-            if st.button("🌃 Evening Milking", use_container_width=True):
-                st.session_state.show_milking_form = "Evening"
+        if "locked_milking_date" not in st.session_state:
+            st.session_state.locked_milking_date = None
 
+
+        # ===============================
+        # ⏳ PENDING MILKING (VIEW ONLY)
+        # ===============================
+
+        df_milk = load_milking_data()
+        pending_milking = []
+
+        if not df_milk.empty and {"Date", "Shift"}.issubset(df_milk.columns):
+
+            df_milk["Date"] = pd.to_datetime(df_milk["Date"], errors="coerce")
+
+            start_date = df_milk["Date"].min().date()
+            today = dt.date.today()
+
+            all_dates = pd.date_range(start=start_date, end=today, freq="D")
+
+            # 👇 CRITICAL FIX: normalize index to DATE
+            done = (
+                df_milk
+                .groupby(["Date", "Shift"])
+                .size()
+                .unstack(fill_value=0)
+            )
+            done.index = done.index.date   # ✅ FIX
+
+            for d in all_dates:
+                d = d.date()
+
+                for shift in ["Morning", "Evening"]:
+                    if d not in done.index or done.loc[d].get(shift, 0) == 0:
+                        pending_milking.append((d, shift))
+
+
+
+
+
+        if pending_milking:
+            st.subheader("⏳ Pending Milking")
+
+            MAX_COLS = 4
+            for i in range(0, len(pending_milking), MAX_COLS):
+
+                row = pending_milking[i:i + MAX_COLS]
+                cols = st.columns(len(row))
+
+                for col, (d, shift) in zip(cols, row):
+                    with col:
+                        if st.button(
+                            f"🐄 {d} • {shift}",
+                            use_container_width=True
+                        ):
+                            st.session_state.show_milking_form = shift
+                            st.session_state.locked_milking_date = d
+                            st.rerun()
 
         
     
         
         # ================== ENTRY FORM ==================
         if st.session_state.show_milking_form:
-    
+
             shift = st.session_state.show_milking_form
+            date = st.session_state.locked_milking_date or dt.date.today()
+
             st.divider()
-            st.subheader(f"📝 {shift} Milking Entry")
-    
-            date = st.date_input("Date", value=dt.date.today())
+            st.subheader(f"📅 Date: {date}")
+            st.caption(f"📝 {shift} Milking Entry")
+
     
             # 🔹 Load only Active + Milking cows
             cows_df = load_cows()
@@ -1291,19 +1340,46 @@ else:
         st.divider()
         st.subheader("🐄 Cow-wise Milking Summary")
 
-        # Active + Milking cows
         cows_df = load_cows()
-        cows_df = cows_df[
-            (cows_df["Status"] == "Active") &
-            (cows_df["MilkingStatus"] == "Milking")
-        ]
+        df_milk["CowID"] = df_milk["CowID"].astype(str).str.strip()
+        cows_df["CowID"] = cows_df["CowID"].astype(str).str.strip()
+
+        df_milk["MilkQuantity"] = pd.to_numeric(
+            df_milk["MilkQuantity"], errors="coerce"
+        ).fillna(0)
+
+
+        def safe_float(val):
+            try:
+                return float(val)
+            except (TypeError, ValueError):
+                return 0.0
+
+
 
         if cows_df.empty:
             st.info("No active milking cows.")
         else:
             # ---------- Aggregations ----------
-            lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
-            month_total = month_df.groupby("CowID")["MilkQuantity"].sum()
+            lifetime = (
+                df_milk
+                .groupby("CowID", as_index=True)["MilkQuantity"]
+                .sum()
+            )
+
+            if not month_df.empty:
+                month_total = month_df.groupby("CowID")["MilkQuantity"].sum()
+                month_avg = (
+                    month_df
+                    .groupby(["CowID", "Date"])["MilkQuantity"]
+                    .sum()
+                    .groupby("CowID")
+                    .mean()
+                )
+            else:
+                month_total = {}
+                month_avg = {}
+
 
             month_avg = (
                 month_df
@@ -1312,15 +1388,33 @@ else:
                 .groupby("CowID")
                 .mean()
             )
+            # ---------------- SHOW ONLY COWS WITH MILK THIS MONTH ----------------
+            if not month_df.empty:
+                valid_cows = set(
+                    month_total[month_total > 0].index.astype(str)
+                )
+            else:
+                valid_cows = set()
+
+            # Filter cows based on data, NOT status
+            cows_df = cows_df[cows_df["CowID"].isin(valid_cows)]
+            cows_df = cows_df.merge(
+                month_total.rename("MonthMilk"),
+                left_on="CowID",
+                right_index=True,
+                how="left"
+            ).sort_values("MonthMilk", ascending=False)
+
+
 
             last_day_map = {}
-            if last_complete_date:
-                last_day_map = (
-                    df_milk[df_milk["Date"] == last_complete_date]
-                    .groupby("CowID")["MilkQuantity"]
-                    .sum()
-                    .to_dict()
+
+            for cid, g in df_milk.groupby("CowID"):
+                last_date = g["Date"].max()
+                last_day_map[cid] = (
+                    g[g["Date"] == last_date]["MilkQuantity"].sum()
                 )
+
 
             last_update_map = (
                 df_milk.groupby("CowID")["Timestamp"]
@@ -1337,10 +1431,12 @@ else:
                 tag = cow["TagNumber"]
 
                 last_upd = last_update_map.get(cid, "-")
-                avg_val = float(month_avg.get(cid, 0.0))
-                last_day_val = float(last_day_map.get(cid, 0.0))
-
+                life_val = safe_float(lifetime.get(cid))
+                month_val = safe_float(month_total.get(cid))
+                avg_val = safe_float(month_avg.get(cid))
+                last_day_val = safe_float(last_day_map.get(cid))
                 is_below_avg = last_day_val < avg_val
+
 
 
                 gradient = (
@@ -1387,11 +1483,11 @@ else:
                         font-size:11px;
                         line-height:1.35;
                     ">
-                        <div>Total :<b>{lifetime.get(cid,0):.1f} L</b></div>
-                        <div>Avg/day :<b>{month_avg.get(cid,0):.1f} L</b></div>
+                        <div>Total : <b>{life_val:.1f} L</b></div>
+                        <div>Avg/day : <b>{avg_val:.1f} L</b></div>
 
-                        <div>Month :<b>{month_total.get(cid,0):.1f} L</b></div>
-                        <div>Last day :<b>{last_day_map.get(cid,0):.1f} L</b></div>
+                        <div>Month : <b>{month_val:.1f} L</b></div>
+                        <div>Last day : <b>{last_day_val:.1f} L</b></div>
                     </div>
 
                 </div>
