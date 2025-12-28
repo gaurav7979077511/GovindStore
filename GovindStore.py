@@ -3662,7 +3662,7 @@ else:
                         value=None,   # ✅ MUST be numeric
                         key=f"{date}_{shift}_{c['CustomerID']}"
                     )
-                    entries.append((c, qty))
+                    entries.append((c, qty if qty is not None else 0.0))
 
                 save = st.form_submit_button("💾 Save Delivery")
                 cancel = st.form_submit_button("❌ Cancel")
@@ -3677,7 +3677,7 @@ else:
             # ---------- SAVE ----------
             if save:
 
-                total_entered = sum(qty for _, qty in entries)
+                total_entered = round(sum(qty for _, qty in entries), 2)
 
                 if round(total_entered, 2) != round(max_qty, 2):
                     st.error(
