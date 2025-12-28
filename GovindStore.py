@@ -975,39 +975,108 @@ else:
             st.markdown('<div class="section">', unsafe_allow_html=True)
             st.subheader("📍 Latest Operations")
 
-            col1, col2 = st.columns(2)
+            # ---------------- LATEST MILKING ----------------
+            st.markdown("**🐄 Milking (Last Day)**")
 
-            with col1:
-                st.markdown("**🐄 Milking (Last 2)**")
-                if milking_df.empty:
-                    st.info("No records")
-                else:
-                    m = milking_df.sort_values("Timestamp", ascending=False).head(2)
-                    for _, r in m.iterrows():
+            if milking_df.empty:
+                st.info("No milking records found.")
+            else:
+                milking_df["Date"] = pd.to_datetime(milking_df["Date"])
+                milking_df["MilkQuantity"] = pd.to_numeric(
+                    milking_df["MilkQuantity"], errors="coerce"
+                ).fillna(0)
+
+                # Take last 2 unique days
+                last_days = (
+                    milking_df.sort_values("Date", ascending=False)
+                    .drop_duplicates("Date")
+                    .head(1)["Date"]
+                    .tolist()
+                )
+
+                recent = milking_df[
+                    milking_df["Date"].isin(last_days)
+                ].sort_values(["Date", "Shift"], ascending=[False, True])
+
+                cols = st.columns(2)
+
+                for i, (_, r) in enumerate(recent.iterrows()):
+                    with cols[i % 2]:
                         st.markdown(
-                            f'<div class="mini-card">'
-                            f'{r["Shift"]} • {r["MilkQuantity"]} L'
-                            f'<span class="meta">{r["Date"]}</span>'
-                            f'</div>',
+                            f"""
+                            <div class="mini-card">
+                                {r['Shift']} • {float(r['MilkQuantity']):.1f} L
+                                <span class="meta">{r['Date'].date()}</span>
+                            </div>
+                            """,
                             unsafe_allow_html=True
                         )
+        # ===============================
+        # ⏳ PENDING MILKING (VIEW ONLY)
+        # ===============================
 
-            with col2:
-                st.markdown("**🚚 Milk Distribution (Last 2)**")
-                if bitran_df.empty:
-                    st.info("No records")
-                else:
-                    b = bitran_df.sort_values("Timestamp", ascending=False).head(2)
-                    for _, r in b.iterrows():
-                        st.markdown(
-                            f'<div class="mini-card">'
-                            f'{r["Shift"]} • {r["MilkDelivered"]} L'
-                            f'<span class="meta">{r["Date"]}</span>'
-                            f'</div>',
-                            unsafe_allow_html=True
-                        )
+        df_milk = load_milking_data()
 
-            st.markdown('</div>', unsafe_allow_html=True)
+        pending_milking = []
+
+        if not df_milk.empty:
+            df_milk["Date"] = pd.to_datetime(df_milk["Date"], errors="coerce")
+
+            day_shift = (
+                df_milk.groupby(["Date", "Shift"])
+                .size()
+                .unstack(fill_value=0)
+            )
+            
+            for date, row in day_shift.iterrows():
+                if row.get("Morning", 0) == 0:
+                    pending_milking.append((date.date(), "Morning"))
+                if row.get("Evening", 0) == 0:
+                    pending_milking.append((date.date(), "Evening"))
+
+        # ---- UI ----
+        if pending_milking:
+            st.subheader("⏳ Pending Milking")
+            cols = st.columns(6)
+
+            for i, (d, s) in enumerate(pending_milking):
+                with cols[i % 6]:
+                    st.markdown(
+                        f"""
+                        <div class="mini-card">
+                            🐄 {d} • {s}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+
+        # ===============================
+        # 💰 PENDING PAYMENTS (VIEW ONLY)
+        # ===============================
+        # --- FIX numeric columns ---
+        for col in ["BillAmount", "PaidAmount", "BalanceAmount"]:
+            if col in bills_df.columns:
+                bills_df[col] = pd.to_numeric(bills_df[col], errors="coerce").fillna(0)
+
+
+        pending_bills = bills_df[bills_df["BalanceAmount"] > 0]
+
+        if not pending_bills.empty:
+            st.subheader("💰 Pending Payments")
+
+            for _, r in pending_bills.iterrows():
+                short_id = f"{r['CustomerID'][:2]}**{r['CustomerID'][-4:]}"
+                st.markdown(
+                    f"""
+                    <div class="mini-card">
+                        👤 {r['CustomerName']} ({short_id})<br>
+                        💵 ₹ {r['BalanceAmount']:,.0f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+        
 
 
 
@@ -1225,7 +1294,14 @@ else:
             # ---------- Aggregations ----------
             lifetime = df_milk.groupby("CowID")["MilkQuantity"].sum()
             month_total = month_df.groupby("CowID")["MilkQuantity"].sum()
-            month_avg = month_df.groupby("CowID")["MilkQuantity"].mean()
+
+            month_avg = (
+                month_df
+                .groupby(["CowID", "Date"])["MilkQuantity"]
+                .sum()
+                .groupby("CowID")
+                .mean()
+            )
 
             last_day_map = {}
             if last_complete_date:
@@ -1243,17 +1319,19 @@ else:
                 .to_dict()
             )
 
-            cols = st.columns(4)  # compact grid
+            cols = st.columns(4)
             i = 0
 
             for _, cow in cows_df.iterrows():
                 cid = cow["CowID"]
                 tag = cow["TagNumber"]
+
                 last_upd = last_update_map.get(cid, "-")
-                avg_val = float(month_avg.get(cid, 0))
-                last_day_val = float(last_day_map.get(cid, 0))
+                avg_val = float(month_avg.get(cid, 0.0))
+                last_day_val = float(last_day_map.get(cid, 0.0))
 
                 is_below_avg = last_day_val < avg_val
+
 
                 gradient = (
                     "linear-gradient(135deg,#92400e,#78350f)"  # warning
@@ -2156,10 +2234,6 @@ else:
                         st.error("❌ Amount must be greater than 0")
                         st.stop()
 
-                    if received_amt > float(bill["BalanceAmount"]):
-                        st.error("❌ Amount cannot exceed pending balance")
-                        st.stop()
-
 
                     now = dt.datetime.now()
 
@@ -2183,6 +2257,8 @@ else:
                     # ---- UPDATE BILL ----
                     new_paid = bill["PaidAmount"] + received_amt
                     new_balance = bill["BillAmount"] - new_paid
+                    if new_balance<0:
+                        new_balance=0
                     if new_balance == 0:
                         status = "Paid"
                         paid_date = now.strftime("%Y-%m-%d")
@@ -2484,7 +2560,7 @@ else:
 
                 month = st.selectbox(
                     "Select Month",
-                    pd.date_range(end=today, periods=12, freq="M").strftime("%Y-%m")
+                    pd.date_range(end=today, periods=3, freq="M").strftime("%Y-%m")
                 )
 
                 y, m = map(int, month.split("-"))
@@ -2497,12 +2573,12 @@ else:
                 preview = []
 
                 for _, c in customers_df.iterrows():
-                    if c["Status"] != "Active":
-                        continue
+
+                    # 🚫 Exclude system customer
                     if c["Name"] == "Dairy-CMS":
                         continue
 
-                    # overlap check
+                    # 🚫 Prevent overlapping bills
                     if not bills_df.empty and (
                         (bills_df["CustomerID"] == c["CustomerID"]) &
                         (bills_df["FromDate"] <= pd.to_datetime(to_date)) &
@@ -2510,11 +2586,20 @@ else:
                     ).any():
                         continue
 
-                    morning, evening, total, missing ,daily_pattern= calculate_milk(bitran_df,
-                        c["CustomerID"], from_date, to_date
+                    # 🔍 Calculate delivered milk
+                    morning, evening, total, missing, daily_pattern = calculate_milk(
+                        bitran_df,
+                        c["CustomerID"],
+                        from_date,
+                        to_date
                     )
 
-                    if total == 0 or c["RatePerLitre"] <= 0:
+                    # 🚫 No delivery → no bill
+                    if total <= 0:
+                        continue
+
+                    # 🚫 Rate not defined → skip bulk
+                    if c["RatePerLitre"] <= 0:
                         continue
 
                     amount = round(total * c["RatePerLitre"], 2)
@@ -2526,8 +2611,9 @@ else:
                         "total": total,
                         "amount": amount,
                         "missing": missing,
-                        "daily_pattern":daily_pattern
+                        "daily_pattern": daily_pattern
                     })
+
 
                 if not preview:
                     st.info("No eligible customers for this month.")
@@ -2558,7 +2644,7 @@ else:
                             c = p["cust"]
                             if not selected.get(c["CustomerID"]):
                                 continue
-                            daily_pattern_str = ",".join(map(str, p["daily_pattern"]))
+                            daily_pattern_str = ",".join(map(str, p["missing"]))
                             rows_to_add.append([
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
                                 safe(c["CustomerID"]),
@@ -2633,8 +2719,15 @@ else:
                         st.stop()
 
                     rate = cust["RatePerLitre"]
+
                     if rate <= 0:
-                        rate = st.number_input("Enter Rate", min_value=1,value=1)
+                        rate = st.number_input(
+                            "Enter Rate",
+                            min_value=0.0,
+                            value=1.0,
+                            step=0.01
+                        )
+
 
                     amount = round(total * rate, 2)
                     if amount <= 0:
@@ -2651,7 +2744,7 @@ else:
 
                     if st.button("✅ Generate Bill"):
                         ws = open_billing_sheet()
-                        daily_pattern_str = ",".join(map(str, daily_pattern))
+                        daily_pattern_str = ",".join(map(str, missing))
                         ws.append_row(
                             [
                                 f"BILL{dt.datetime.now().strftime('%Y%m%d%H%M%S%f')}",
