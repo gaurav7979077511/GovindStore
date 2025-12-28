@@ -3658,7 +3658,7 @@ else:
                     qty = st.number_input(
                         f"{c['Name']} ({c['CustomerID']})",
                         min_value=0.0,
-                        step=0.1,
+                        step=0.5,
                         value=None,   # ✅ MUST be numeric
                         key=f"{date}_{shift}_{c['CustomerID']}"
                     )
