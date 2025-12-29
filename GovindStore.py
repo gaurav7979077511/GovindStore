@@ -3995,10 +3995,12 @@ else:
                     if last_day else 0
                 )
 
-                last_updated = (
-                    pd.to_datetime(c_df["Date"].max()).strftime("%d %b")
-                    if not c_df.empty else "-"
-                )
+                if not c_df.empty:
+                    last_date = max(c_df["Date"])  # ✅ Python max, NOT pandas max
+                    last_updated = pd.to_datetime(last_date).strftime("%d %b")
+                else:
+                    last_updated = "-"
+
 
 
                 # ---- Conditional gradient ----
