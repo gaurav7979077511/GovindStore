@@ -3906,27 +3906,10 @@ else:
                 rows = []
                 date_str = pd.to_datetime(date).strftime("%Y-%m-%d")
                 st.info(f"📅 Saving Bitran for Date: **{date_str}** | Shift: **{shift}**")
+                st.write("Date value:", date, "Type:", type(date))
+                st.write("Date to save:", date_str)
 
 
-                for c, qty in entries:
-                    if qty > 0:
-                        rows.append([
-                            date_str,
-                            shift,
-                            c["CustomerID"],
-                            c["Name"],
-                            qty,
-                            ts
-                        ])
-
-                append_bitran_rows(rows)
-
-                st.success("✅ Milk Bitran saved successfully")
-                st.cache_data.clear()
-                st.session_state.show_form = None
-                st.session_state.pop("locked_bitran_date", None)
-                st.session_state.pop("locked_milk_qty", None)
-                st.rerun()
 
 
         # ==================================================
