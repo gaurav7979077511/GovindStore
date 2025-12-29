@@ -3692,10 +3692,16 @@ else:
                 df_bitran["MilkDelivered"], errors="coerce"
             ).fillna(0)
 
-            df_bitran["Date"] = pd.to_datetime(df_bitran["Date"])
+            df_bitran["Date"] = pd.to_datetime(
+                df_bitran["Date"],
+                errors="coerce",
+                dayfirst=True
+            ).dt.date
 
-            today = pd.Timestamp.today().normalize()
+
+            today = dt.date.today()
             month_start = today.replace(day=1)
+
 
             # ---- Lifetime ----
             total_delivered = df_bitran["MilkDelivered"].sum()
@@ -3703,7 +3709,7 @@ else:
             # ---- This month ----
             m_df = df_bitran[df_bitran["Date"] >= month_start]
             month_total = m_df["MilkDelivered"].sum()
-            month_days = m_df["Date"].dt.date.nunique()
+            month_days = m_df["Date"].nunique()
             month_avg = round(month_total / month_days, 2) if month_days else 0
 
             # ---- Last complete day (Morning + Evening both) ----
@@ -3763,6 +3769,12 @@ else:
 
         pending_tasks = []
         df_milk = load_milking_data()
+        df_milk["Date"] = pd.to_datetime(
+            df_milk["Date"],
+            errors="coerce",
+            dayfirst=True
+        ).dt.date
+
 
         # total milking per day + shift
         milk_grp = (
@@ -3834,7 +3846,9 @@ else:
                     shift = task["Shift"]
                     qty = float(task["MilkTotal"])
 
-                    btn_label = f"🧾 {date} • {shift} • {qty:.1f} L"
+                    date_disp = pd.to_datetime(date).strftime("%Y-%m-%d")
+                    btn_label = f"🧾 {date_disp} • {shift} • {qty:.1f} L"
+
 
                     with col:
                         if st.button(btn_label, use_container_width=True):
@@ -3904,12 +3918,31 @@ else:
 
                 ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
                 rows = []
+
                 date_str = pd.to_datetime(date).strftime("%Y-%m-%d")
+
                 st.info(f"📅 Saving Bitran for Date: **{date_str}** | Shift: **{shift}**")
-                st.write("Date value:", date, "Type:", type(date))
-                st.write("Date to save:", date_str)
+
+                for c, qty in entries:
+                    if qty > 0:
+                        rows.append([
+                            date_str,
+                            shift,
+                            c["CustomerID"],
+                            c["Name"],
+                            qty,
+                            ts
+                        ])
+
+                append_bitran_rows(rows)
 
 
+                st.success("✅ Milk Bitran saved successfully")
+                st.cache_data.clear()
+                st.session_state.show_form = None
+                st.session_state.pop("locked_bitran_date", None)
+                st.session_state.pop("locked_milk_qty", None)
+                st.rerun()
 
 
         # ==================================================
