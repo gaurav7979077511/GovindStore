@@ -3973,7 +3973,7 @@ else:
                 if m_total <= 0:
                     continue
 
-                m_days = m_df["Date"].dt.date.nunique()
+                m_days = m_df["Date"].nunique()
                 m_avg = round(m_total / m_days, 2) if m_days else 0
 
                 # ---- Last complete day ----
