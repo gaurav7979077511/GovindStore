@@ -14,7 +14,10 @@ import cloudinary.uploader
 import random
 import smtplib
 from email.message import EmailMessage  
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
+import time
+from streamlit_cookies_manager import EncryptedCookieManager
+
 
 
 
@@ -22,6 +25,15 @@ from datetime import datetime, timedelta
 # PAGE CONFIGURATION
 # ============================================================
 st.set_page_config(page_title="Dairy Farm Management", layout="wide")
+
+cookies = EncryptedCookieManager(
+    prefix="dairy_app",
+    password=st.secrets["cookie_password"]
+)
+
+if not cookies.ready():
+    st.stop()
+
 
 # ============================================================
 # GOOGLE SHEET IDS (from Streamlit Secrets)
@@ -337,6 +349,17 @@ def hash_password(password):
 def verify_password(stored_hash, password):
     return bcrypt.checkpw(password.encode(), stored_hash.encode())
 
+def logout_user(auto=False):
+    st.session_state.clear()
+
+    cookies["authenticated"] = ""
+    cookies.save()
+
+    if auto:
+        st.warning("Session expired due to inactivity")
+
+    st.experimental_rerun()
+
 def generate_otp():
     return str(random.randint(100000, 999999))
 
@@ -403,7 +426,8 @@ defaults = {
     "user_role": None,
     "user_accesslevel": None,
     "otp_sent": False,
-    "otp_verified": False
+    "otp_verified": False,
+    "last_activity": None
 }
 if "reset_step" not in st.session_state:
     st.session_state.reset_step = "username"
@@ -414,6 +438,17 @@ def get_col_index(df, col_name):
 
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
+
+def restore_session_from_cookie():
+    if cookies.get("authenticated") == "true":
+        st.session_state.authenticated = True
+        st.session_state.user_id = cookies.get("user_id")
+        st.session_state.username = cookies.get("username")
+        st.session_state.user_name = cookies.get("user_name")
+        st.session_state.user_role = cookies.get("user_role")
+        st.session_state.user_accesslevel = cookies.get("user_accesslevel")
+
+restore_session_from_cookie()
 
 
 def open_bank_sheet():
@@ -528,6 +563,19 @@ forgot_mode = st.query_params.get("forgot", "false") == "true"
 # ============================================================
 # AUTH FLOW
 # ============================================================
+if st.session_state.authenticated:
+    st.session_state.last_activity = time.time()
+
+INACTIVITY_LIMIT = 120  # seconds
+
+def auto_logout_check():
+    if st.session_state.authenticated and st.session_state.last_activity:
+        if time.time() - st.session_state.last_activity > INACTIVITY_LIMIT:
+            logout_user(auto=True)
+
+auto_logout_check()
+
+
 if not st.session_state.authenticated:
 
     # =================== FORGOT PASSWORD ===================
@@ -671,6 +719,14 @@ if not st.session_state.authenticated:
         st.session_state.user_name = row["name"]
         st.session_state.user_role = row["role"]
         st.session_state.user_accesslevel = row["accesslevel"]
+        cookies["authenticated"] = "true"
+        cookies["user_id"] = st.session_state.user_id
+        cookies["username"] = st.session_state.username
+        cookies["user_name"] = st.session_state.user_name
+        cookies["user_role"] = st.session_state.user_role
+        cookies["user_accesslevel"] = st.session_state.user_accesslevel
+        cookies.save()
+
 
         st.success(f"✅ Welcome, {row['name']}")
         st.rerun()
@@ -687,10 +743,8 @@ if not st.session_state.authenticated:
 # ============================================================
 else:
     if st.sidebar.button("🚪 Logout"):
-        for k in list(st.session_state.keys()):
-            st.session_state.pop(k)
-        st.query_params.clear()
-        st.rerun()
+        logout_user()
+
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
     # ============================================================
