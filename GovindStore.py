@@ -14,10 +14,7 @@ import cloudinary.uploader
 import random
 import smtplib
 from email.message import EmailMessage  
-from datetime import datetime, timedelta
-import time
-from streamlit_cookies_manager import EncryptedCookieManager
-
+from datetime import datetime, timedelta 
 
 
 
@@ -25,76 +22,6 @@ from streamlit_cookies_manager import EncryptedCookieManager
 # PAGE CONFIGURATION
 # ============================================================
 st.set_page_config(page_title="Dairy Farm Management", layout="wide")
-
-cookies = EncryptedCookieManager(
-    prefix="dairy_app",
-    password=st.secrets["cookie_password"]
-)
-
-if not cookies.ready():
-    st.stop()
-
-# ============================================================
-# SESSION STATE DEFAULTS (MUST BE FIRST)
-# ============================================================
-defaults = {
-    "authenticated": False,
-    "user_id": None,
-    "username": None,
-    "user_name": None,
-    "user_role": None,
-    "user_accesslevel": None,
-    "last_activity": None
-}
-
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# ============================================================
-# COOKIE → SESSION RESTORE
-# ============================================================
-def restore_session_from_cookie():
-    if not st.session_state.authenticated and cookies.get("authenticated") == "true":
-        st.session_state.authenticated = True
-        st.session_state.user_id = cookies.get("user_id")
-        st.session_state.username = cookies.get("username")
-        st.session_state.user_name = cookies.get("user_name")
-        st.session_state.user_role = cookies.get("user_role")
-        st.session_state.user_accesslevel = cookies.get("user_accesslevel")
-
-    # FALLBACK: mobile refresh protection
-    elif st.session_state.get("authenticated"):
-        # Session already valid, do nothing
-        pass
-
-
-
-restore_session_from_cookie()
-
-# ============================================================
-# ACTIVITY TRACKING
-# ============================================================
-# ================= ACTIVITY TRACKING =================
-INACTIVITY_LIMIT = 120  # seconds
-
-def auto_logout_check():
-    if not st.session_state.authenticated:
-        return
-
-    last = st.session_state.get("last_activity")
-    if last and (time.time() - last > INACTIVITY_LIMIT):
-        logout_user(auto=True)
-
-# ✅ SET activity ONLY once per session (refresh-safe)
-if st.session_state.authenticated:
-    if st.session_state.last_activity is None:
-        st.session_state.last_activity = time.time()
-
-auto_logout_check()
-
-
-
 
 # ============================================================
 # GOOGLE SHEET IDS (from Streamlit Secrets)
@@ -410,31 +337,6 @@ def hash_password(password):
 def verify_password(stored_hash, password):
     return bcrypt.checkpw(password.encode(), stored_hash.encode())
 
-def logout_user(auto=False):
-    # --- Reset auth state safely ---
-    st.session_state.authenticated = False
-    st.session_state.user_id = None
-    st.session_state.username = None
-    st.session_state.user_name = None
-    st.session_state.user_role = None
-    st.session_state.user_accesslevel = None
-    st.session_state.last_activity = None
-
-    # --- Clear cookies properly ---
-    cookies["authenticated"] = ""
-    cookies["user_id"] = ""
-    cookies["username"] = ""
-    cookies["user_name"] = ""
-    cookies["user_role"] = ""
-    cookies["user_accesslevel"] = ""
-    cookies.save()
-
-    if auto:
-        st.warning("Session expired due to inactivity")
-
-    st.rerun()
-
-
 def generate_otp():
     return str(random.randint(100000, 999999))
 
@@ -493,13 +395,25 @@ def send_temp_password_email(to_email,name, username, temp_password):
 # ============================================================
 # SESSION STATE INIT
 # ============================================================
-
+defaults = {
+    "authenticated": False,
+    "user_id": None,
+    "username": None,
+    "user_name": None,
+    "user_role": None,
+    "user_accesslevel": None,
+    "otp_sent": False,
+    "otp_verified": False
+}
 if "reset_step" not in st.session_state:
     st.session_state.reset_step = "username"
 
 def get_col_index(df, col_name):
     return df.columns.tolist().index(col_name.lower()) + 1
 
+
+for k, v in defaults.items():
+    st.session_state.setdefault(k, v)
 
 
 def open_bank_sheet():
@@ -614,7 +528,6 @@ forgot_mode = st.query_params.get("forgot", "false") == "true"
 # ============================================================
 # AUTH FLOW
 # ============================================================
-
 if not st.session_state.authenticated:
 
     # =================== FORGOT PASSWORD ===================
@@ -757,16 +670,7 @@ if not st.session_state.authenticated:
         st.session_state.username = row["username"]
         st.session_state.user_name = row["name"]
         st.session_state.user_role = row["role"]
-        st.session_state.last_activity = time.time()
         st.session_state.user_accesslevel = row["accesslevel"]
-        cookies["authenticated"] = "true"
-        cookies["user_id"] = st.session_state.user_id
-        cookies["username"] = st.session_state.username
-        cookies["user_name"] = st.session_state.user_name
-        cookies["user_role"] = st.session_state.user_role
-        cookies["user_accesslevel"] = st.session_state.user_accesslevel
-        cookies.save()
-
 
         st.success(f"✅ Welcome, {row['name']}")
         st.rerun()
@@ -783,8 +687,10 @@ if not st.session_state.authenticated:
 # ============================================================
 else:
     if st.sidebar.button("🚪 Logout"):
-        logout_user()
-
+        for k in list(st.session_state.keys()):
+            st.session_state.pop(k)
+        st.query_params.clear()
+        st.rerun()
 
     st.sidebar.write(f"👤 **Welcome, {st.session_state.user_name}!**")
     # ============================================================
@@ -1110,21 +1016,13 @@ else:
         # ===============================
 
         df_milk = load_milking_data()
+
         pending_milking = []
 
         if not df_milk.empty and {"Date", "Shift"}.issubset(df_milk.columns):
 
-            # Normalize Date
             df_milk["Date"] = pd.to_datetime(df_milk["Date"], errors="coerce")
 
-            # 📌 Range control
-            start_date = df_milk["Date"].min().date()
-            today = dt.date.today()
-            yesterday = today - dt.timedelta(days=1)
-
-            all_dates = pd.date_range(start=start_date, end=yesterday, freq="D")
-
-            # Group existing data
             day_shift = (
                 df_milk
                 .groupby(["Date", "Shift"])
@@ -1132,21 +1030,11 @@ else:
                 .unstack(fill_value=0)
             )
 
-            # ✅ CRITICAL: convert index to pure date
-            day_shift.index = day_shift.index.date
-
-            # 🔁 Check every date till today
-            for d in all_dates:
-                d = d.date()
-
-                # Morning missing
-                if d not in day_shift.index or day_shift.loc[d].get("Morning", 0) == 0:
-                    pending_milking.append((d, "Morning"))
-
-                # Evening missing
-                if d not in day_shift.index or day_shift.loc[d].get("Evening", 0) == 0:
-                    pending_milking.append((d, "Evening"))
-
+            for date, row in day_shift.iterrows():
+                if row.get("Morning", 0) == 0:
+                    pending_milking.append((date.date(), "Morning"))
+                if row.get("Evening", 0) == 0:
+                    pending_milking.append((date.date(), "Evening"))
 
         # ---- UI (ONLY IF EXISTS) ----
         if pending_milking:
@@ -1766,7 +1654,7 @@ else:
                         [
                             "Feed", "Medicine", "Labour", "Electricity",
                             "Maintenance", "Transport", "Veterinary",
-                            "Equipment","Petrol","Cow_Shelter", "Other"
+                            "Equipment", "Other"
                         ]
                     )
     
@@ -4016,11 +3904,12 @@ else:
 
                 ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
                 rows = []
+                date_str = pd.to_datetime(date).strftime("%Y-%m-%d")
 
                 for c, qty in entries:
                     if qty > 0:
                         rows.append([
-                            str(date),
+                            date_str,
                             shift,
                             c["CustomerID"],
                             c["Name"],
