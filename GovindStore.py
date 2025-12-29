@@ -1654,7 +1654,7 @@ else:
                         [
                             "Feed", "Medicine", "Labour", "Electricity",
                             "Maintenance", "Transport", "Veterinary",
-                            "Equipment", "Other"
+                            "Equipment","Petrol","Cow_Shelter", "Other"
                         ]
                     )
     
