@@ -1110,13 +1110,21 @@ else:
         # ===============================
 
         df_milk = load_milking_data()
-
         pending_milking = []
 
         if not df_milk.empty and {"Date", "Shift"}.issubset(df_milk.columns):
 
+            # Normalize Date
             df_milk["Date"] = pd.to_datetime(df_milk["Date"], errors="coerce")
 
+            # 📌 Range control
+            start_date = df_milk["Date"].min().date()
+            today = dt.date.today()
+            yesterday = today - dt.timedelta(days=1)
+
+            all_dates = pd.date_range(start=start_date, end=yesterday, freq="D")
+
+            # Group existing data
             day_shift = (
                 df_milk
                 .groupby(["Date", "Shift"])
@@ -1124,11 +1132,21 @@ else:
                 .unstack(fill_value=0)
             )
 
-            for date, row in day_shift.iterrows():
-                if row.get("Morning", 0) == 0:
-                    pending_milking.append((date.date(), "Morning"))
-                if row.get("Evening", 0) == 0:
-                    pending_milking.append((date.date(), "Evening"))
+            # ✅ CRITICAL: convert index to pure date
+            day_shift.index = day_shift.index.date
+
+            # 🔁 Check every date till today
+            for d in all_dates:
+                d = d.date()
+
+                # Morning missing
+                if d not in day_shift.index or day_shift.loc[d].get("Morning", 0) == 0:
+                    pending_milking.append((d, "Morning"))
+
+                # Evening missing
+                if d not in day_shift.index or day_shift.loc[d].get("Evening", 0) == 0:
+                    pending_milking.append((d, "Evening"))
+
 
         # ---- UI (ONLY IF EXISTS) ----
         if pending_milking:
