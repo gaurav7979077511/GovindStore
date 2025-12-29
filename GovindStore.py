@@ -63,12 +63,19 @@ def restore_session_from_cookie():
         st.session_state.user_role = cookies.get("user_role")
         st.session_state.user_accesslevel = cookies.get("user_accesslevel")
 
+    # FALLBACK: mobile refresh protection
+    elif st.session_state.get("authenticated"):
+        # Session already valid, do nothing
+        pass
+
+
 
 restore_session_from_cookie()
 
 # ============================================================
 # ACTIVITY TRACKING
 # ============================================================
+# ================= ACTIVITY TRACKING =================
 INACTIVITY_LIMIT = 120  # seconds
 
 def auto_logout_check():
@@ -79,13 +86,13 @@ def auto_logout_check():
     if last and (time.time() - last > INACTIVITY_LIMIT):
         logout_user(auto=True)
 
-# 👉 Set activity ONLY if missing (refresh-safe)
+# ✅ SET activity ONLY once per session (refresh-safe)
 if st.session_state.authenticated:
-    if "last_activity" not in st.session_state:
+    if st.session_state.last_activity is None:
         st.session_state.last_activity = time.time()
 
-# 👉 Now check inactivity
 auto_logout_check()
+
 
 
 
@@ -750,6 +757,7 @@ if not st.session_state.authenticated:
         st.session_state.username = row["username"]
         st.session_state.user_name = row["name"]
         st.session_state.user_role = row["role"]
+        st.session_state.last_activity = time.time()
         st.session_state.user_accesslevel = row["accesslevel"]
         cookies["authenticated"] = "true"
         cookies["user_id"] = st.session_state.user_id
