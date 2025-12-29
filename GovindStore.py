@@ -3996,10 +3996,16 @@ else:
                 )
 
                 if not c_df.empty:
-                    last_date = max(c_df["Date"])  # ✅ Python max, NOT pandas max
-                    last_updated = pd.to_datetime(last_date).strftime("%d %b")
+                    valid_dates = c_df["Date"].dropna()
+
+                    if not valid_dates.empty:
+                        last_date = max(valid_dates)
+                        last_updated = pd.to_datetime(last_date).strftime("%d %b")
+                    else:
+                        last_updated = "-"
                 else:
                     last_updated = "-"
+
 
 
 
