@@ -34,6 +34,42 @@ cookies = EncryptedCookieManager(
 if not cookies.ready():
     st.stop()
 
+# ============================================================
+# COOKIE → SESSION RESTORE
+# ============================================================
+def restore_session_from_cookie():
+    if cookies.get("authenticated") == "true":
+        st.session_state.authenticated = True
+        st.session_state.user_id = cookies.get("user_id")
+        st.session_state.username = cookies.get("username")
+        st.session_state.user_name = cookies.get("user_name")
+        st.session_state.user_role = cookies.get("user_role")
+        st.session_state.user_accesslevel = cookies.get("user_accesslevel")
+
+restore_session_from_cookie()
+
+# ============================================================
+# ACTIVITY TRACKING
+# ============================================================
+INACTIVITY_LIMIT = 120  # seconds
+
+def auto_logout_check():
+    if not st.session_state.authenticated:
+        return
+
+    last = st.session_state.get("last_activity")
+    if last and (time.time() - last > INACTIVITY_LIMIT):
+        logout_user(auto=True)
+
+# 👉 Set activity ONLY if missing (refresh-safe)
+if st.session_state.authenticated:
+    if "last_activity" not in st.session_state:
+        st.session_state.last_activity = time.time()
+
+# 👉 Now check inactivity
+auto_logout_check()
+
+
 
 # ============================================================
 # GOOGLE SHEET IDS (from Streamlit Secrets)
@@ -439,17 +475,6 @@ def get_col_index(df, col_name):
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
 
-def restore_session_from_cookie():
-    if cookies.get("authenticated") == "true":
-        st.session_state.authenticated = True
-        st.session_state.user_id = cookies.get("user_id")
-        st.session_state.username = cookies.get("username")
-        st.session_state.user_name = cookies.get("user_name")
-        st.session_state.user_role = cookies.get("user_role")
-        st.session_state.user_accesslevel = cookies.get("user_accesslevel")
-
-restore_session_from_cookie()
-
 
 def open_bank_sheet():
     return open_sheet(MAIN_SHEET_ID, BANK_TRANSACTION_TAB)
@@ -563,18 +588,6 @@ forgot_mode = st.query_params.get("forgot", "false") == "true"
 # ============================================================
 # AUTH FLOW
 # ============================================================
-if st.session_state.authenticated:
-    st.session_state.last_activity = time.time()
-
-INACTIVITY_LIMIT = 120  # seconds
-
-def auto_logout_check():
-    if st.session_state.authenticated and st.session_state.last_activity:
-        if time.time() - st.session_state.last_activity > INACTIVITY_LIMIT:
-            logout_user(auto=True)
-
-auto_logout_check()
-
 
 if not st.session_state.authenticated:
 
