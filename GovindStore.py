@@ -35,6 +35,23 @@ if not cookies.ready():
     st.stop()
 
 # ============================================================
+# SESSION STATE DEFAULTS (MUST BE FIRST)
+# ============================================================
+defaults = {
+    "authenticated": False,
+    "user_id": None,
+    "username": None,
+    "user_name": None,
+    "user_role": None,
+    "user_accesslevel": None,
+    "last_activity": None
+}
+
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# ============================================================
 # COOKIE → SESSION RESTORE
 # ============================================================
 def restore_session_from_cookie():
@@ -454,26 +471,13 @@ def send_temp_password_email(to_email,name, username, temp_password):
 # ============================================================
 # SESSION STATE INIT
 # ============================================================
-defaults = {
-    "authenticated": False,
-    "user_id": None,
-    "username": None,
-    "user_name": None,
-    "user_role": None,
-    "user_accesslevel": None,
-    "otp_sent": False,
-    "otp_verified": False,
-    "last_activity": None
-}
+
 if "reset_step" not in st.session_state:
     st.session_state.reset_step = "username"
 
 def get_col_index(df, col_name):
     return df.columns.tolist().index(col_name.lower()) + 1
 
-
-for k, v in defaults.items():
-    st.session_state.setdefault(k, v)
 
 
 def open_bank_sheet():
