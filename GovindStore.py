@@ -3905,6 +3905,8 @@ else:
                 ts = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
                 rows = []
                 date_str = pd.to_datetime(date).strftime("%Y-%m-%d")
+                st.info(f"📅 Saving Bitran for Date: **{date_str}** | Shift: **{shift}**")
+
 
                 for c, qty in entries:
                     if qty > 0:
