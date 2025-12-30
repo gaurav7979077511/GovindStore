@@ -3149,40 +3149,35 @@ else:
                         whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
 
                         # Step 1: Show WhatsApp link (NO side effects)
-                        st.markdown(
-                            f"""
-                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">
-                                <div style="
-                                    margin-top:6px;
-                                    background:#25D366;
-                                    color:white;
-                                    padding:10px;
-                                    border-radius:12px;
-                                    text-align:center;
-                                    font-weight:700;
-                                ">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                        width="18" style="vertical-align:middle;margin-right:6px;">
-                                    Send WhatsApp Reminder
-                                </div>
-                            </a>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                        # Step 2: Explicit confirmation button
                         if st.button(
-                            "✅ Mark WhatsApp as Sent",
-                            key=f"mark_wa_{r['BillID']}",
+                            "📲 Send WhatsApp Reminder",
+                            key=f"wa_{r['BillID']}",
                             use_container_width=True
                         ):
+                            # 1️⃣ Update DB FIRST (safe)
                             ws = open_billing_sheet()
                             row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
                             col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
                             ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
+
                             st.cache_data.clear()
-                            st.success("WhatsApp reminder marked as sent")
+
+                            # 2️⃣ Open WhatsApp (JS redirect)
+                            msg = build_whatsapp_message(r)
+                            encoded_msg = urllib.parse.quote(msg)
+                            whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
+
+                            st.markdown(
+                                f"""
+                                <script>
+                                    window.open("{whatsapp_url}", "_blank");
+                                </script>
+                                """,
+                                unsafe_allow_html=True
+                            )
+
                             st.rerun()
+
 
 
 
