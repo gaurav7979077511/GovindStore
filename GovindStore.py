@@ -3124,7 +3124,6 @@ else:
                     else:
                         phone = ""
                         has_phone = False
-                    st.write(phone)
 
                     is_paid = r["BillStatus"] == "Paid"
 
