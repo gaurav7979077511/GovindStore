@@ -3102,8 +3102,29 @@ else:
                 components.html(card_html, height=235)
                 if st.session_state.show_whatsapp_buttons:
 
-                    phone = customer_phone_map.get(r["CustomerID"], "")
-                    has_phone = bool(str(phone).strip())
+                    raw_phone = str(customer_phone_map.get(r["CustomerID"], "")).strip()
+
+                    # Remove +, spaces, hyphens
+                    raw_phone = raw_phone.replace("+", "").replace(" ", "").replace("-", "")
+
+                    phone = ""
+                    has_phone = False
+
+                    # Case 1: 10-digit mobile → add 91
+                    if raw_phone.isdigit() and len(raw_phone) == 10:
+                        phone = "91" + raw_phone
+                        has_phone = True
+
+                    # Case 2: Already with 91 and 12 digits
+                    elif raw_phone.isdigit() and len(raw_phone) == 12 and raw_phone.startswith("91"):
+                        phone = raw_phone
+                        has_phone = True
+
+                    # Else → invalid number
+                    else:
+                        phone = ""
+                        has_phone = False
+                        
                     is_paid = r["BillStatus"] == "Paid"
 
                     today = pd.Timestamp.today().normalize()
@@ -3117,7 +3138,7 @@ else:
                     if not disable_button:
                         msg = build_whatsapp_message(r)
                         encoded_msg = urllib.parse.quote(msg)
-                        whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
+                        whatsapp_url = f"https://wa.me/phone={phone}&text={encoded_msg}"
 
                         # Step 1: Show WhatsApp link (NO side effects)
                         st.markdown(
