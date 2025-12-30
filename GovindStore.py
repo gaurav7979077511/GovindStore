@@ -2593,99 +2593,90 @@ else:
                 missing_dates,
                 daily_pattern
             )
+        def fmt_date(d):
+            return pd.to_datetime(d).strftime("%d-%m-%Y")
+
 
         def build_whatsapp_message(bill_row):
-            """
-            Builds Hindi WhatsApp message
-            Optimized for mobile (~32 chars width)
-            """
+            customer = bill_row["CustomerName"]
+            bill_id = bill_row["BillID"]
+            bill_date = fmt_date(bill_row["GeneratedOn"])
 
-            name = bill_row["CustomerName"].split()[0]
-            bill_no = bill_row["BillID"][-5:]  # short bill no
-            status = bill_row["BillStatus"]
+            from_date = pd.to_datetime(bill_row["FromDate"])
+            to_date = pd.to_datetime(bill_row["ToDate"])
 
-            total_milk = bill_row.get("TotalMilk", 0)
-            rate = bill_row.get("RatePerLitre", 0)
+            from_day = from_date.day
+            to_day = to_date.day
+            from_month = from_date.strftime("%b").upper()
+            to_month = to_date.strftime("%b").upper()
 
-            total_amt = float(bill_row.get("BillAmount", 0))
-            paid_amt = float(bill_row.get("PaidAmount", 0))
-            balance = float(bill_row.get("BalanceAmount", 0))
+            due_date = fmt_date(bill_row["DueDate"])
 
-            from_date = bill_row["FromDate"].date()
-            to_date = bill_row["ToDate"].date()
-            due_date = bill_row["DueDate"].date()
+            total_amount = float(bill_row["BillAmount"])
+            paid_amount = float(bill_row.get("PaidAmount", 0))
+            balance_amount = float(bill_row["BalanceAmount"])
 
-            missing_raw = bill_row.get("DailyMilkPattern", "")
-            missing_days = (
-                missing_raw.split(",")
-                if missing_raw and str(missing_raw).strip()
-                else []
-            )
+            total_litre = bill_row.get("TotalMilk", "")
+            rate = bill_row.get("RatePerLitre", "")
 
-            # ---------- PENDING BILL ----------
-            if status == "Payment Pending":
+            missing_days = str(bill_row.get("DailyMilkPattern", "")).strip()
+
+            # ---------------- PENDING BILL ----------------
+            if bill_row["BillStatus"] == "Payment Pending":
+
                 msg = f"""
-        नमस्ते {name} जी 👋
+        नमस्ते {customer} जी 🙏
 
-        आपके दूध बिल की
-        विनम्र याद दिलाना है।
+        आपके दूध बिल की जानकारी नीचे दी गई है:
 
-        🧾 बिल नं: {bill_no}
-        🥛 कुल दूध: {total_milk} लीटर
-        💰 दर: ₹{rate} / लीटर
-        """
+        🧾 बिल नं: {bill_id}
+        📆 बिल तिथि: {bill_date}
+
+        📅 अवधि: {from_day} {from_month} से {to_day} {to_month}
+        🥛 कुल दूध: {total_litre} लीटर
+        💵 दर: ₹{rate}/लीटर
+        💰 कुल राशि: ₹{total_amount:,.0f}
+        """.strip()
 
                 if missing_days:
-                    msg += "\n📅 जिन दिनों दूध नहीं\nमिला:\n"
-                    msg += ", ".join(missing_days)
-                else:
-                    msg += "\n✅ इस माह सभी दिनों\nदूध प्राप्त हुआ"
+                    msg += f"\n❌ दूध नहीं मिला: {missing_days}"
 
                 msg += f"""
 
-        ⏰ अंतिम तिथि:
-        {due_date.strftime("%d-%m-%Y")}
+        ⏰ अंतिम तिथि: {due_date}
 
-        कृपया सुविधा अनुसार
-        भुगतान करें 🙏
+        कृपया समय पर भुगतान करने की कृपा करें 🙏  
+        धन्यवाद
         """
 
                 return msg.strip()
 
-            # ---------- PARTIALLY PAID ----------
-            if status == "Partially Paid":
-                paid_date = bill_row.get("PaidDate", "")
+            # ---------------- PARTIALLY PAID ----------------
+            else:
+                paid_date_raw = bill_row.get("PaidDate", "")
+                paid_date = fmt_date(paid_date_raw) if paid_date_raw else ""
 
                 msg = f"""
-        नमस्ते {name} जी 🙏
+        नमस्ते {customer} जी 🙏
 
-        क्षमा करें,
-        आपको परेशान करने
-        के लिए।
+        क्षमा करें, आपको परेशान करने के लिए।
+        आपके दूध बिल की जानकारी नीचे दी गई है:
 
-        🧾 बिल नं: {bill_no}
-        💵 कुल बिल: ₹{int(total_amt)}
-        ✅ भुगतान: ₹{int(paid_amt)}
-        """
+        🧾 बिल नं: {bill_id}
+        📆 बिल तिथि: {bill_date}
 
-                if paid_date:
-                    msg += f"📅 तिथि: {pd.to_datetime(paid_date).date()}\n"
+        💰 कुल राशि: ₹{total_amount:,.0f}
+        ✅ जमा राशि: ₹{paid_amount:,.0f}
+        📅 भुगतान तिथि: {paid_date}
+        ⚠️ शेष राशि: ₹{balance_amount:,.0f}
 
-                msg += f"""
-        🔴 शेष राशि:
-        ₹{int(balance)}
+        ⏰ अंतिम तिथि: {due_date}
 
-        ⏰ अंतिम तिथि:
-        {due_date.strftime("%d-%m-%Y")}
-
-        कृपया शेष राशि
-        जमा करें 🙏
+        कृपया शेष राशि जमा करने की कृपा करें 🙏
+        धन्यवाद
         """
 
                 return msg.strip()
-
-            return ""
-
 
 
 
