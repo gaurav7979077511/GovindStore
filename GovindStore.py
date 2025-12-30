@@ -177,17 +177,6 @@ def safe_cell(val):
         return ""
     return val
 
-@st.cache_data(ttl=30)
-def load_bills():
-    ws = open_billing_sheet()
-    rows = ws.get_all_values()
-
-
-    if not rows or rows[0] != BILLING_HEADER:
-        ws.insert_row(BILLING_HEADER, 1)
-        return pd.DataFrame(columns=BILLING_HEADER)
-
-    return pd.DataFrame(rows[1:], columns=rows[0])
 
 INVESTMENT_HEADER = [
             "InvestmentID",
@@ -208,7 +197,7 @@ BILLING_HEADER = [
             "PaidAmount","BalanceAmount",
             "BillStatus","DueDate","PaidDate",
             "DailyMilkPattern",
-            "GeneratedBy","GeneratedOn"
+            "GeneratedBy","GeneratedOn","WhatsAppLastSentOn"
         ]
 
 BANK_TRANSACTION_HEADER = [
@@ -303,6 +292,19 @@ MEDICATION_LOG_HEADER = [
 # ============================================================
 # LOAD AUTH DATA
 # ============================================================
+
+@st.cache_data(ttl=30)
+def load_bills():
+    ws = open_billing_sheet()
+    rows = ws.get_all_values()
+
+
+    if not rows or rows[0] != BILLING_HEADER:
+        ws.insert_row(BILLING_HEADER, 1)
+        return pd.DataFrame(columns=BILLING_HEADER)
+
+    return pd.DataFrame(rows[1:], columns=rows[0])
+
 @st.cache_resource
 def get_auth_sheet():
     try:
