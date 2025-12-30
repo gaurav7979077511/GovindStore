@@ -2372,7 +2372,7 @@ else:
                         paid_date = now.strftime("%Y-%m-%d")
                     else:
                         status = "Partially Paid"
-                        paid_date = ""   # keep blank
+                        paid_date = now.strftime("%Y-%m-%d")
 
 
                     ws = open_billing_sheet()
