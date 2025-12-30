@@ -3123,7 +3123,7 @@ else:
                         st.markdown(
                         f"""
                         <div style="display:flex; justify-content:center;">
-                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:420px;margin-left:auto;margin-right:auto;">
+                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:520px;margin-left:auto;margin-right:auto;">
                                 <div style="
                                     background:#25D366;
                                     color:white;
