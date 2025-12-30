@@ -3100,6 +3100,7 @@ else:
 
             with cols[i % 3]:
                 components.html(card_html, height=235)
+                # ---------- WhatsApp Reminder ----------
                 if st.session_state.show_whatsapp_buttons:
 
                     phone = customer_phone_map.get(r["CustomerID"], "")
@@ -3109,21 +3110,60 @@ else:
                     today = pd.Timestamp.today().normalize()
 
                     last_sent_raw = r.get("WhatsAppLastSentOn", "")
-                    last_sent = pd.to_datetime(last_sent_raw, errors="coerce") if str(last_sent_raw).strip() else None
+                    last_sent = (
+                        pd.to_datetime(last_sent_raw, errors="coerce")
+                        if str(last_sent_raw).strip()
+                        else None
+                    )
 
                     cooldown_active = last_sent is not None and (today - last_sent).days < 7
 
-                    disable_button = is_paid or not has_phone or cooldown_active
+                    # ❌ Do not show anything if bill is paid
+                    if not is_paid:
 
-                    if disable_button:
-                        if is_paid:
-                            reason = "✅ Bill already paid"
-                        elif not has_phone:
+                        if not has_phone:
                             reason = "📵 Phone number missing"
-                        else:
+
+                        elif cooldown_active:
                             days_left = 7 - (today - last_sent).days
                             reason = f"⏳ Retry after {days_left} day(s)"
 
+                        else:
+                            # ✅ ACTIVE WhatsApp button
+                            msg = build_whatsapp_message(r)
+                            encoded_msg = urllib.parse.quote(msg)
+                            whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
+
+                            st.markdown(
+                                f"""
+                                <a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">
+                                    <div style="
+                                        margin-top:6px;
+                                        background:#25D366;
+                                        color:white;
+                                        padding:10px;
+                                        border-radius:12px;
+                                        text-align:center;
+                                        font-weight:700;
+                                    ">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                                            width="18" style="vertical-align:middle;margin-right:6px;">
+                                        Send WhatsApp Reminder
+                                    </div>
+                                </a>
+                                """,
+                                unsafe_allow_html=True
+                            )
+
+                            # 🔒 Mark sent automatically AFTER click
+                            ws = open_billing_sheet()
+                            row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
+                            col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
+                            ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
+                            st.cache_data.clear()
+                            st.stop()
+
+                        # 🔒 Disabled info box
                         st.markdown(
                             f"""
                             <div style="
@@ -3143,40 +3183,6 @@ else:
                             unsafe_allow_html=True
                         )
 
-                    else:
-                        msg = build_whatsapp_message(r)
-                        encoded_msg = urllib.parse.quote(msg)
-                        whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
-
-                        # Step 1: Show WhatsApp link (NO side effects)
-                        if st.button(
-                            "📲 Send WhatsApp Reminder",
-                            key=f"wa_{r['BillID']}",
-                            use_container_width=True
-                        ):
-                            # 1️⃣ Update DB FIRST (safe)
-                            ws = open_billing_sheet()
-                            row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
-                            col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
-                            ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
-
-                            st.cache_data.clear()
-
-                            # 2️⃣ Open WhatsApp (JS redirect)
-                            msg = build_whatsapp_message(r)
-                            encoded_msg = urllib.parse.quote(msg)
-                            whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
-
-                            st.markdown(
-                                f"""
-                                <script>
-                                    window.open("{whatsapp_url}", "_blank");
-                                </script>
-                                """,
-                                unsafe_allow_html=True
-                            )
-
-                            st.rerun()
 
 
 
