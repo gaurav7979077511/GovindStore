@@ -3121,30 +3121,37 @@ else:
 
                         # Step 1: Show WhatsApp link (NO side effects)
                         st.markdown(
-                        f"""
-                        <div style="display:flex; justify-content:center;">
-                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:480px;margin-left:auto;margin-right:auto;">
-                                <div style="
-                                    background:#edfffd;
-                                    color:white;
-                                    padding:10px;
-                                    border-radius:12px;
-                                    text-align:center;
-                                    font-weight:700;
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                    gap:8px;
-                                ">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                        width="16">
-                                    Send WhatsApp Reminder
-                                </div>
-                            </a>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                            f"""
+                            <div style="display:flex; justify-content:center; margin-top:8px;">
+                                <a href="{whatsapp_url}" target="_blank"
+                                style="text-decoration:none; width:100%; max-width:480px; margin-left:auto; margin-right:auto;">
+                                    <div style="
+                                        background:#ffffff;
+                                        border:2px solid #25D366;
+                                        color:#25D366;
+                                        padding:12px;
+                                        border-radius:14px;
+                                        text-align:center;
+                                        font-weight:700;
+                                        font-size:14px;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        gap:10px;
+                                        box-shadow:0 4px 10px rgba(0,0,0,0.15);
+                                    ">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                                            width="22"
+                                            height="22"
+                                            style="vertical-align:middle;">
+                                        <span>Send WhatsApp Reminder</span>
+                                    </div>
+                                </a>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
 
     
     elif page == "Cow Profile":
