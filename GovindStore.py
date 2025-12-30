@@ -3122,14 +3122,14 @@ else:
                         # Step 1: Show WhatsApp link (NO side effects)
                         st.markdown(
                             f"""
-                            <div style="display:flex; justify-content:center; margin-top:8px;">
+                            <div style="display:flex; justify-content:center; margin-top:8px;margin-bottom:8px; ">
                                 <a href="{whatsapp_url}" target="_blank"
                                 style="text-decoration:none; width:100%; max-width:480px; margin-left:auto; margin-right:auto;">
                                     <div style="
                                         background:#ffffff;
                                         border:2px solid #25D366;
                                         color:#25D366;
-                                        padding:14px 14px 26px 14px;
+                                        padding:12px 16px;
                                         border-radius:14px;
                                         text-align:center;
                                         font-weight:700;
@@ -3141,8 +3141,8 @@ else:
                                         box-shadow:0 4px 10px rgba(0,0,0,0.15);
                                     ">
                                         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                            width="26"
-                                            height="26"
+                                            width="24"
+                                            height="24"
                                             style="vertical-align:middle;">
                                         <span>Send WhatsApp Reminder</span>
                                     </div>
