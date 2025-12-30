@@ -2598,7 +2598,7 @@ else:
 
 
         def build_whatsapp_message(bill_row):
-            customer = bill_row["CustomerName"]
+            customer = bill_row["CustomerName"].split()[0]
             bill_id = bill_row["BillID"][-10:]
             bill_date = fmt_date(bill_row["GeneratedOn"])
 
