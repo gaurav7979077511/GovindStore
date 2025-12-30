@@ -3124,7 +3124,8 @@ else:
                     else:
                         phone = ""
                         has_phone = False
-                        
+                    st.write(phone)
+
                     is_paid = r["BillStatus"] == "Paid"
 
                     today = pd.Timestamp.today().normalize()
@@ -3138,7 +3139,7 @@ else:
                     if not disable_button:
                         msg = build_whatsapp_message(r)
                         encoded_msg = urllib.parse.quote(msg)
-                        whatsapp_url = f"https://wa.me/phone={phone}&text={encoded_msg}"
+                        whatsapp_url = f"https://wa.me/{phone}?text={encoded_msg}"
 
                         # Step 1: Show WhatsApp link (NO side effects)
                         st.markdown(
