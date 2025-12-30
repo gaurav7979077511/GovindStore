@@ -2599,7 +2599,7 @@ else:
 
         def build_whatsapp_message(bill_row):
             customer = bill_row["CustomerName"]
-            bill_id = bill_row["BillID"]
+            bill_id = bill_row["BillID"][:-8]
             bill_date = fmt_date(bill_row["GeneratedOn"])
 
             from_date = pd.to_datetime(bill_row["FromDate"])
