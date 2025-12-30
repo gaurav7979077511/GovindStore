@@ -2521,6 +2521,8 @@ else:
         # CONSTANTS
         # ======================================================
         
+        if "show_whatsapp_buttons" not in st.session_state:
+            st.session_state.show_whatsapp_buttons = False
 
         # ======================================================
         # SHEET HELPERS
@@ -2592,6 +2594,34 @@ else:
                 daily_pattern
             )
 
+        def build_whatsapp_message(bill_row):
+            """
+            Builds a polite WhatsApp reminder message for a bill
+            """
+
+            customer = bill_row["CustomerName"]
+            bill_id = bill_row["BillID"]
+            amount = float(bill_row["BalanceAmount"])
+            from_date = bill_row["FromDate"].date()
+            to_date = bill_row["ToDate"].date()
+            due_date = bill_row["DueDate"].date()
+
+            msg = f"""
+        Hello {customer} 👋
+
+        This is a gentle reminder regarding your milk bill.
+
+        🧾 Bill ID: {bill_id}
+        📅 Period: {from_date} to {to_date}
+        💰 Amount Due: ₹ {amount:,.0f}
+        ⏰ Due Date: {due_date}
+
+        Kindly make the payment at your convenience.
+        Thank you 🙏
+        """
+
+            return msg.strip()
+
 
 
         # ======================================================
@@ -2600,6 +2630,10 @@ else:
         customers_df = get_customers_df()
         bills_df = load_bills()
         bitran_df = load_bitran_df()
+
+        if "WhatsAppLastSentOn" not in bills_df.columns:
+            bills_df["WhatsAppLastSentOn"] = ""
+
 
 
         customers_df["RatePerLitre"] = pd.to_numeric(
@@ -2887,6 +2921,21 @@ else:
         # ======================================================
 
         st.subheader("📋 Bills")
+        left, right = st.columns([4, 1])
+
+        with right:
+            if st.button(
+                "📲 Send WhatsApp Reminder"
+                if not st.session_state.show_whatsapp_buttons
+                else "❌ Hide WhatsApp Buttons",
+                use_container_width=True
+            ):
+                st.session_state.show_whatsapp_buttons = not st.session_state.show_whatsapp_buttons
+        customer_phone_map = dict(
+            zip(customers_df["CustomerID"], customers_df.get("Phone", ""))
+        )
+
+
 
         # ---------- Safety checks ----------
         if bills_df.empty:
@@ -3048,6 +3097,81 @@ else:
 
             with cols[i % 3]:
                 components.html(card_html, height=235)
+                if st.session_state.show_whatsapp_buttons:
+
+                    phone = customer_phone_map.get(r["CustomerID"], "")
+                    has_phone = bool(str(phone).strip())
+                    is_paid = r["BillStatus"] == "Paid"
+
+                    today = pd.Timestamp.today().normalize()
+
+                    last_sent_raw = r.get("WhatsAppLastSentOn", "")
+                    last_sent = (
+                        pd.to_datetime(last_sent_raw, errors="coerce")
+                        if str(last_sent_raw).strip()
+                        else None
+                    )
+
+                    cooldown_active = (
+                        last_sent is not None and (today - last_sent).days < 7
+                    )
+
+                    disable_button = is_paid or not has_phone or cooldown_active
+                    
+                    if disable_button:
+                        if is_paid:
+                            reason = "✅ Bill already paid"
+                        elif not has_phone:
+                            reason = "📵 Phone number not available"
+                        else:
+                            days_left = 7 - (today - last_sent).days
+                            reason = f"⏳ Retry after {days_left} day(s)"
+
+                        st.markdown(
+                            f"""
+                            <div style="
+                                margin-top:6px;
+                                text-align:center;
+                                background:#00000033;
+                                color:white;
+                                padding:8px;
+                                border-radius:10px;
+                                font-size:12px;
+                                opacity:0.7;
+                            ">
+                                📲 WhatsApp Reminder<br>
+                                <span style="font-size:11px;">{reason}</span>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        msg = build_whatsapp_message(r)
+                        encoded_msg = urllib.parse.quote(msg)
+                        whatsapp_url = f"https://wa.me/{phone}?text={encoded_msg}"
+
+                        if st.button(
+                            "📲 Send WhatsApp Reminder",
+                            key=f"wa_{r['BillID']}",
+                            use_container_width=True
+                        ):
+                            # Open WhatsApp
+                            st.markdown(
+                                f'<meta http-equiv="refresh" content="0; url={whatsapp_url}">',
+                                unsafe_allow_html=True
+                            )
+
+                            # Save send date
+                            ws = open_billing_sheet()
+                            row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
+                            col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
+                            ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
+
+                            st.cache_data.clear()
+                            st.rerun()
+
+
+
 
 
 
