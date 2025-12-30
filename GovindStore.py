@@ -3148,17 +3148,42 @@ else:
                         encoded_msg = urllib.parse.quote(msg)
                         whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
 
-                        if st.link_button(
-                            "📲 Send WhatsApp Reminder",
-                            whatsapp_url,
+                        # Step 1: Show WhatsApp link (NO side effects)
+                        st.markdown(
+                            f"""
+                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">
+                                <div style="
+                                    margin-top:6px;
+                                    background:#25D366;
+                                    color:white;
+                                    padding:10px;
+                                    border-radius:12px;
+                                    text-align:center;
+                                    font-weight:700;
+                                ">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+                                        width="18" style="vertical-align:middle;margin-right:6px;">
+                                    Send WhatsApp Reminder
+                                </div>
+                            </a>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                        # Step 2: Explicit confirmation button
+                        if st.button(
+                            "✅ Mark WhatsApp as Sent",
+                            key=f"mark_wa_{r['BillID']}",
                             use_container_width=True
                         ):
                             ws = open_billing_sheet()
                             row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
                             col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
-
                             ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
                             st.cache_data.clear()
+                            st.success("WhatsApp reminder marked as sent")
+                            st.rerun()
+
 
 
 
