@@ -3125,7 +3125,7 @@ else:
                         <div style="display:flex; justify-content:center;">
                             <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:480px;margin-left:auto;margin-right:auto;">
                                 <div style="
-                                    background:#075E54;
+                                    background:#edfffd;
                                     color:white;
                                     padding:10px;
                                     border-radius:12px;
