@@ -2924,13 +2924,16 @@ else:
         left, right = st.columns([4, 1])
 
         with right:
-            if st.button(
-                "📲 Send WhatsApp Reminder"
+            toggle_label = (
+                "📲 Show WhatsApp Reminders"
                 if not st.session_state.show_whatsapp_buttons
-                else "❌ Hide WhatsApp Buttons",
-                use_container_width=True
-            ):
+                else "❌ Hide WhatsApp Reminders"
+            )
+
+            if st.button(toggle_label, use_container_width=True):
                 st.session_state.show_whatsapp_buttons = not st.session_state.show_whatsapp_buttons
+                st.rerun()  # 🔥 forces immediate UI refresh
+
         customer_phone_map = dict(
             zip(customers_df["CustomerID"], customers_df.get("Phone", ""))
         )
