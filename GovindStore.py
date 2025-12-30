@@ -3129,7 +3129,7 @@ else:
                                         background:#ffffff;
                                         border:2px solid #25D366;
                                         color:#25D366;
-                                        padding:12px;
+                                        padding:12px 16px;
                                         border-radius:14px;
                                         text-align:center;
                                         font-weight:700;
@@ -3141,8 +3141,8 @@ else:
                                         box-shadow:0 4px 10px rgba(0,0,0,0.15);
                                     ">
                                         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                            width="22"
-                                            height="22"
+                                            width="26"
+                                            height="26"
                                             style="vertical-align:middle;">
                                         <span>Send WhatsApp Reminder</span>
                                     </div>
