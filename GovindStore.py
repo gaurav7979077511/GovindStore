@@ -197,7 +197,7 @@ BILLING_HEADER = [
             "PaidAmount","BalanceAmount",
             "BillStatus","DueDate","PaidDate",
             "DailyMilkPattern",
-            "GeneratedBy","GeneratedOn","WhatsAppLastSentOn"
+            "GeneratedBy","GeneratedOn"
         ]
 
 BANK_TRANSACTION_HEADER = [
@@ -3123,7 +3123,7 @@ else:
                         st.markdown(
                         f"""
                         <div style="display:flex; justify-content:center;">
-                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:460px;margin-left:auto;margin-right:auto;">
+                            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:480px;margin-left:auto;margin-right:auto;">
                                 <div style="
                                     background:#25D366;
                                     color:white;
@@ -3145,18 +3145,6 @@ else:
                         """,
                         unsafe_allow_html=True
                     )
-
-
-
-                        
-
-
-
-
-
-
-
-
 
     
     elif page == "Cow Profile":
