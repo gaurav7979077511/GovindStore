@@ -3685,6 +3685,16 @@ else:
                 st.rerun()
 
             if create:
+                # ---------------- PHONE VALIDATION ----------------
+                phone = phone.strip()
+
+                if not phone.isdigit():
+                    st.error("📵 Phone number must contain only digits")
+                    st.stop()
+
+                if len(phone) != 10:
+                    st.error("📵 Phone number must be exactly 10 digits")
+                    st.stop()
                 cid = f"CUST{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
                 ws = open_customer_sheet()
                 ws.append_row([
@@ -3761,6 +3771,17 @@ else:
                 st.rerun()
             
             if update:
+                # ---------------- PHONE VALIDATION ----------------
+                e_phone = e_phone.strip()
+
+                if not e_phone.isdigit():
+                    st.error("📵 Phone number must contain only digits")
+                    st.stop()
+
+                if len(e_phone) != 10:
+                    st.error("📵 Phone number must be exactly 10 digits")
+                    st.stop()
+                
                 update_customer_by_id(
                     row["CustomerID"],
                     {
