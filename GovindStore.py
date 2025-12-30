@@ -3106,23 +3106,17 @@ else:
                     today = pd.Timestamp.today().normalize()
 
                     last_sent_raw = r.get("WhatsAppLastSentOn", "")
-                    last_sent = (
-                        pd.to_datetime(last_sent_raw, errors="coerce")
-                        if str(last_sent_raw).strip()
-                        else None
-                    )
+                    last_sent = pd.to_datetime(last_sent_raw, errors="coerce") if str(last_sent_raw).strip() else None
 
-                    cooldown_active = (
-                        last_sent is not None and (today - last_sent).days < 7
-                    )
+                    cooldown_active = last_sent is not None and (today - last_sent).days < 7
 
                     disable_button = is_paid or not has_phone or cooldown_active
-                    
+
                     if disable_button:
                         if is_paid:
                             reason = "✅ Bill already paid"
                         elif not has_phone:
-                            reason = "📵 Phone number not available"
+                            reason = "📵 Phone number missing"
                         else:
                             days_left = 7 - (today - last_sent).days
                             reason = f"⏳ Retry after {days_left} day(s)"
@@ -3145,30 +3139,24 @@ else:
                             """,
                             unsafe_allow_html=True
                         )
+
                     else:
                         msg = build_whatsapp_message(r)
                         encoded_msg = urllib.parse.quote(msg)
-                        whatsapp_url = f"https://wa.me/{phone}?text={encoded_msg}"
+                        whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
 
-                        if st.button(
+                        if st.link_button(
                             "📲 Send WhatsApp Reminder",
-                            key=f"wa_{r['BillID']}",
+                            whatsapp_url,
                             use_container_width=True
                         ):
-                            # Open WhatsApp
-                            st.markdown(
-                                f'<meta http-equiv="refresh" content="0; url={whatsapp_url}">',
-                                unsafe_allow_html=True
-                            )
-
-                            # Save send date
                             ws = open_billing_sheet()
                             row_idx = bills_df.index[bills_df["BillID"] == r["BillID"]][0] + 2
                             col_idx = bills_df.columns.get_loc("WhatsAppLastSentOn") + 1
-                            ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
 
+                            ws.update_cell(row_idx, col_idx, today.strftime("%Y-%m-%d"))
                             st.cache_data.clear()
-                            st.rerun()
+
 
 
 
