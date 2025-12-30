@@ -2596,31 +2596,96 @@ else:
 
         def build_whatsapp_message(bill_row):
             """
-            Builds a polite WhatsApp reminder message for a bill
+            Builds Hindi WhatsApp message
+            Optimized for mobile (~32 chars width)
             """
 
-            customer = bill_row["CustomerName"]
-            bill_id = bill_row["BillID"]
-            amount = float(bill_row["BalanceAmount"])
+            name = bill_row["CustomerName"].split()[0]
+            bill_no = bill_row["BillID"][-5:]  # short bill no
+            status = bill_row["BillStatus"]
+
+            total_milk = bill_row.get("TotalMilk", 0)
+            rate = bill_row.get("RatePerLitre", 0)
+
+            total_amt = float(bill_row.get("BillAmount", 0))
+            paid_amt = float(bill_row.get("PaidAmount", 0))
+            balance = float(bill_row.get("BalanceAmount", 0))
+
             from_date = bill_row["FromDate"].date()
             to_date = bill_row["ToDate"].date()
             due_date = bill_row["DueDate"].date()
 
-            msg = f"""
-        Hello {customer} 👋
+            missing_raw = bill_row.get("DailyMilkPattern", "")
+            missing_days = (
+                missing_raw.split(",")
+                if missing_raw and str(missing_raw).strip()
+                else []
+            )
 
-        This is a gentle reminder regarding your milk bill.
+            # ---------- PENDING BILL ----------
+            if status == "Payment Pending":
+                msg = f"""
+        नमस्ते {name} जी 👋
 
-        🧾 Bill ID: {bill_id}
-        📅 Period: {from_date} to {to_date}
-        💰 Amount Due: ₹ {amount:,.0f}
-        ⏰ Due Date: {due_date}
+        आपके दूध बिल की
+        विनम्र याद दिलाना है।
 
-        Kindly make the payment at your convenience.
-        Thank you 🙏
+        🧾 बिल नं: {bill_no}
+        🥛 कुल दूध: {total_milk} लीटर
+        💰 दर: ₹{rate} / लीटर
         """
 
-            return msg.strip()
+                if missing_days:
+                    msg += "\n📅 जिन दिनों दूध नहीं\nमिला:\n"
+                    msg += ", ".join(missing_days)
+                else:
+                    msg += "\n✅ इस माह सभी दिनों\nदूध प्राप्त हुआ"
+
+                msg += f"""
+
+        ⏰ अंतिम तिथि:
+        {due_date.strftime("%d-%m-%Y")}
+
+        कृपया सुविधा अनुसार
+        भुगतान करें 🙏
+        """
+
+                return msg.strip()
+
+            # ---------- PARTIALLY PAID ----------
+            if status == "Partially Paid":
+                paid_date = bill_row.get("PaidDate", "")
+
+                msg = f"""
+        नमस्ते {name} जी 🙏
+
+        क्षमा करें,
+        आपको परेशान करने
+        के लिए।
+
+        🧾 बिल नं: {bill_no}
+        💵 कुल बिल: ₹{int(total_amt)}
+        ✅ भुगतान: ₹{int(paid_amt)}
+        """
+
+                if paid_date:
+                    msg += f"📅 तिथि: {pd.to_datetime(paid_date).date()}\n"
+
+                msg += f"""
+        🔴 शेष राशि:
+        ₹{int(balance)}
+
+        ⏰ अंतिम तिथि:
+        {due_date.strftime("%d-%m-%Y")}
+
+        कृपया शेष राशि
+        जमा करें 🙏
+        """
+
+                return msg.strip()
+
+            return ""
+
 
 
 
