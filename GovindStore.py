@@ -3129,7 +3129,7 @@ else:
                                         background:#ffffff;
                                         border:2px solid #25D366;
                                         color:#25D366;
-                                        padding:12px 16px;
+                                        padding:14px 14px 26px 14px;
                                         border-radius:14px;
                                         text-align:center;
                                         font-weight:700;
