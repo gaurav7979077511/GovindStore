@@ -3111,39 +3111,10 @@ else:
                     last_sent_raw = r.get("WhatsAppLastSentOn", "")
                     last_sent = pd.to_datetime(last_sent_raw, errors="coerce") if str(last_sent_raw).strip() else None
 
-                    cooldown_active = last_sent is not None and (today - last_sent).days < 7
 
-                    disable_button = is_paid or not has_phone or cooldown_active
+                    disable_button = is_paid or not has_phone
 
-                    if disable_button:
-                        if is_paid:
-                            reason = "✅ Bill already paid"
-                        elif not has_phone:
-                            reason = "📵 Phone number missing"
-                        else:
-                            days_left = 7 - (today - last_sent).days
-                            reason = f"⏳ Retry after {days_left} day(s)"
-
-                        st.markdown(
-                            f"""
-                            <div style="
-                                margin-top:6px;
-                                text-align:center;
-                                background:#00000033;
-                                color:white;
-                                padding:8px;
-                                border-radius:10px;
-                                font-size:12px;
-                                opacity:0.7;
-                            ">
-                                📲 WhatsApp Reminder<br>
-                                <span style="font-size:11px;">{reason}</span>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                    else:
+                    if not disable_button:
                         msg = build_whatsapp_message(r)
                         encoded_msg = urllib.parse.quote(msg)
                         whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_msg}"
@@ -3162,13 +3133,14 @@ else:
                                     font-weight:700;
                                 ">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                        width="18" style="vertical-align:middle;margin-right:6px;">
+                                        width="16" style="vertical-align:middle;margin-right:6px;">
                                     Send WhatsApp Reminder
                                 </div>
                             </a>
                             """,
                             unsafe_allow_html=True
                         )
+                        
 
 
 
