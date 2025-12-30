@@ -3123,23 +3123,21 @@ else:
                         st.markdown(
                             f"""
                             <div style="display:flex; justify-content:center;">
-                                <a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">
+                                <a href="{whatsapp_url}" target="_blank" style="text-decoration:none; width:100%; max-width:320px;">
                                     <div style="
-                                        margin-top:6px;
                                         background:#25D366;
                                         color:white;
-                                        padding:8px 12px;
+                                        padding:10px;
                                         border-radius:12px;
                                         text-align:center;
-                                        font-weight:600;
-                                        font-size:13px;
-                                        max-width:260px;
-                                        width:100%;
-                                        box-shadow:0 4px 10px rgba(0,0,0,0.25);
+                                        font-weight:700;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        gap:8px;
                                     ">
                                         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                                            width="15"
-                                            style="vertical-align:middle;margin-right:6px;">
+                                            width="16">
                                         Send WhatsApp Reminder
                                     </div>
                                 </a>
@@ -3147,6 +3145,7 @@ else:
                             """,
                             unsafe_allow_html=True
                         )
+
 
 
                         
