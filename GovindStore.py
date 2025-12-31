@@ -1656,7 +1656,7 @@ else:
                         [
                             "Feed", "Medicine", "Labour", "Electricity",
                             "Maintenance", "Transport", "Veterinary",
-                            "Equipment", "Other"
+                            "Equipment","Salary", "Other"
                         ]
                     )
     
