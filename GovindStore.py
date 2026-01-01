@@ -1565,7 +1565,7 @@ else:
         
     
         # ================= CLOUDINARY =================
-        folder="dairy/expenses",
+        folder="dairy/expenses"
         
     
         # ================= GSHEET =================
