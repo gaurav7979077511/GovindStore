@@ -1379,8 +1379,9 @@ else:
                     .mean()
                 )
             else:
-                month_total = {}
-                month_avg = {}
+                month_total = pd.Series(dtype=float)
+                month_avg = pd.Series(dtype=float)
+
 
 
             month_avg = (
@@ -1508,20 +1509,59 @@ else:
 
         st.divider()
         #------------- Daily Milk Summary-----------
+        st.subheader("📊 Daily Milking Summary")
+        filter_option = st.radio(
+            "Show data for",
+            ["Last", "1 W", "1 M", "3 M", "All"],
+            index=1,  # ✅ default = 1 Week
+            horizontal=True
+        )
+
+        today = pd.Timestamp.today().normalize()
+
+        if filter_option == "Last":
+            latest_date = df_milk["Date"].max()
+            df_milk = df_milk[df_milk["Date"] == latest_date]
+
+        elif filter_option == "1 W":
+            df_milk = df_milk[df_milk["Date"] >= today - pd.Timedelta(days=7)]
+
+        elif filter_option == "1 M":
+            df_milk = df_milk[df_milk["Date"] >= today - pd.DateOffset(months=1)]
+
+        elif filter_option == "3 M":
+            df_milk = df_milk[df_milk["Date"] >= today - pd.DateOffset(months=3)]
+
+        # "All" → no filter needed
+
+
         if not df_milk.empty:
             df_milk["MilkQuantity"] = pd.to_numeric(
                 df_milk["MilkQuantity"], errors="coerce"
             ).fillna(0)
+
+            df_milk["Date"] = pd.to_datetime(df_milk["Date"], errors="coerce")
+            shift_order = {"Morning": 1, "Evening": 2}
+
     
             summary = (
                 df_milk
                 .groupby(["Date", "Shift"])["MilkQuantity"]
                 .sum()
                 .reset_index()
-                .sort_values("Date", ascending=False)
             )
+
+            summary["ShiftOrder"] = summary["Shift"].map(shift_order)
+
+            summary = summary.sort_values(
+                by=["Date", "ShiftOrder"],
+                ascending=[False, False]   # latest date first, Evening after Morning
+            )
+
+            summary = summary.drop(columns=["ShiftOrder"])
+
     
-            st.subheader("📊 Daily Milking Summary")
+            
     
             cols = st.columns(4)
     
@@ -1656,7 +1696,7 @@ else:
                         [
                             "Feed", "Medicine", "Labour", "Electricity",
                             "Petrol", "Transport", "Veterinary",
-                            "Equipment","Salary", "Cow_Shed","Other"
+                            "Equipment","Salary","Cow_Shed", "Other"
                         ]
                     )
     
@@ -2107,7 +2147,7 @@ else:
             border:1px solid #e5e7eb;
             border-radius:10px;
             padding:8px;
-            height:95px;
+            height:105px;
             box-sizing:border-box;
             box-shadow:0 1px 2px rgba(0,0,0,0.04);
             font-family:Arial, sans-serif;
@@ -4275,22 +4315,62 @@ else:
         df_bitran = load_bitran_data()
         
         if not df_bitran.empty and "MilkDelivered" in df_bitran.columns:
+
+            st.subheader("📊 Daily Summary")
+            df_bitran["Date"] = pd.to_datetime(df_bitran["Date"], errors="coerce")
+
+            filter_option = st.radio(
+                "Filter",
+                ["Last", "1 W", "1 M", "3 M", "All"],
+                horizontal=True,
+                index=1  # default = 1 Week
+            )
+
+            today = pd.Timestamp.today().normalize()
+
+            if filter_option == "Last":
+                start_date = today
+            elif filter_option == "1 W":
+                start_date = today - pd.Timedelta(days=7)
+            elif filter_option == "1 M":
+                start_date = today - pd.DateOffset(months=1)
+            elif filter_option == "3 M":
+                start_date = today - pd.DateOffset(months=3)
+            else:  # All
+                start_date = None
+
+            if start_date is not None:
+                df_bitran = df_bitran[df_bitran["Date"] >= start_date]
+
+
         
             df_bitran["MilkDelivered"] = (
                 pd.to_numeric(df_bitran["MilkDelivered"], errors="coerce")
                 .fillna(0)
             )
+            
+
         
+            shift_order = {"Morning": 1, "Evening": 2}
+
             summary = (
                 df_bitran
                 .groupby(["Date", "Shift"])["MilkDelivered"]
                 .sum()
                 .reset_index()
-                .sort_values("Date", ascending=False)
             )
+
+            summary["ShiftOrder"] = summary["Shift"].map(shift_order)
+
+            summary = summary.sort_values(
+                by=["Date", "ShiftOrder"],
+                ascending=[False, False]  # latest date first, Evening after Morning
+            )
+
+            summary = summary.drop(columns=["ShiftOrder"])
             summary["MilkDelivered"] = summary["MilkDelivered"].round(2)
+
         
-            st.subheader("📊 Daily Summary")
         
             cols = st.columns(4)
         
@@ -6052,6 +6132,78 @@ else:
         st.divider()
 
         # ======================================================
+        # 👑 ADMIN – ALL USERS WALLET GLANCE
+        # ======================================================
+        if st.session_state.user_role == "Admin":
+
+            st.subheader("👥 Users Wallet Overview")
+
+            # Ensure numeric conversion
+            wallet_df["Amount"] = pd.to_numeric(wallet_df["Amount"], errors="coerce").fillna(0)
+
+            # Exclude admin from list
+            non_admin_df = wallet_df[wallet_df["UserID"] != st.session_state.user_id].copy()
+
+            users = non_admin_df["UserID"].unique()
+
+
+            cards_per_row = 3
+            rows = [users[i:i+cards_per_row] for i in range(0, len(users), cards_per_row)]
+
+            for row in rows:
+                cols = st.columns(len(row))
+
+                for col, uid in zip(cols, row):
+
+                    u_df = non_admin_df[non_admin_df["UserID"] == uid]
+
+                    if u_df.empty:
+                        continue
+
+                    name = u_df["Name"].iloc[0]
+
+                    credit = u_df[
+                        (u_df["TxnType"] == "CREDIT") &
+                        (u_df["TxnStatus"] == "COMPLETED")
+                    ]["Amount"].sum()
+
+                    debit = u_df[
+                        (u_df["TxnType"] == "DEBIT") &
+                        (u_df["TxnStatus"] == "COMPLETED")
+                    ]["Amount"].sum()
+
+                    blocked = u_df[
+                        (u_df["TxnType"] == "DEBIT") &
+                        (u_df["TxnStatus"] == "PENDING")
+                    ]["Amount"].sum()
+
+                    available = credit - debit - blocked
+
+                    with col:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                padding:14px;
+                                border-radius:14px;
+                                background:linear-gradient(135deg,#6b7280,#374151);
+                                color:white;
+                                font-family:Inter,system-ui,sans-serif;
+                                box-shadow:0 6px 14px rgba(0,0,0,0.25);
+                            ">
+                                <div style="font-size:14px;font-weight:800;">{name}</div>
+                                <div style="margin-top:8px;font-size:13px;">
+                                    💰 Available: ₹ {available:,.2f}
+                                </div>
+                                {"<div style='font-size:12px;opacity:.85;'>⛔ Blocked: ₹ " + f"{blocked:,.2f}</div>" if blocked > 0 else ""}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+            st.divider()
+
+
+
+        # ======================================================
         # SEND MONEY (INITIATE)
         # ======================================================
         # Create columns (left space + button column)
@@ -6069,6 +6221,7 @@ else:
         users_df = dairy_users_df[
             dairy_users_df["userid"] != st.session_state.user_id
         ]
+    
 
         
 
