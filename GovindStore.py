@@ -4244,6 +4244,9 @@ else:
                     continue
 
                 # ---- Monthly stats (CURRENT MONTH ONLY) ----
+                c_df["Date"] = pd.to_datetime(c_df["Date"], errors="coerce")
+                month_start = pd.to_datetime(month_start)
+
                 m_df = c_df[c_df["Date"] >= month_start]
                 m_total = m_df["MilkDelivered"].sum()
 
