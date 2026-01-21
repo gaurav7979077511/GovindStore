@@ -759,7 +759,7 @@ else:
     if page == "Dashboard":
 
 
-        st.title("📊 Pure Dairy Farm Dashboard")
+        st.title("📊 Vayuvolt Dairy Farm Dashboard")
 
         # ==================================================
         # 🎨 GLOBAL STYLES (READABLE + PROFESSIONAL)
@@ -4006,6 +4006,14 @@ else:
 
         pending_tasks = []
         df_milk = load_milking_data()
+
+        # Force clean Date and Shift in both datasets
+        df_milk["Date"] = pd.to_datetime(df_milk["Date"]).dt.date
+        df_milk["Shift"] = df_milk["Shift"].str.strip()
+
+        df_bitran["Date"] = pd.to_datetime(df_bitran["Date"]).dt.date
+        df_bitran["Shift"] = df_bitran["Shift"].str.strip()
+
 
         # total milking per day + shift
         milk_grp = (
