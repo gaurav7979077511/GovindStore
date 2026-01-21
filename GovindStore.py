@@ -3942,6 +3942,9 @@ else:
                 ws.append_row(r, value_input_option="USER_ENTERED")
 
         df_bitran = load_bitran_data()
+        if not df_bitran.empty:
+            df_bitran["Date"] = pd.to_datetime(df_bitran["Date"], errors="coerce")
+
 
         if not df_bitran.empty:
             df_bitran["MilkDelivered"] = pd.to_numeric(
@@ -4335,6 +4338,10 @@ else:
 
         # ===================== SUMMARY CARDS =====================
         df_bitran = load_bitran_data()
+
+        if not df_bitran.empty:
+            df_bitran["Date"] = pd.to_datetime(df_bitran["Date"], errors="coerce")
+
         
         if not df_bitran.empty and "MilkDelivered" in df_bitran.columns:
 
