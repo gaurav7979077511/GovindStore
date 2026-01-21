@@ -4031,6 +4031,10 @@ else:
             .reset_index()
         )
 
+        st.write("MILK", milk_grp)
+        st.write("BITRAN", bitran_grp)
+
+
         for _, row in milk_grp.iterrows():
             date = row["Date"]
             shift = row["Shift"]
