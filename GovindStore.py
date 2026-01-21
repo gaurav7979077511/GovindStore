@@ -478,12 +478,25 @@ def open_milking_sheet():
 def load_milking_data():
     ws = open_milking_sheet()
     rows = ws.get_all_values()
-    
+
     if not rows or rows[0] != MILKING_HEADER:
         ws.insert_row(MILKING_HEADER, 1)
         return pd.DataFrame(columns=MILKING_HEADER)
-    
-    return pd.DataFrame(rows[1:], columns=rows[0])
+
+    df = pd.DataFrame(rows[1:], columns=rows[0])
+
+    # 🔥 CRITICAL FIX: force correct datatypes
+    if "MilkQuantity" in df.columns:
+        df["MilkQuantity"] = pd.to_numeric(df["MilkQuantity"], errors="coerce").fillna(0)
+
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce").dt.date
+
+    if "Shift" in df.columns:
+        df["Shift"] = df["Shift"].astype(str).str.strip()
+
+    return df
+
     
 def append_milking_rows(rows):
     ws = open_milking_sheet()
