@@ -897,9 +897,14 @@ else:
             def filter_this_month(df, date_col):
                 if df.empty or date_col not in df:
                     return df.iloc[0:0]
+
                 df = df.copy()
                 df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-                return df[df[date_col].dt.date >= month_start]
+
+                month_start = pd.Timestamp.today().replace(day=1).normalize()
+
+                return df[df[date_col] >= month_start]
+
 
             # Filter monthly data
             m_milking = filter_this_month(milking_df, "Date")
