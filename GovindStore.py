@@ -892,6 +892,7 @@ else:
 
             today = dt.date.today()
             month_start = today.replace(day=1)
+            month_start = pd.to_datetime(month_start)
 
             def filter_this_month(df, date_col):
                 if df.empty or date_col not in df:
