@@ -755,7 +755,8 @@ else:
             "Investment",
             "Bank Account",
             "My Wallet",
-            "My Profile"
+            "My Profile",
+            "Chatbot"
 
             
         ],
@@ -6529,7 +6530,39 @@ else:
 
             components.html(card_html, height=110)
 
-
+    # ----------------------------
+    # CHATBOT PAGE
+    # ----------------------------
+    if page == "Chatbot":
+        st.title("🤖 Dairy Insights Chatbot")
+    
+        # Session state for chat history
+        if 'messages' not in st.session_state:
+            st.session_state.messages = []
+    
+        # Display chat history
+        for message in st.session_state.messages:
+            st.markdown(f"**{message['role'].capitalize()}**: {message['content']}")
+    
+        # User input
+        user_input = st.text_input("You: ", "")
+    
+        if st.button("Send"):
+            if user_input:
+                # Add user message to chat history
+                st.session_state.messages.append({"role": "user", "content": user_input})
+    
+                # Send input to your LLM API and get response (to be implemented)
+                # response = call_to_llm_api(user_input)
+    
+                # Placeholder response for now
+                response = "This is a placeholder response from LLM."
+    
+                # Add LLM message to chat history
+                st.session_state.messages.append({"role": "assistant", "content": response})
+    
+                # Clear input box
+                st.empty()
 
 
     # ----------------------------
